@@ -415,7 +415,7 @@ FINALLY, say your next action as a short command. Only output the command, nothi
             output_ids = generated_ids[0][len(input_ids[0]):].tolist()
         except KeyboardInterrupt as ki:
             raise ki
-        except OutOfMemoryError as oome:
+        except torch.cuda.OutOfMemoryError as oome:
             raise oome
             # return "help" # model is in distress :/
 
