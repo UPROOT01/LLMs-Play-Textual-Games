@@ -52,7 +52,13 @@ model = AutoModelForCausalLM.from_pretrained(
 # ## Play function
 
 # %%
-def play(agent, path, max_steps=100, n_episodes=10, verbose=True, return_max_score=False):
+def play(agent, path, max_steps=100, n_episodes=10, verbose=True, return_max_score=False,
+         loop_window=None, loop_max_distinct=2):
+    """loop_window: if set, an episode is stopped early when its last loop_window turns contain at most
+    loop_max_distinct different (observation, command) pairs, i.e. the agent is stuck in a loop.
+    The game is deterministic, so such an episode would almost never score again: on the logs of experiment 6,
+    loop_window=20 and loop_max_distinct=2 never stopped a r4/r10-think episode that would have scored later.
+    """
     torch.manual_seed(46)  # For reproducibility when using action sampling.
 
     infos_to_request = agent.infos_to_request
@@ -87,15 +93,25 @@ def play(agent, path, max_steps=100, n_episodes=10, verbose=True, return_max_sco
         done = False
         nb_moves = 0
         moves_scores_times = [(0, 0, 0)] # starting point
-        
+        turns = [] # (observation, command) pairs, for loop detection
+
         while not done:
             command = agent.act(obs, score, done, infos)
+            # without the status bar ("-= Room =-score/moves"), whose move counter changes at every turn
+            turns.append((re.sub(r">\s+-=.*", "", obs).strip(), command))
             timestamp = time.process_time()
             obs, score, done, infos = env.step(command)
             nb_moves += 1
             moves_scores_times.append((nb_moves, score, timestamp - episode_start))
+            if not done and loop_window and len(turns) >= loop_window \
+                    and len(set(turns[-loop_window:])) <= loop_max_distinct:
+                if verbose:
+                    print(f"loop detected at step {nb_moves}, episode stopped", end=" ")
+                if hasattr(agent, "write_on_log"):
+                    agent.write_on_log(f"LOOP DETECTED: episode stopped at step {nb_moves}")
+                break
 
-        agent.act(obs, score, done, infos)  # Let the agent know the game is done.
+        agent.act(obs, score, True, infos)  # Let the agent know the game is done.
         moves_scores_times_list.append(moves_scores_times)
 
         if verbose:
@@ -118,10 +134,10 @@ def play(agent, path, max_steps=100, n_episodes=10, verbose=True, return_max_sco
             print(msg.format(np.mean(avg_moves), np.mean(avg_scores), infos["max_score"], play_end_time - play_start_time))
             if len(avg_moves) > 1:
                 print(f"Detailed steps: {avg_moves}\t Detailed scores: {avg_scores}")
-        if return_max_score:
-            return (moves_scores_times_list, max_score)
-        else:
-            return moves_scores_times_list
+    if return_max_score:
+        return (moves_scores_times_list, max_score)
+    else:
+        return moves_scores_times_list
 
 
 
