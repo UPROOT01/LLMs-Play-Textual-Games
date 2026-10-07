@@ -278,12 +278,13 @@ Think about it, and then say your next action. Remember to only say the command 
     def __init__(self, model=model, tokenizer=tokenizer, prompt_version = "default",
     selfeval_turns = 5, random_selfeval = False,
     verbose = False, log = "",
-    handheld = False, reads_own_reasoning = False):
+    handheld = False, reads_own_reasoning = False, show_speed = False):
         """Initialization function.
         selfeval_turns: how many turns should pass between a self-evaluation and the next one.
         random_selfeval: whether the self-evaluation turn counter should be random. It's randomized within an interval centered on selfeval_turns, if that value is passed
         handheld: if this is set to True there are a few simple changes in the function that make it easier for the LLM to understand and correct its course
         reads_own_reasoning: if the model's reasoning during the self-evaluation turns should be included in the context too, or only its final action
+        show_speed: if the generation speed (tokens per minute) should be shown in the notebook and written on the log at every turn
         """
         super().__init__(model, tokenizer)
 
@@ -302,6 +303,8 @@ Think about it, and then say your next action. Remember to only say the command 
 
         self.handheld = handheld 
         self.reads_own_reasoning = reads_own_reasoning
+        self.show_speed = show_speed
+        self.speed_display = None
 
         self.prompt_version = prompt_version
         self.set_prompts()
@@ -406,6 +409,7 @@ FINALLY, say your next action as a short command. Only output the command, nothi
         input_ids = self.tokenizer.encode(
                 self.context,
                 return_tensors = "pt")
+        generation_start = time.perf_counter() # wall time, the generation runs on the GPU
         try:
             if self.prompt_version == "CoT" or self.prompt_version == 6:
                 if think:
@@ -429,6 +433,8 @@ FINALLY, say your next action as a short command. Only output the command, nothi
                         eos_token_id = self.tokenizer.eos_token_id
                         ) # default temperature=0.6, top_p=0.95, min_p=0, top_k=20
             output_ids = generated_ids[0][len(input_ids[0]):].tolist()
+            if self.show_speed:
+                self.report_speed(len(output_ids), time.perf_counter() - generation_start, len(input_ids[0]), think)
         except KeyboardInterrupt as ki:
             raise ki
         except torch.cuda.OutOfMemoryError as oome:
@@ -468,6 +474,23 @@ FINALLY, say your next action as a short command. Only output the command, nothi
             .replace("/no_think", "") \
             .strip("\n")
             return response
+
+    def report_speed(self, n_tokens, seconds, context_tokens, think):
+        """Shows the speed of the last generation on a single line of the notebook, updated at every turn.
+        """
+        text = f"{'self-evaluation' if think else 'normal turn'}: {n_tokens} tokens in {seconds:.1f} s " \
+             + f"= {n_tokens / seconds * 60:.0f} tokens/min (context: {context_tokens} tokens)"
+        self.write_on_log("SPEED: " + text)
+        try:
+            from IPython.display import display
+        except ImportError:
+            display = None
+        if display is None: # IPython not installed
+            print(text)
+        elif self.speed_display is None:
+            self.speed_display = display({"text/plain": text}, raw=True, display_id=True) # None outside a notebook
+        else:
+            self.speed_display.update({"text/plain": text}, raw=True)
 
     def act(self, obs: str, score: int, done: bool, infos: Mapping[str, Any]) -> str:
         # print(f"{self.selfeval_turn_counter}/{self.selfeval_turns}")
