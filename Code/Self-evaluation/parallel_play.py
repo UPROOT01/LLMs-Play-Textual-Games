@@ -18,6 +18,7 @@ Differences with play():
 import itertools
 import os
 import re
+import sys
 import threading
 import time
 
@@ -41,8 +42,15 @@ def _get_engine(gpu_memory_utilization):
         os.environ.setdefault("VLLM_ENABLE_V1_MULTIPROCESSING", "0") # engine in this process: no subprocess to spawn from the notebook
         os.environ.setdefault("VLLM_LOGGING_LEVEL", "WARNING")
         from vllm import LLM
-        _engine = LLM(model=model_name, gpu_memory_utilization=gpu_memory_utilization,
-                      max_model_len=32768, enable_prefix_caching=True, seed=46).llm_engine
+        # vLLM silences some messages by redirecting the file descriptor of sys.stdout, which the notebook's output
+        # does not have (UnsupportedOperation: fileno): during the start-up, use the real standard output of the process
+        notebook_stdout = sys.stdout
+        sys.stdout = sys.__stdout__ if sys.__stdout__ is not None else open(os.devnull, "w")
+        try:
+            _engine = LLM(model=model_name, gpu_memory_utilization=gpu_memory_utilization,
+                          max_model_len=32768, enable_prefix_caching=True, seed=46).llm_engine
+        finally:
+            sys.stdout = notebook_stdout
     return _engine
 
 
