@@ -283,7 +283,8 @@ Think about it, and then say your next action. Remember to only say the command 
         selfeval_turns: how many turns should pass between a self-evaluation and the next one.
         random_selfeval: whether the self-evaluation turn counter should be random. It's randomized within an interval centered on selfeval_turns, if that value is passed
         handheld: if this is set to True there are a few simple changes in the function that make it easier for the LLM to understand and correct its course
-        reads_own_reasoning: if the model's reasoning during the self-evaluation turns should be included in the context too, or only its final action
+        reads_own_reasoning: if the model's reasoning during the self-evaluation turns should be included in the context too, or only its final action.
+            "last": only the reasoning of the last self-evaluation is kept, and it is removed when the next self-evaluation starts
         show_speed: if the generation speed (tokens per minute) should be shown in the notebook and written on the log at every turn
         """
         super().__init__(model, tokenizer)
@@ -391,6 +392,7 @@ FINALLY, say your next action as a short command. Only output the command, nothi
         if self.random_selfeval:
             self.randomize_selfeval_turn()
         self.selvaluated_last_turn = False
+        self.last_reasoning_span = None # (start, end) of the last reasoning in the context, with reads_own_reasoning="last"
         self.write_on_log("CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-")
 
     def randomize_selfeval_turn(self):
@@ -538,6 +540,10 @@ FINALLY, say your next action as a short command. Only output the command, nothi
             raise KeyboardInterrupt
 
     def self_evaluation(self, obs) -> str :
+        if self.last_reasoning_span is not None: # reads_own_reasoning="last": the previous reasoning is removed
+            start, end = self.last_reasoning_span
+            self.context = self.context[:start] + self.context[end:]
+            self.last_reasoning_span = None
         self.context += self.token_user + obs + self.selfeval_prompt + self.token_think + self.token_endofturn 
         self.context += self.token_assistant # induce thinking
 
@@ -556,7 +562,10 @@ FINALLY, say your next action as a short command. Only output the command, nothi
         if self.log != "":
             self.write_on_log(turn_string)
 
-        if self.reads_own_reasoning:
+        if self.reads_own_reasoning == "last":
+            self.last_reasoning_span = (len(self.context), len(self.context) + len(thinking_response))
+            self.context += thinking_response + response + self.token_endofturn
+        elif self.reads_own_reasoning:
             self.context += thinking_response + response + self.token_endofturn
         else:
             self.context += response + self.token_endofturn
