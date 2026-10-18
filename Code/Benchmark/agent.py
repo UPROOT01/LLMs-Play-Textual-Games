@@ -185,6 +185,10 @@ class SelfEvalAgent:
 
     # ---------------------------------------------------------------- statistics
 
+    def context_tokens(self):
+        """Tokens in the context after the last answer (0 before the first one)."""
+        return self.turns[-1]["prompt"] + self.turns[-1]["generated"] if self.turns else 0
+
     def token_stats(self):
         """Generated and read tokens of the turns played so far."""
         think = [turn for turn in self.turns if turn["think"]]

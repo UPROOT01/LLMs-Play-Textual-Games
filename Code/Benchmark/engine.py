@@ -5,6 +5,11 @@ to the main thread and waits: the main thread keeps adding the requests to the b
 (continuous batching), so a game does not wait for the self-evaluations of the other games, and vLLM reuses
 the context already read in the previous turns (prefix caching).
 The times are wall-clock times of games played together: they are not comparable between runs.
+
+How many games are played at the same time (n_parallel="auto", see ContextBudget): while a game waits for its answers,
+which is almost all the time, its whole context is in vLLM's KV cache. A new game is started only if the contexts of
+all the games, at the size they are expected to reach by their end, fit in the KV cache. Too many games would not fit:
+vLLM would pause some answers and compute their contexts again (preemption), and the tokens per minute would drop.
 """
 import gc
 import itertools
@@ -13,6 +18,8 @@ import re
 import sys
 import threading
 import time
+
+import numpy as np
 
 _env_lock = threading.Lock() # TextWorld is not thread-safe: one game action at a time
 _request_ids = itertools.count()
@@ -95,6 +102,12 @@ class Engine:
             sys.stdout = notebook_stdout
         self.backend = self.llm.llm_engine
         self.max_model_len = self.llm.llm_engine.model_config.max_model_len
+        cache_config = self.llm.llm_engine.vllm_config.cache_config
+        self.kv_capacity = None # tokens that fit in the KV cache (None: unknown)
+        if cache_config.num_gpu_blocks:
+            self.kv_capacity = cache_config.num_gpu_blocks * cache_config.block_size
+        print(f"{model}: KV cache of {self.kv_capacity} tokens" if self.kv_capacity else
+              f"{model}: unknown KV cache size, n_parallel='auto' plays {FALLBACK_PARALLEL} games at a time")
         self.description = dict(backend=f"vllm {vllm.__version__}", gpu_memory_utilization=gpu_memory_utilization,
                                 **llm_settings)
 
@@ -118,12 +131,21 @@ class Engine:
         params.update(sampling or {})
         return SamplingParams(max_tokens=max_tokens, stop_token_ids=self.stop_token_ids, **params)
 
-    def play(self, jobs, n_parallel=8, on_result=None, verbose=True):
-        """Plays the jobs, n_parallel games at a time.
+    def play(self, jobs, n_parallel="auto", on_result=None, verbose=True, group=None, max_parallel=32):
+        """Plays the jobs, n_parallel games at a time ("auto": as many as fit in the KV cache, see ContextBudget).
         jobs: list of (key, make_agent, play_kwargs): make_agent(generate) returns a new agent that uses generate()
         as its model, play_kwargs are the arguments of play_game() (path, max_steps, loop_window, ...).
         on_result(key, agent, result): called in the main thread as soon as a game ends, with the result of play_game().
+        group(key): games of the same group have contexts of similar size (e.g. the mode); used by "auto".
         """
+        group = group or (lambda key: None)
+        budget = None
+        if n_parallel == "auto":
+            if self.kv_capacity:
+                budget = ContextBudget(self.kv_capacity, max_parallel=max_parallel)
+            else:
+                n_parallel = FALLBACK_PARALLEL
+        playing = {} # key -> agent of the games being played
         state = _State()
         jobs = list(jobs)
         in_vllm = {} # request id -> request being generated
@@ -145,9 +167,11 @@ class Engine:
 
         try:
             while jobs or state.running > 0 or state.finished: # finished: the last games ended but are not saved yet
-                while jobs and state.running < n_parallel:
+                while jobs and (budget.admits([(agent, group(key)) for key, agent in playing.items()], group(jobs[0][0]))
+                                if budget else state.running < n_parallel):
                     key, make_agent, play_kwargs = jobs.pop(0)
                     agent = make_agent(state.generate_function(self.max_model_len))
+                    playing[key] = agent
                     with state.condition:
                         state.running += 1
                     threading.Thread(target=run, args=(key, agent, play_kwargs), daemon=True).start()
@@ -167,6 +191,9 @@ class Engine:
                 for key, agent, outcome in done_now:
                     if isinstance(outcome, BaseException):
                         raise outcome
+                    playing.pop(key, None)
+                    if budget:
+                        budget.ended(agent, group(key))
                     ended += 1
                     if verbose:
                         print(f"{key}: {'loop, ' if outcome['loop_stopped'] else ''}steps {outcome['steps']}, "
@@ -189,6 +216,9 @@ class Engine:
                     elapsed = last_display - start
                     text = f"{state.running} games running, {len(jobs)} waiting, {ended} ended " \
                          + f"({ended / elapsed * 3600:.1f} games/hour); {generated / elapsed * 60:.0f} tokens/min"
+                    if budget:
+                        text += f"; contexts {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}" \
+                              + " of the KV cache at their expected end"
                     display_handle = _show(text, display_handle)
         finally:
             if in_vllm:
@@ -197,6 +227,47 @@ class Engine:
                 if state.running > 0 and state.error is None:
                     state.error = RuntimeError("stopped") # wakes up the game threads, which then stop
                 state.condition.notify_all()
+
+
+FALLBACK_PARALLEL = 8 # games at a time with n_parallel="auto" when the size of the KV cache is unknown
+
+
+class ContextBudget:
+    """Decides when to start another game, so that the contexts of the games being played fit together in the KV cache.
+
+    The context of a game grows at every turn, so a game counts for the size its context is expected to reach by the
+    end of the game: the 75th percentile of the final contexts of the games of its group (e.g. its mode) that already
+    ended, or `prior` tokens until 3 of them have ended. A game whose context is already larger counts for its size.
+    A new game starts if all of them, plus the new one, take at most `fraction` of the KV cache (and there are fewer
+    than max_parallel games); at least min_parallel games are always played.
+    The games are started in order: a big game waits until there is room for it, the smaller ones after it wait too.
+    """
+
+    def __init__(self, capacity, fraction=0.9, prior=20000, min_parallel=2, max_parallel=32):
+        self.capacity = capacity
+        self.fraction = fraction
+        self.prior = prior
+        self.min_parallel = min_parallel
+        self.max_parallel = max_parallel
+        self.final_contexts = {} # group -> final context tokens of its games that ended
+
+    def expected(self, group):
+        finals = self.final_contexts.get(group, [])
+        return self.prior if len(finals) < 3 else float(np.percentile(finals, 75))
+
+    def planned(self, playing):
+        """Tokens of the contexts of the games being played (list of (agent, group)) at their expected end."""
+        return sum(max(agent.context_tokens(), self.expected(group)) for agent, group in playing)
+
+    def admits(self, playing, group):
+        if len(playing) < self.min_parallel:
+            return True
+        if len(playing) >= self.max_parallel:
+            return False
+        return self.planned(playing) + self.expected(group) <= self.fraction * self.capacity
+
+    def ended(self, agent, group):
+        self.final_contexts.setdefault(group, []).append(agent.context_tokens())
 
 
 class _State:

@@ -76,11 +76,12 @@ def summary(grid, results, read, models=None):
           "(the token estimate uses the games already played with the same mode, any model)")
 
 
-def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_parallel=8,
+def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_parallel="auto",
              gpu_memory_utilization=0.9, verbose=True):
     """Plays the games of the grid (a path or a dict of load_grid()) not yet played, and saves their records in results.
     read: other results folders whose games are not played again. models: only these models of the grid.
-    limit: at most this many games per model (e.g. for a pilot)."""
+    limit: at most this many games per model (e.g. for a pilot).
+    n_parallel: games played at the same time, or "auto": as many as fit in the GPU memory (see engine.ContextBudget)."""
     from agent import SelfEvalAgent
     from engine import Engine
     from profiles import model_settings
@@ -130,7 +131,8 @@ def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_p
         start = time.perf_counter()
         try:
             engine.play([make_job(game_id) for game_id in to_play], n_parallel=n_parallel,
-                        on_result=on_result, verbose=verbose)
+                        on_result=on_result, verbose=verbose,
+                        group=lambda game_id: game_id[3]) # the contexts of the games of a mode grow alike
         finally:
             engine.close()
         print(f"{model}: done in {(time.perf_counter() - start) / 60:.0f} min")
@@ -144,7 +146,8 @@ def main():
                         help="other results folders whose games are not played again (default: the imported old games)")
     parser.add_argument("--model", nargs="*", help="only these models of the grid")
     parser.add_argument("--limit", type=int, help="at most this many games per model (e.g. a pilot)")
-    parser.add_argument("--n-parallel", type=int, default=8, help="games played at the same time")
+    parser.add_argument("--n-parallel", default="auto",
+                        help="games played at the same time, or auto: as many as fit in the GPU memory")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9)
     parser.add_argument("--dry-run", action="store_true", help="only show what is played and what is left")
     args = parser.parse_args()
@@ -152,7 +155,8 @@ def main():
     if args.dry_run:
         summary(grid, args.results, args.read, args.model)
     else:
-        run_grid(grid, args.results, args.read, args.model, args.limit, args.n_parallel, args.gpu_memory_utilization)
+        n_parallel = args.n_parallel if args.n_parallel == "auto" else int(args.n_parallel)
+        run_grid(grid, args.results, args.read, args.model, args.limit, n_parallel, args.gpu_memory_utilization)
 
 
 if __name__ == "__main__":
