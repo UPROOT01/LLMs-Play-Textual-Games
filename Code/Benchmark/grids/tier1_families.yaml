@@ -1,0 +1,13 @@
+# Tier 1 on other model families, after the Qwen3 sizes.
+# They think only when the answer is prefilled with "<think>" (see profiles.py), so their normal turns never think.
+models:
+  - HuggingFaceTB/SmolLM3-3B
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+modes: ["0", e1, r4, er4]
+prompts: [CoT]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
