@@ -132,19 +132,36 @@ class FakeAgent:
 
 
 def test_context_budget():
-    budget = engine.ContextBudget(capacity=100000, fraction=0.9, prior=20000, min_parallel=2, max_parallel=6)
+    budget = engine.ContextBudget(capacity=100000, fraction=0.9, prior=20000, min_parallel=2, max_parallel=6, max_wait=300)
+    e1 = lambda tokens=0: (FakeAgent(tokens), "e1")
     # before 3 games of a group end, a game counts for the prior, or for its context if it is already larger
-    assert budget.planned([(FakeAgent(500), "e1"), (FakeAgent(30000), "e1")]) == 50000
-    assert budget.admits([(FakeAgent(0), "e1")] * 3, "e1") # 4 x 20000 <= 90000
-    assert not budget.admits([(FakeAgent(0), "e1")] * 4, "e1") # 5 x 20000 > 90000
-    assert budget.admits([(FakeAgent(80000), "e1")], "e1") # at least 2 games
+    assert budget.planned([e1(500), e1(30000)]) == 50000
+    assert budget.choose(["e1"], [e1()] * 3, now=0) == 0 # 4 x 20000 <= 90000
+    assert budget.choose(["e1"], [e1()] * 4, now=0) is None # 5 x 20000 > 90000
+    assert budget.choose(["e1"], [e1(80000)], now=0) == 0 # at least 2 games
+    assert budget.choose([], [], now=0) is None
     for tokens in (8000, 9000, 10000, 3000):
         budget.ended(FakeAgent(tokens), "0")
     assert budget.expected("0") == 9250 # 75th percentile of its games
     assert budget.expected("e1") == 20000 # still the prior
-    assert budget.admits([(FakeAgent(0), "0")] * 5, "0")
-    assert not budget.admits([(FakeAgent(0), "0")] * 6, "0") # max_parallel
-    print("ok ContextBudget")
+    assert budget.choose(["0"], [(FakeAgent(0), "0")] * 5, now=0) == 0
+    assert budget.choose(["0"], [(FakeAgent(0), "0")] * 6, now=0) is None # max_parallel
+
+    # backfill: the first e1 does not fit (4 x 20000 + 20000 > 90000), the first 0 after it does (+ 9250)
+    budget = engine.ContextBudget(capacity=100000, prior=20000, max_wait=300)
+    for tokens in (9000, 9000, 9000):
+        budget.ended(FakeAgent(tokens), "0")
+    playing = [e1()] * 4
+    assert budget.choose(["e1", "e1", "0", "0"], playing, now=1000) == 2
+    assert budget.choose(["e1", "e1", "0"], playing + [(FakeAgent(0), "0")], now=1100) is None # no room left
+    # a 0 would fit (80000 + 9000 <= 90000), but after max_wait seconds the first game waits no more behind the
+    # backfill: nothing else starts
+    assert budget.choose(["e1", "0"], [e1()] * 4, now=1299) == 1
+    assert budget.choose(["e1", "0"], [e1()] * 4, now=1301) is None
+    # when it finally fits, it starts, and the waiting time is reset
+    assert budget.choose(["e1", "0"], [e1()] * 3, now=1400) == 0
+    assert budget.first_waiting_since is None
+    print("ok ContextBudget: expected contexts, backfill, max_wait")
 
 
 class ConcurrentGames:

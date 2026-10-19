@@ -8,9 +8,11 @@ The times are wall-clock times of games played together: they are not comparable
 
 How many games are played at the same time (n_parallel="auto", see ContextBudget): while a game waits for its answers,
 which is almost all the time, its whole context is in vLLM's KV cache. A new game is started only if the contexts of
-all the games, at the size they are expected to reach by their end, fit in the KV cache. Too many games would not fit:
+all the games, at the size they are expected to reach by their end, fit in the KV cache; when the next game is too big,
+a smaller one after it can start instead. Too many games would not fit:
 vLLM would pause some answers and compute their contexts again (preemption), and the tokens per minute would drop.
 """
+import collections
 import gc
 import itertools
 import os
@@ -154,6 +156,7 @@ class Engine:
         ended = 0
         last_display = 0
         display_handle = None
+        history = collections.deque() # (time, ended, generated) of the last RECENT seconds, for the recent rates
 
         def run(key, agent, play_kwargs):
             try:
@@ -167,9 +170,15 @@ class Engine:
 
         try:
             while jobs or state.running > 0 or state.finished: # finished: the last games ended but are not saved yet
-                while jobs and (budget.admits([(agent, group(key)) for key, agent in playing.items()], group(jobs[0][0]))
-                                if budget else state.running < n_parallel):
-                    key, make_agent, play_kwargs = jobs.pop(0)
+                while jobs:
+                    if budget:
+                        index = budget.choose([group(job[0]) for job in jobs],
+                                              [(agent, group(key)) for key, agent in playing.items()])
+                    else:
+                        index = 0 if state.running < n_parallel else None
+                    if index is None:
+                        break
+                    key, make_agent, play_kwargs = jobs.pop(index)
                     agent = make_agent(state.generate_function(self.max_model_len))
                     playing[key] = agent
                     with state.condition:
@@ -214,8 +223,15 @@ class Engine:
                 if verbose and time.perf_counter() - last_display > 2: # the loop runs at every generated token
                     last_display = time.perf_counter()
                     elapsed = last_display - start
-                    text = f"{state.running} games running, {len(jobs)} waiting, {ended} ended " \
-                         + f"({ended / elapsed * 3600:.1f} games/hour); {generated / elapsed * 60:.0f} tokens/min"
+                    history.append((last_display, ended, generated))
+                    while last_display - history[0][0] > RECENT:
+                        history.popleft()
+                    recent = last_display - history[0][0]
+                    text = f"{state.running} games running, {len(jobs)} waiting, {ended} ended; " \
+                         + f"since the start {ended / elapsed * 3600:.1f} games/hour, {generated / elapsed * 60:.0f} tokens/min"
+                    if recent > 0:
+                        text += f"; last {recent / 60:.0f} min {(ended - history[0][1]) / recent * 3600:.1f} games/hour, " \
+                              + f"{(generated - history[0][2]) / recent * 60:.0f} tokens/min"
                     if budget:
                         text += f"; contexts {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}" \
                               + " of the KV cache at their expected end"
@@ -230,6 +246,7 @@ class Engine:
 
 
 FALLBACK_PARALLEL = 8 # games at a time with n_parallel="auto" when the size of the KV cache is unknown
+RECENT = 600 # seconds of the recent rates in the status line
 
 
 class ContextBudget:
@@ -238,36 +255,54 @@ class ContextBudget:
     The context of a game grows at every turn, so a game counts for the size its context is expected to reach by the
     end of the game: the 75th percentile of the final contexts of the games of its group (e.g. its mode) that already
     ended, or `prior` tokens until 3 of them have ended. A game whose context is already larger counts for its size.
-    A new game starts if all of them, plus the new one, take at most `fraction` of the KV cache (and there are fewer
+    A game can start if all of them, plus the new one, take at most `fraction` of the KV cache (and there are fewer
     than max_parallel games); at least min_parallel games are always played.
-    The games are started in order: a big game waits until there is room for it, the smaller ones after it wait too.
+
+    The first waiting game starts as soon as it fits. While it does not fit, the first smaller game after it that fits
+    starts instead (backfill): small games add little to the generation time of each step and keep the GPU busy.
+    So that the small games do not keep the big one waiting forever, after max_wait seconds of waiting the backfill
+    stops until the big one starts: the small games end quickly and make room for it.
     """
 
-    def __init__(self, capacity, fraction=0.9, prior=20000, min_parallel=2, max_parallel=32):
+    def __init__(self, capacity, fraction=0.9, prior=20000, min_parallel=2, max_parallel=32, max_wait=300):
         self.capacity = capacity
         self.fraction = fraction
         self.prior = prior
         self.min_parallel = min_parallel
         self.max_parallel = max_parallel
+        self.max_wait = max_wait
         self.final_contexts = {} # group -> final context tokens of its games that ended
+        self.expected_context = {} # group -> expected final context, once 3 of its games ended
+        self.first_waiting_since = None # when the first waiting game started to wait (None: it is not waiting)
 
     def expected(self, group):
-        finals = self.final_contexts.get(group, [])
-        return self.prior if len(finals) < 3 else float(np.percentile(finals, 75))
+        return self.expected_context.get(group, self.prior)
 
     def planned(self, playing):
         """Tokens of the contexts of the games being played (list of (agent, group)) at their expected end."""
         return sum(max(agent.context_tokens(), self.expected(group)) for agent, group in playing)
 
-    def admits(self, playing, group):
-        if len(playing) < self.min_parallel:
-            return True
-        if len(playing) >= self.max_parallel:
-            return False
-        return self.planned(playing) + self.expected(group) <= self.fraction * self.capacity
+    def choose(self, waiting, playing, now=None):
+        """Index in `waiting` (the groups of the waiting games, in order) of the game to start now, or None.
+        playing: list of (agent, group) of the games being played."""
+        if not waiting or len(playing) >= self.max_parallel:
+            return None
+        room = self.fraction * self.capacity - self.planned(playing)
+        if len(playing) < self.min_parallel or self.expected(waiting[0]) <= room:
+            self.first_waiting_since = None
+            return 0
+        now = time.perf_counter() if now is None else now
+        if self.first_waiting_since is None:
+            self.first_waiting_since = now
+        if now - self.first_waiting_since > self.max_wait: # stop the backfill, to make room for the first game
+            return None
+        return next((index for index, group in enumerate(waiting) if self.expected(group) <= room), None)
 
     def ended(self, agent, group):
-        self.final_contexts.setdefault(group, []).append(agent.context_tokens())
+        finals = self.final_contexts.setdefault(group, [])
+        finals.append(agent.context_tokens())
+        if len(finals) >= 3:
+            self.expected_context[group] = float(np.percentile(finals, 75))
 
 
 class _State:
