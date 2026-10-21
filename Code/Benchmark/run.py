@@ -2,7 +2,7 @@
 
     python run.py grids/tier1.yaml --results /content/drive/MyDrive/LLMs-Play-Textual-Games/Benchmark/results
     python run.py grids/tier1.yaml --dry-run          # only shows what is done and what is left
-    python run.py grids/tier1.yaml --model Qwen/Qwen3-8B --limit 8   # a pilot: 8 games of one model
+    python run.py grids/tier1.yaml --model Qwen/Qwen3-8B-FP8 --limit 8   # a pilot: 8 games of one model
 
 A game is skipped if its record exists in the results folder or in one of the folders to read
 (by default the old games imported by import_legacy.py), whatever the settings it was played with.

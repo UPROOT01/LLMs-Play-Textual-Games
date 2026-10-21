@@ -88,14 +88,18 @@ PROFILES = {profile.name: profile for profile in (Qwen3, SmolLM3, DeepSeekR1)}
 # models that can be used in a grid, with their profile and the vLLM settings that fit them on an L4 (24 GB).
 # max_model_len: the e1 contexts reach ~30k tokens before the 10k of a self-evaluation, so ~40k are needed.
 # kv_cache_dtype="fp8" halves the memory of the context, for the models whose weights leave little room on the L4
+# The 8B models in bf16 (~16 GB) leave only ~2 GB for the context, less than one 40k game: their weights are in fp8
+# (~8.5 GB), which leaves ~10 GB for the context. Qwen3-8B-FP8 is Qwen's own fp8 checkpoint; DeepSeek has none,
+# so quantization="fp8" makes vLLM quantize its weights while loading them
 MODELS = {
     "Qwen/Qwen3-0.6B": dict(profile="qwen3", max_model_len=40960),
     "Qwen/Qwen3-1.7B": dict(profile="qwen3", max_model_len=40960),
     "Qwen/Qwen3-4B": dict(profile="qwen3", max_model_len=40960),
-    "Qwen/Qwen3-8B": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
+    "Qwen/Qwen3-8B-FP8": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
     "Qwen/Qwen3-14B-AWQ": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
     "HuggingFaceTB/SmolLM3-3B": dict(profile="smollm3", max_model_len=40960),
-    "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": dict(profile="deepseek_r1", max_model_len=40960, kv_cache_dtype="fp8"),
+    "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": dict(profile="deepseek_r1", max_model_len=40960,
+                                                     quantization="fp8", kv_cache_dtype="fp8"),
 }
 
 
