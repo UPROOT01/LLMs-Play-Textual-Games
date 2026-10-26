@@ -22,3 +22,24 @@ Workflow: `colab.ipynb` (pilot with `limit = 8`, then the whole grid) → copy `
 To add a model: an entry in `profiles.MODELS` (a new family also needs a profile and a check in `tests/test_profiles.py`), then add it to a grid.
 
 Tests (only the tokenizers are downloaded, no GPU): `python tests/test_legacy_equivalence.py`, `python tests/test_profiles.py`, `python tests/test_pipeline.py`.
+
+## Two-player games
+
+The same agent and modes against an opponent, in chess and Connect Four. The levels of a game are its opponents:
+`random`, `greedy` (one move ahead), Stockfish `sf<N>` (skill level) or `elo<N>` (chess only), or the model itself `self-<mode>`.
+The records go in the same results folders, with the same path (`level<opponent>-seed<S>.json`), and `source: "benchmark-duel"`.
+
+| File | What it does |
+|---|---|
+| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (each mode against the model that never thinks) |
+| `run_duel.py` | the `run.py` of the two-player games (`--dry-run` too) |
+| `colab_duel.ipynb` | runs a duel grid on Colab (installs python-chess and Stockfish) |
+| `duel.py` | the agent with the prompts of the game, the opponents, the game loop (illegal answers, forfeit, max_steps) |
+| `duel_games.py` | the games: what a side sees, its legal moves, how an answer becomes a move |
+| `duel_prompts.py` | the prompts of each game, as in `prompts.py` |
+| `tests/test_duel.py` | rules and parsing, opponents, the game loop, `run_duel` end to end |
+
+The score is the agent's: win 1, draw 0.5, loss 0 (`max_score` 1). An illegal answer is not played: the agent reads why and answers again;
+after `max_illegal` wrong answers in a row a random legal move is played for it (or it loses, with `illegal_policy: forfeit`).
+The agent plays first on the odd seeds and second on the even ones (`colors: alternate`).
+To add a game: a class in `duel_games.py` (see `DuelGame`) and its prompts in `duel_prompts.py`.

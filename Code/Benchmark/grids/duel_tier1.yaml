@@ -1,0 +1,21 @@
+# Duel tier 1: the modes of the textual games in two-player games, against opponents that do not think (run_duel.py).
+# Does thinking help against a fixed opponent, and is keeping the reasonings worse than throwing them away?
+# The levels are the opponents (see duel.py): random and greedy for both games, Stockfish at skill 0 for chess.
+# The agent plays first on the odd seeds and second on the even ones (colors: alternate).
+models:
+  - Qwen/Qwen3-1.7B
+  - Qwen/Qwen3-4B
+  - Qwen/Qwen3-8B-FP8
+modes: ["0", e1, r4, er4, lr4]
+prompts: [CoT]
+games:
+  connect_four: [random, greedy] # short games (at most 21 moves of the agent): a cheap first look
+  chess: [random, greedy, sf0]
+seeds: 1-10
+max_steps: 80 # moves of the agent; then the game is a draw (the material balance is in the record)
+max_illegal: 3 # wrong answers in a row before a random move is played for the agent
+illegal_policy: random
+colors: alternate
+game_options:
+  chess: {board: ascii, legal_moves: true, history: false} # the FEN too ("both") costs ~40 more tokens per turn
+  connect_four: {legal_moves: true}

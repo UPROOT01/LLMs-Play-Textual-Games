@@ -1,0 +1,97 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You're now in a kitchen.
+
+You make out an opened fridge close by. The fridge contains a green bell pepper, a yellow onion, a lettuce, an orange bell pepper, a carrot, a raw white tuna, a block of cheese, a green apple, a green hot pepper, a yellow apple and a red onion. There's something strange about this thing being here, but you don't have time to worry about that now. You can see an oven. You shudder, but continue examining the room. You see a table. You see a cookbook on the table. You lean against the wall, inadvertently pressing a secret button. The wall opens up to reveal a counter. On the counter you see a raw yellow potato, a red hot pepper, a tomato, a yellow bell pepper, a raw red potato, a red apple and a knife. You can see a stove. Now why would someone leave that there? Looks like someone's already been here and taken everything off it, though. You move on, clearly upset with TextWorld.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+cut green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it.
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+slice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+slice green bell pepper with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the green bell pepper first.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+take green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen text game where they need to cook a meal. The goal is to use the cookbook recipe, so they need ingredients. The user has already taken the knife and tried to slice the green bell pepper but didn't have it. Now they've taken the green bell pepper.
+
+First, the main goal is to prepare ingredients for the meal. The user needs to gather items from the fridge and counter. They've taken the knife and the green bell pepper. Next steps would be to prepare other ingredients. But the user is stuck because they need to cut the pepper, but they already have it now. Wait, they took the green bell pepper, so now they can cut it. But earlier attempts to slice failed because they didn't have the pepper. Now that they have it, they can try again. But maybe the next step is to cut it. However, the user might need to check the cookbook for the recipe first. Wait, the initial prompt said to check the cookbook for the recipe. So maybe the user hasn't done that yet. But the user is focused on cutting the pepper. Let me check the steps again.
+
+The user's past actions: took knife, tried to slice pepper without having it, then took the pepper. Now they have the pepper. The next logical step is to cut it. But the previous attempt to slice failed because they didn't have the pepper. Now that they have it, they can slice it. So the next action should be to slice the green bell pepper with the knife. But maybe the system is expecting a different command. Alternatively, maybe they need to check the cookbook first. Wait, the initial message said to check the cookbook in the kitchen. The user hasn't done that yet. So maybe the correct next step is to go to the table where the cookbook is. Wait, the user is already in the kitchen, and the cookbook is on the table. So maybe the user should go to the table to pick up the cookbook. But the user's current focus is on cutting the pepper. However, the recipe might require specific ingredients. Let me think again.
+
+The user's goal is to cook a meal, so they need to follow the recipe. The recipe isn't known yet, so they need to check the cookbook. But the user hasn't done that yet. However, the user is trying to prepare ingredients. The green bell pepper is one ingredient. Once they cut it, they can proceed. But the user is stuck because they need to cut the pepper. Wait, the user just took the green bell pepper. So the next step should be to slice it with the knife. But in the previous attempt, the user tried to slice without having the pepper, so now that they have it, they can do it. So the next action is to slice the green bell pepper with the knife. But the system might require a different command. Alternatively, maybe the user needs to go to the counter or table. Wait, the user is in the kitchen, and the table is in the kitchen. So maybe the user should go to the table to check the cookbook. But the initial instruction was to check the cookbook for the recipe. So perhaps the correct next step is to go to the table and take the cookbook. However, the user is currently focused on cutting the pepper. But the user hasn't even checked the recipe yet. Maybe the user needs to do that first. But the user's previous actions were focused on getting the knife and the pepper. Now that they have the pepper, the next step is to prepare it. So the next action should be to slice the green bell pepper with the knife. But the system might require the user to be at the counter or table. Wait, the user is in the kitchen, and the counter is there. The knife is on the counter. The user took the knife from the counter. Now they have the knife and the pepper. So they can slice the pepper. So the next action is to slice the green bell pepper with the knife. But in the previous attempt, the user tried to slice without having the pepper, so now that they have it, they can proceed. Therefore, the next command should be "slice green bell pepper with knife".
+</think>slice green bell pepper with knife
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

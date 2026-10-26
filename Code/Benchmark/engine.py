@@ -133,10 +133,13 @@ class Engine:
         params.update(sampling or {})
         return SamplingParams(max_tokens=max_tokens, stop_token_ids=self.stop_token_ids, **params)
 
-    def play(self, jobs, n_parallel="auto", on_result=None, verbose=True, group=None, max_parallel=32):
+    def play(self, jobs, n_parallel="auto", on_result=None, verbose=True, group=None, max_parallel=32,
+             play_function=None):
         """Plays the jobs, n_parallel games at a time ("auto": as many as fit in the KV cache, see ContextBudget).
         jobs: list of (key, make_agent, play_kwargs): make_agent(generate) returns a new agent that uses generate()
-        as its model, play_kwargs are the arguments of play_game() (path, max_steps, loop_window, ...).
+        as its model, play_kwargs are the arguments of play_function() (path, max_steps, loop_window, ...).
+        play_function(agent, **play_kwargs): plays one game, play_game() (TextWorld) by default; it returns a dict
+        with at least score, max_score, steps, loop_stopped and seconds (e.g. duel.play_duel() for two-player games).
         on_result(key, agent, result): called in the main thread as soon as a game ends, with the result of play_game().
         group(key): games of the same group have contexts of similar size (e.g. the mode); used by "auto".
         """
@@ -160,7 +163,7 @@ class Engine:
 
         def run(key, agent, play_kwargs):
             try:
-                outcome = play_game(agent, **play_kwargs)
+                outcome = (play_function or play_game)(agent, **play_kwargs)
             except BaseException as e:
                 outcome = e
             with state.condition:

@@ -216,6 +216,8 @@ def test_grid_files():
     folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "grids")
     from profiles import model_settings
     for name in sorted(os.listdir(folder)):
+        if name.startswith("duel_"): # two-player games: checked by test_duel.py
+            continue
         grid = run.load_grid(os.path.join(folder, name))
         for model in grid["models"]:
             model_settings(model)

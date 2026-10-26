@@ -1,0 +1,61 @@
+"""Prompts of the agent in the two-player games (duel.py), one set per game, with the same structure of prompts.py:
+the system prompt, and the question of the self-evaluations. "CoT" follows the 3 steps of the CoT prompt of the
+textual games, rewritten for an opponent who moves between the turns.
+"""
+from prompts import SAMPLING
+
+DUEL_PROMPTS = {
+    "chess": {
+        "default": {
+            "system": """
+You are an assistant playing chess against an opponent.
+The user shows you the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Only output the move, nothing else.
+""",
+            "selfeval": """
+Do you think you're playing well so far? Do you think you're winning?
+Think about it, and then say your next move. Remember to only say the move and nothing else.
+""",
+        },
+        "CoT": {
+            "system": """
+You are an expert chess player. You attentively analyze the position and find the best move.
+The user shows you the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Think thoroughly about how to win the game and then output the move, nothing else.
+""",
+            "selfeval": """
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: Evaluate the position: material, king safety, and what your opponent's last move threatens.
+SECOND STEP: List 2 or 3 candidate moves. For each one, check your opponent's best reply: does it lose a piece or allow a checkmate?
+THIRD STEP: Choose the best candidate. It is fundamental that your move is legal: if it was not accepted before, choose a different one from your legal moves.
+FINALLY, say your move in standard algebraic notation. Only output the move, nothing else.
+""",
+        },
+    },
+    "connect_four": {
+        "default": {
+            "system": """
+You are an assistant playing Connect Four against an opponent. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
+The user shows you the board and you reply with the column where you drop your disc, like \"4\". Only output the column number, nothing else.
+""",
+            "selfeval": """
+Do you think you're playing well so far? Do you think you're winning?
+Think about it, and then say your next move. Remember to only say the column number and nothing else.
+""",
+        },
+        "CoT": {
+            "system": """
+You are an expert Connect Four player. You attentively analyze the board and find the best move. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
+The user shows you the board and you reply with the column where you drop your disc, like \"4\". Think thoroughly about how to win the game and then output the column number, nothing else.
+""",
+            "selfeval": """
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: Can you connect four with this move? Can your opponent connect four with their next move, so that you have to block it?
+SECOND STEP: List 2 or 3 candidate columns. For each one, check your opponent's best reply: does it let them connect four on top of your disc?
+THIRD STEP: Choose the best candidate. It is fundamental that the column is not full: if your move was not accepted before, choose a different column.
+FINALLY, say your move as a column number. Only output the number, nothing else.
+""",
+        },
+    },
+}
+
+# same sampling of the textual games, so that the only difference is the game
+DUEL_SAMPLING = SAMPLING

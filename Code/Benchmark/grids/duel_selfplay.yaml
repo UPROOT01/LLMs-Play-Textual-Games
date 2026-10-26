@@ -1,0 +1,18 @@
+# Duel self-play: the model against itself, each side with its own mode (the level "self-<mode>" is the opponent's).
+# Against an opponent that never thinks ("self-0"), how much is each way of thinking worth?
+# Both agents use the same engine: a game costs the tokens of both.
+models:
+  - Qwen/Qwen3-4B
+modes: ["0", e1, r4, er4, lr4]
+prompts: [CoT]
+games:
+  connect_four: [self-0]
+  chess: [self-0]
+seeds: 1-10
+max_steps: 80
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+game_options:
+  chess: {board: ascii, legal_moves: true, history: false}
+  connect_four: {legal_moves: true}
