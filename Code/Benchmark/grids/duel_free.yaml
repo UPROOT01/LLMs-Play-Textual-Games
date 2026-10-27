@@ -1,0 +1,22 @@
+# Duel self-play with the "free" prompt: the same games of duel_selfplay.yaml (same model, modes, opponents, seeds and
+# colours), only the prompt changes. The neutral prompt still structures the reasoning ("evaluate the position",
+# "compare 2 or 3 candidate moves", "be concise") and calls the player "the user", and in its pilot the reasonings
+# judged their own candidate moves and almost never the opponent's intentions. "free" only says which game is played
+# and asks to think (duel_prompts.py), so comparing the two shows how much the structure of the prompt suppresses
+# reasoning about the opponent.
+# Pilot: limit 8 plays seed 1 of the opponents self-e1 and self-r4 with every mode, the same 8 games of the neutral pilot.
+models:
+  - Qwen/Qwen3-4B
+modes: [e1, r4, er4, lr4]
+prompts: [free]
+games:
+  chess: [self-e1, self-r4, self-er4, self-lr4]
+seeds: 1-10
+max_steps: 80
+max_illegal: 3
+illegal_policy: random
+adjudicate: stockfish
+adjudicate_cp: 300
+colors: alternate
+game_options:
+  chess: {board: ascii, legal_moves: true, history: false}

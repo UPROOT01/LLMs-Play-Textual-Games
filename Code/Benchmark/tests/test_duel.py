@@ -18,6 +18,7 @@ import duel
 import engine
 import run_duel
 from duel_games import Chess, ConnectFour, make_game
+from duel_prompts import DUEL_PROMPTS, DUEL_SAMPLING
 from records import load_table, record_path
 from test_pipeline import TOKENIZER, FakeEngine
 
@@ -349,6 +350,21 @@ def test_observation_tokens():
         print(f"  chess observation, board={board}: {tokens} tokens")
 
 
+def test_duel_prompts():
+    """neutral and free never mention the opponent (reasoning about it must come from the model); free also has no
+    steps, no user and no request to be brief (it does not structure the reasoning)."""
+    for game, prompts in DUEL_PROMPTS.items():
+        assert set(prompts) <= set(DUEL_SAMPLING)
+        for prompt in ("neutral", "free"):
+            text = (prompts[prompt]["system"] + prompts[prompt]["selfeval"]).lower()
+            for word in ("opponent", "threat", "other player"):
+                assert word not in text, (game, prompt, word)
+        free = (prompts["free"]["system"] + prompts["free"]["selfeval"]).lower()
+        for word in ("user", "step", "concise", "brief", "candidate", "evaluate", "how to win"):
+            assert word not in free, (game, word)
+    print("ok duel prompts: neutral and free do not mention the opponent, free does not structure the reasoning")
+
+
 def test_duel_grid_files():
     folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "grids")
     from profiles import model_settings
@@ -359,10 +375,14 @@ def test_duel_grid_files():
                 model_settings(model)
             for game, options in grid["game_options"].items():
                 make_game(game, rng=random.Random(0), **options)
+            for game in grid["games"]:
+                for prompt in grid["prompts"]:
+                    assert prompt in DUEL_PROMPTS[game] and prompt in DUEL_SAMPLING, (name, game, prompt)
             print(f"ok {name}: {len(list(run_duel.grid_games(grid)))} games")
 
 
 if __name__ == "__main__":
+    test_duel_prompts()
     test_duel_grid_files()
     test_chess_rules()
     test_connect_four_rules()

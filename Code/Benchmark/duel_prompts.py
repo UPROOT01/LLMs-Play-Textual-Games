@@ -4,6 +4,11 @@ textual games, rewritten for an opponent who moves between the turns.
 "neutral" has the same 3 steps and sampling of "CoT", but never mentions the opponent: CoT asks what the opponent's
 last move threatens and what its best reply is, so a model that reasons about what its opponent is doing would only be
 following the prompt. With "neutral", reasoning about the opponent can only come from the model (self-play experiments).
+"free" does not structure the reasoning at all: neutral's steps ("evaluate the position", "compare 2 or 3 candidate
+moves") still frame the task as finding the best move in a fixed position, and its system prompt ("The user shows you
+the position") makes the model reason as an assistant advising a user ("Okay, let's see. The user is playing as
+Black..."). So free says only which game is played and how to answer, and asks to think: no steps, no "concise", no
+"how to win", no user, and no opponent. Same sampling of CoT and neutral, so that only the prompt changes.
 """
 from prompts import SAMPLING
 
@@ -45,6 +50,15 @@ THIRD STEP: Choose the best candidate. It is fundamental that your move is legal
 FINALLY, say your move in standard algebraic notation. Only output the move, nothing else.
 """,
         },
+        "free": {
+            "system": """
+You are playing a game of chess.
+You are shown the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Only output the move, nothing else.
+""",
+            "selfeval": """
+Think about the game, then say your move in standard algebraic notation. Only output the move, nothing else.
+""",
+        },
     },
     "connect_four": {
         "default": {
@@ -83,8 +97,17 @@ THIRD STEP: Choose the best candidate. It is fundamental that the column is not 
 FINALLY, say your move as a column number. Only output the number, nothing else.
 """,
         },
+        "free": {
+            "system": """
+You are playing a game of Connect Four. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
+You are shown the board and you reply with the column where you drop your disc, like \"4\". Only output the column number, nothing else.
+""",
+            "selfeval": """
+Think about the game, then say your move as a column number. Only output the number, nothing else.
+""",
+        },
     },
 }
 
 # same sampling of the textual games, so that the only difference is the game
-DUEL_SAMPLING = {**SAMPLING, "neutral": SAMPLING["CoT"]}
+DUEL_SAMPLING = {**SAMPLING, "neutral": SAMPLING["CoT"], "free": SAMPLING["CoT"]}

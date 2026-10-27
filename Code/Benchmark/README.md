@@ -31,7 +31,7 @@ The records go in the same results folders, with the same path (`level<opponent>
 
 | File | What it does |
 |---|---|
-| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt) |
+| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt), `duel_free.yaml` (the same games with the free prompt) |
 | `run_duel.py` | the `run.py` of the two-player games (`--dry-run` too) |
 | `colab_duel.ipynb` | runs a duel grid on Colab (installs python-chess and Stockfish) |
 | `duel.py` | the agent with the prompts of the game, the opponents, the game loop (illegal answers, forfeit, max_steps) |
@@ -46,4 +46,5 @@ A chess game stopped at `max_steps` is a draw on the board; with `adjudicate: st
 Next to every record: `.transcript.md`, the game move by move with the reasonings of both agents, and `.thoughts.jsonl`, the same reasonings as data.
 In self-play they are what the experiment is about: does a model reason, unprompted, about what its opponent is doing, and is it right according to the opponent's own reasoning?
 That is why `duel_selfplay.yaml` uses the `neutral` prompt: `CoT` asks about the opponent's threats and replies.
+`neutral` still structures the reasoning (evaluate the position, compare candidate moves, be brief) and calls the player "the user"; `free` (`duel_free.yaml`) only says which game is played and asks to think. CoT, neutral and free go from the most to the least steered.
 To add a game: a class in `duel_games.py` (see `DuelGame`) and its prompts in `duel_prompts.py`.
