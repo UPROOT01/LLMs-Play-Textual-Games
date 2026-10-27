@@ -1,18 +1,21 @@
-# Duel self-play: the model against itself, each side with its own mode (the level "self-<mode>" is the opponent's).
-# Against an opponent that never thinks ("self-0"), how much is each way of thinking worth?
-# Both agents use the same engine: a game costs the tokens of both.
+# Duel self-play: the model against itself, with two separate contexts and two ways of thinking (the agent's mode,
+# and the opponent's in the level "self-<mode>"). Each side sees only the board and the other's moves.
+# The question is in the reasonings, read afterwards in the .transcript.md of each game: does a model reason, without
+# being asked, about what its opponent is doing, and is it right, judging from the opponent's own reasoning?
+# So both sides think (no "0"), and the prompt is "neutral": the CoT prompt asks about the opponent's threats and replies.
+# Every pair of modes is played with both colours (alternate) and from both sides (e1 vs er4 and er4 vs e1).
 models:
   - Qwen/Qwen3-4B
-modes: ["0", e1, r4, er4, lr4]
-prompts: [CoT]
+modes: [e1, r4, er4, lr4]
+prompts: [neutral]
 games:
-  connect_four: [self-0]
-  chess: [self-0]
+  chess: [self-e1, self-r4, self-er4, self-lr4]
 seeds: 1-10
 max_steps: 80
 max_illegal: 3
 illegal_policy: random
+adjudicate: stockfish # a chess game stopped at max_steps is won by the side Stockfish sees ahead by
+adjudicate_cp: 300   # at least 300 centipawns (3 pawns), a draw otherwise (the result on the board is kept too)
 colors: alternate
 game_options:
   chess: {board: ascii, legal_moves: true, history: false}
-  connect_four: {legal_moves: true}

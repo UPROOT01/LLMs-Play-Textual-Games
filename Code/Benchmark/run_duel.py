@@ -9,12 +9,19 @@ The records are in the same results folders and with the same path of the textua
 Extra fields of a duel record: opponent, color, result ("win", "draw", "loss"), termination, moves (legal moves of
 the agent), illegal (its illegal answers), forced (random moves played for it), plies, history (all the moves),
 final_state, opponent_counts and opponent_tokens (self-play), and for chess pgn, material, opening.
+Next to the record and its log (and, in self-play, the opponent's log .opponent.log):
+    .transcript.md: the game move by move, with the reasonings of both agents where they reasoned, to read side by side;
+    .thoughts.jsonl: the same reasonings, one line per move (ply, side, color, player, move, forced, illegal,
+        reasonings: [{reasoning, answer}]), for an automatic analysis.
 
 Grid keys besides those of run.py: max_steps (moves of the agent before a draw), max_illegal, illegal_policy
 ("random" or "forfeit"), colors ("alternate": first player on the odd seeds, second on the even ones; "first";
-"second"), game_options (per game, the options of duel_games: e.g. chess: {board: fen, legal_moves: false}).
+"second"), game_options (per game, the options of duel_games: e.g. chess: {board: fen, legal_moves: false}),
+adjudicate ("stockfish": the chess games stopped at max_steps are won by the side ahead by adjudicate_cp centipawns
+in Stockfish's evaluation of the final position, see duel.py; the other games are not affected).
 """
 import argparse
+import json
 import os
 import random
 import time
@@ -23,7 +30,8 @@ from datetime import datetime, timezone
 from records import LEGACY_RESULTS, record_path, save_record
 from run import grid_games, is_played, load_grid, summary
 
-DUEL_DEFAULTS = dict(max_steps=100, max_illegal=3, illegal_policy="random", colors="alternate", game_options={})
+DUEL_DEFAULTS = dict(max_steps=100, max_illegal=3, illegal_policy="random", colors="alternate", game_options={},
+                     adjudicate=None, adjudicate_cp=300)
 
 
 def load_duel_grid(path):
@@ -47,13 +55,14 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
                   gpu_memory_utilization=0.9, verbose=True):
     """Plays the games of the grid (a path or a dict of load_duel_grid()) not yet played, and saves their records in
     results. The other arguments are those of run.run_grid()."""
-    from duel import Contestants, DuelAgent, parse_opponent, play_duel, stockfish_path
+    from duel import Contestants, DuelAgent, parse_opponent, play_duel, stockfish_path, write_transcript
     from engine import Engine
     from profiles import model_settings
 
     if isinstance(grid, str):
         grid = load_duel_grid(grid)
-    if any(parse_opponent(level)[0] == "stockfish" for levels in grid["games"].values() for level in levels):
+    if any(parse_opponent(level)[0] == "stockfish" for levels in grid["games"].values() for level in levels) \
+            or (grid["adjudicate"] == "stockfish" and "chess" in grid["games"]):
         stockfish_path() # missing Stockfish fails now, not in the middle of the games
     folders = [results, *read]
     for model in grid["models"]:
@@ -87,19 +96,30 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             play_kwargs = dict(game=game, level=level, seed=seed, color=agent_color(seed, grid["colors"]),
                                max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
                                illegal_policy=grid["illegal_policy"],
-                               game_options=grid["game_options"].get(game, {}))
+                               game_options=grid["game_options"].get(game, {}),
+                               adjudicate_with=grid["adjudicate"] if game == "chess" else None,
+                               adjudicate_cp=grid["adjudicate_cp"])
             return game_id, make_agent, play_kwargs
 
         def on_result(game_id, contestants, result):
             model, game, prompt, mode, level, seed = game_id
+            path = record_path(results, *game_id)[:-len(".json")]
+            thoughts = result.pop("thoughts") # next to the record, not in it: with e1 they are long
+            with open(path + ".thoughts.jsonl", "w") as f:
+                f.writelines(json.dumps(thought) + "\n" for thought in thoughts)
+            write_transcript(path + ".transcript.md", {**result, "thoughts": thoughts},
+                             f"{game}, {model} ({prompt}): the agent ({mode}) against {level}, seed {seed}")
             record = dict(model=model, mode=mode, prompt=prompt, game=game, level=level, seed=seed, opponent=level,
                           norm_score=result["score"] / result["max_score"], **result,
                           max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
                           illegal_policy=grid["illegal_policy"], game_options=grid["game_options"].get(game, {}),
+                          adjudicate=grid["adjudicate"] if game == "chess" else None,
+                          adjudicate_cp=grid["adjudicate_cp"],
                           loop_window=None, tokens=contestants.agent.token_stats(),
                           opponent_tokens=contestants.opponent.token_stats() if contestants.opponent else None,
                           time_kind="wall", profile=profile.name, settings=engine.description,
                           source="benchmark-duel", log=f"level{level}-seed{seed}.log",
+                          transcript=f"level{level}-seed{seed}.transcript.md",
                           created=datetime.now(timezone.utc).isoformat(timespec="seconds"))
             save_record(record_path(results, *game_id), record)
 

@@ -8,6 +8,8 @@ Every game has:
     parse(answer): the legal move written in the agent's answer, or None;  play(move);
     over(), winner() (0, 1 or None for a draw), termination() (why it ended);
     observation(side, last_move, feedback): what the agent of that side reads before moving;
+    retry_observation(side): what it reads after an illegal answer (only the error and the legal moves: the position
+        is already in its context, and repeating it at every wrong answer would fill the context);
     greedy_move(rng): the move of a simple one-move-ahead player, used as an opponent;
     summary(side): the final position and a few numbers, saved in the record.
 """
@@ -47,6 +49,16 @@ class DuelGame:
 
     def observation(self, side, last_move=None, feedback=None):
         raise NotImplementedError
+
+    legal_label = "Your legal moves"
+    move_request = "Your move:"
+
+    def retry_observation(self, side):
+        lines = ["That is not a legal move."]
+        if self.show_legal:
+            lines.append(f"{self.legal_label}: " + ", ".join(self.legal_moves()))
+        lines.append(self.move_request)
+        return "\n".join(lines)
 
     def greedy_move(self, rng):
         raise NotImplementedError
@@ -207,6 +219,8 @@ class ConnectFour(DuelGame):
     name = "connect_four"
     sides = ("X", "O")
     rows, columns = 6, 7
+    legal_label = "Columns you can play"
+    move_request = "Your move (a column number):"
 
     def __init__(self, rng=None, legal_moves=True):
         super().__init__(rng)
@@ -282,8 +296,8 @@ class ConnectFour(DuelGame):
             lines.append(f"{self.sides[1 - side]} dropped a disc in column {last_move}.")
         lines.append("Board (the discs fall to the bottom row):\n" + self._text())
         if self.show_legal:
-            lines.append("Columns you can play: " + ", ".join(self.legal_moves()))
-        lines.append(f"You play {self.sides[side]}. Your move (a column number):")
+            lines.append(f"{self.legal_label}: " + ", ".join(self.legal_moves()))
+        lines.append(f"You play {self.sides[side]}. {self.move_request}")
         return "\n".join(lines)
 
     def _winning_moves(self, side):

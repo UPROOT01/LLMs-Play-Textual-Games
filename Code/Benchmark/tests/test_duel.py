@@ -112,17 +112,78 @@ def test_opponents():
     print("ok opponents: parsing, stockfish")
 
 
-class ScriptedAgent:
-    """Answers with the given function of the observation; counts the resets."""
+def test_adjudication():
+    # only the games stopped at max_steps are adjudicated, by the agent's evaluation of the final position
+    assert duel.adjudicate("draw", "max_steps", 350) == "win"
+    assert duel.adjudicate("draw", "max_steps", -duel.MATE_SCORE) == "loss"
+    assert duel.adjudicate("draw", "max_steps", 120) == "draw"
+    assert duel.adjudicate("draw", "max_steps", 120, threshold=100) == "win"
+    assert duel.adjudicate("loss", "checkmate", 900) == "loss" and duel.adjudicate("draw", "max_steps", None) == "draw"
 
-    def __init__(self, answer):
+    # in play_duel, with a fake Stockfish that sees White 5 pawns ahead: the agent plays Black, so it loses
+    evaluate, duel.evaluate = duel.evaluate, lambda fen: 500
+    try:
+        result = duel.play_duel(duel.Contestants(ScriptedAgent(first_legal)), "chess", "random", seed=1, color=1,
+                                max_steps=5, adjudicate_with="stockfish")
+        assert result["result"] == "draw" and result["score"] == 0.5 # on the board
+        assert result["final_eval"] == -500 and result["adjudicated_result"] == "loss"
+        assert result["adjudicated_score"] == 0
+        # without adjudication, the adjudicated fields are the result on the board
+        result = duel.play_duel(duel.Contestants(ScriptedAgent(first_legal)), "chess", "random", seed=1, color=1,
+                                max_steps=5)
+        assert result["final_eval"] is None and result["adjudicated_result"] == "draw"
+
+        # the records already played: adjudicate.py
+        import adjudicate
+        folder = tempfile.mkdtemp()
+        record = dict(result, source="benchmark-duel", game="chess")
+        record.pop("thoughts")
+        with open(os.path.join(folder, "levelrandom-seed1.json"), "w") as f:
+            json.dump(record, f)
+        adjudicate.adjudicate_records(folder)
+        with open(os.path.join(folder, "levelrandom-seed1.json")) as f:
+            record = json.load(f)
+        assert record["final_eval"] == -500 and record["adjudicated_result"] == "loss" and record["adjudicate_cp"] == 300
+    finally:
+        duel.evaluate = evaluate
+    try:
+        duel.play_duel(duel.Contestants(ScriptedAgent(first_legal)), "connect_four", "random", seed=1,
+                       adjudicate_with="stockfish")
+        raise AssertionError("Connect Four cannot be adjudicated by Stockfish")
+    except ValueError:
+        pass
+
+    try:
+        duel.stockfish_path()
+    except FileNotFoundError:
+        print("ok adjudication (skip the real Stockfish: not installed)")
+        return
+    import chess
+    board = chess.Board()
+    for move in ["e4", "e5", "Bc4", "Nc6", "Qh5", "Nf6", "Qxf7#"]:
+        board.push_san(move)
+    assert duel.evaluate(board.fen()) == duel.MATE_SCORE # White checkmated Black
+    assert abs(duel.evaluate(chess.STARTING_FEN)) < 100
+    print("ok adjudication, with the real Stockfish")
+
+
+class ScriptedAgent:
+    """Answers with the given function of the observation; counts the resets. think_every: it "reasons" every that
+    many answers (the reasoning is the observation's first line), as a self-evaluation would."""
+
+    def __init__(self, answer, think_every=0):
         self.answer, self.observations, self.resets, self.logs = answer, [], 0, []
+        self.think_every, self.turns, self.last_thought = think_every, [], None
 
     def act(self, obs, done=False):
         if done:
             self.resets += 1
             return ":)"
         self.observations.append(obs)
+        think = bool(self.think_every) and len(self.observations) % self.think_every == 0
+        self.turns.append(dict(think=think))
+        if think:
+            self.last_thought = "I think about: " + obs.split("\n")[0]
         return self.answer(obs)
 
     def _write_log(self, text):
@@ -154,7 +215,8 @@ def test_play_duel():
     result = duel.play_duel(duel.Contestants(agent), "connect_four", "greedy", seed=2, color=1, max_illegal=3)
     if result["forced"]:
         assert result["illegal"] == 4 * result["forced"]
-        assert any(obs.startswith("Your answer '4' is not a legal move") for obs in agent.observations)
+        retry = "That is not a legal move.\nColumns you can play: "
+        assert any(obs.startswith(retry) and "Board" not in obs for obs in agent.observations)
         assert any(obs.startswith("Your answers were not legal moves") for obs in agent.observations)
     assert result["color"] == "O"
     # the forfeit: the agent that never answers a move loses at its first turn
@@ -175,7 +237,29 @@ def test_play_duel():
     result = duel.play_duel(duel.Contestants(agent, opponent), "connect_four", "self-0", seed=1, color=1)
     assert agent.observations[0].startswith("X dropped") and opponent.observations[0].startswith("The game starts")
     assert result["opponent_counts"]["moves"] in (result["moves"], result["moves"] + 1)
-    print("ok play_duel: results, seeds, illegal answers, forfeit, max_steps, self-play")
+    assert result["thoughts"] == [] # neither reasoned
+
+    # both reason (every 2 and every 3 answers): the reasonings of both, at the right plies, and in the transcript
+    agent, opponent = ScriptedAgent(first_legal, think_every=2), ScriptedAgent(first_legal, think_every=3)
+    result = duel.play_duel(duel.Contestants(agent, opponent), "chess", "self-er4", seed=1, color=0, max_steps=12)
+    plies = {thought["player"]: [t["ply"] for t in result["thoughts"] if t["player"] == thought["player"]]
+             for thought in result["thoughts"]}
+    # the agent (White) reasons at its moves 2, 4, 6, ... (plies 3, 7, 11, ...), the opponent at its moves 3, 6, ...
+    # (plies 6, 12, ...), until the game ends (here by repetition: both always play their first legal move)
+    assert result["termination"] == "threefold_repetition", result["termination"]
+    assert plies == {"agent": list(range(3, result["plies"] + 1, 4)),
+                     "opponent": list(range(6, result["plies"] + 1, 6))}, plies
+    thought = result["thoughts"][1] # the opponent's at ply 6: it had read White's 3rd move
+    assert thought["color"] == "Black" and thought["reasonings"][0]["answer"] == thought["move"]
+    assert thought["reasonings"][0]["reasoning"] == f"I think about: White played {result['history'][4]}."
+    path = os.path.join(tempfile.mkdtemp(), "game.transcript.md")
+    duel.write_transcript(path, result, "test")
+    with open(path) as f:
+        transcript = f.read()
+    assert "## 2. " + result["history"][2] + "  (White, agent)" in transcript
+    assert "## 3... " + result["history"][5] + "  (Black, opponent)" in transcript
+    assert "1. " + result["history"][0] + "\n1... " in transcript # no reasoning: only the move
+    print("ok play_duel: results, seeds, illegal answers, forfeit, max_steps, self-play, reasonings and transcript")
 
 
 class MoveBackend:
@@ -233,6 +317,17 @@ def test_run_duel_grid():
         log = f.read()
     assert "the first move is the best" in log and "connect_four against self-0" in log and "game over" in log
     assert os.path.exists(path + ".opponent.log")
+    # the reasonings of the agent (er4 thinks, self-0 never does): in the thoughts and in the transcript
+    with open(path + ".thoughts.jsonl") as f:
+        thoughts = [json.loads(line) for line in f]
+    assert thoughts and {thought["player"] for thought in thoughts} == {"agent"}
+    assert sum(len(thought["reasonings"]) for thought in thoughts) == record["tokens"]["think_turns"]
+    assert "the first move is the best" in thoughts[0]["reasonings"][0]["reasoning"]
+    with open(path + ".transcript.md") as f:
+        transcript = f.read()
+    assert transcript.startswith("# connect_four, Qwen/Qwen3-1.7B (CoT): the agent (er4) against self-0, seed 2")
+    assert "(O, agent" in transcript and "the first move is the best" in transcript and "<think>" not in transcript
+    assert record["transcript"] == "levelself-0-seed2.transcript.md"
     with open(record_path(results, "Qwen/Qwen3-1.7B", "chess", "CoT", "0", "random", 1)) as f:
         record = json.load(f)
     assert record["color"] == "White" and record["pgn"].startswith("1. ") and record["game_options"] == {"board": "ascii"}
@@ -273,5 +368,6 @@ if __name__ == "__main__":
     test_connect_four_rules()
     test_opponents()
     test_play_duel()
+    test_adjudication()
     test_observation_tokens()
     test_run_duel_grid()

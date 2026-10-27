@@ -31,7 +31,7 @@ The records go in the same results folders, with the same path (`level<opponent>
 
 | File | What it does |
 |---|---|
-| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (each mode against the model that never thinks) |
+| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt) |
 | `run_duel.py` | the `run.py` of the two-player games (`--dry-run` too) |
 | `colab_duel.ipynb` | runs a duel grid on Colab (installs python-chess and Stockfish) |
 | `duel.py` | the agent with the prompts of the game, the opponents, the game loop (illegal answers, forfeit, max_steps) |
@@ -39,7 +39,11 @@ The records go in the same results folders, with the same path (`level<opponent>
 | `duel_prompts.py` | the prompts of each game, as in `prompts.py` |
 | `tests/test_duel.py` | rules and parsing, opponents, the game loop, `run_duel` end to end |
 
-The score is the agent's: win 1, draw 0.5, loss 0 (`max_score` 1). An illegal answer is not played: the agent reads why and answers again;
+The score is the agent's: win 1, draw 0.5, loss 0 (`max_score` 1). An illegal answer is not played: the agent reads that it is not legal, with the legal moves (not the board again), and answers again;
 after `max_illegal` wrong answers in a row a random legal move is played for it (or it loses, with `illegal_policy: forfeit`).
 The agent plays first on the odd seeds and second on the even ones (`colors: alternate`).
+A chess game stopped at `max_steps` is a draw on the board; with `adjudicate: stockfish` (both duel grids), Stockfish evaluates the final position and the side ahead by `adjudicate_cp` (300 = 3 pawns) wins it: `final_eval`, `adjudicated_result`, `adjudicated_score` (equal to the result on the board for the games that ended by themselves). `adjudicate.py` adds them to records already played, from their final position.
+Next to every record: `.transcript.md`, the game move by move with the reasonings of both agents, and `.thoughts.jsonl`, the same reasonings as data.
+In self-play they are what the experiment is about: does a model reason, unprompted, about what its opponent is doing, and is it right according to the opponent's own reasoning?
+That is why `duel_selfplay.yaml` uses the `neutral` prompt: `CoT` asks about the opponent's threats and replies.
 To add a game: a class in `duel_games.py` (see `DuelGame`) and its prompts in `duel_prompts.py`.

@@ -15,6 +15,8 @@ seeds: 1-10
 max_steps: 80 # moves of the agent; then the game is a draw (the material balance is in the record)
 max_illegal: 3 # wrong answers in a row before a random move is played for the agent
 illegal_policy: random
+adjudicate: stockfish # a chess game stopped at max_steps is won by the side Stockfish sees ahead by
+adjudicate_cp: 300   # at least 300 centipawns (3 pawns), a draw otherwise (the result on the board is kept too)
 colors: alternate
 game_options:
   chess: {board: ascii, legal_moves: true, history: false} # the FEN too ("both") costs ~40 more tokens per turn

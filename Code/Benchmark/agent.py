@@ -86,6 +86,7 @@ class SelfEvalAgent:
             self._draw_selfeval_turns()
         self.after_selfeval = False
         self.last_reasoning = None # index of the piece of the reasoning kept by the "last" mode
+        self.last_thought = None # text of the last reasoning (read by duel.py to save the reasonings of a game)
         self._write_log("CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-")
 
     def _draw_selfeval_turns(self):
@@ -143,6 +144,7 @@ class SelfEvalAgent:
             if self.profile.think_prefill: # the start of the reasoning was in the prompt
                 reasoning = self.profile.think_prefill + reasoning
         self._write_log(LOG_GAME + obs + self.selfeval_prompt + "\n" + LOG_SELFEVAL + reasoning + command)
+        self.last_thought = reasoning
 
         if self.keep != "none":
             self.pieces.append(reasoning)
