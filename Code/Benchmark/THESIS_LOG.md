@@ -445,8 +445,10 @@ tests/test_profiles.py (l1 keeps exactly the last reasoning and thinks on the sa
 words, so after ~10 moves the context passes the 40k tokens of the engine, and when the context is full the
 answers are replaced by illegal ones.
 
-**Grid.** grids/duel_c4_memory.yaml: Qwen3-4B, Connect Four, modes e1 and l1 against self-e1 and self-l1, plain and
-free prompts, seeds 1-2, 16 games (e1 vs self-e1 repeats games of duel_c4_prompts.yaml). Compare with
+**Grid.** grids/duel_c4_memory.yaml: Qwen3-4B, Connect Four, every pair of the modes of the chess self-play plus l1
+(e1, l1, r4, er4, lr4, each against self-e1 ... self-lr4), plain and free prompts, seeds 1-2: 100 games (the e1/r4
+pairs repeat games of duel_c4_prompts.yaml). e1 vs l1 separates memory at the same frequency; er4 / lr4 / r4 give
+none / last / all at the lower frequency, so frequency and memory can be told apart. Compare with
 summary(table, by=["game", "prompt", "player_mode"]) in reasoning_analysis.ipynb. Things to look at: the share of
 reasonings with guesses, whether l1 reasonings refer back to their previous expectation ("I expected O to block…"),
 and whether their guesses are more often right.
