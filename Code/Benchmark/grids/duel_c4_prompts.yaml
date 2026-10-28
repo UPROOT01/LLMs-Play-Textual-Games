@@ -1,0 +1,23 @@
+# Connect Four self-play with every prompt of the chess self-play: does a simpler game, whose position is easy to
+# read, change how the model reasons, and does it reason more about its opponent?
+# In chess (Qwen3-4B) much of the thinking goes into working out where the pieces are, and the opponent's intentions
+# are rarely discussed. In Connect Four the board is 7 columns and the threats are explicit (three in a row).
+# Prompts, from the most to the least steered (duel_prompts.py): CoT (asks whether the opponent can connect four and
+# its best reply), neutral (the same steps, no opponent), free ("Think about the game"), plain (nothing added).
+# "default" is left out: it asks "Do you think you're winning?", another kind of question.
+# 8 games per prompt: e1 and r4 against self-e1 and self-r4 (the mode pairs of the chess pilots), seeds 1-2, so every
+# pair is played once as X (first) and once as O. Connect Four always ends (four in a row or a full board, at most 21
+# moves each), so no adjudication and no repetition draws.
+models:
+  - Qwen/Qwen3-4B
+modes: [e1, r4]
+prompts: [CoT, neutral, free, plain]
+games:
+  connect_four: [self-e1, self-r4]
+seeds: 1-2
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+game_options:
+  connect_four: {legal_moves: true}

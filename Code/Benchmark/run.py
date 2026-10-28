@@ -18,7 +18,9 @@ from datetime import datetime, timezone
 
 import yaml
 
-from records import LEGACY_RESULTS, game_path, iter_records, record_path, save_record
+import json
+
+from records import LEGACY_RESULTS, game_path, model_folder, record_path, save_record
 
 DEFAULTS = dict(prompts=["CoT"], max_steps=100, loop_window=20, loop_max_distinct=2)
 
@@ -52,17 +54,37 @@ def is_played(folders, game_id):
     return any(os.path.exists(record_path(folder, *game_id)) for folder in folders)
 
 
+def token_samples(grid, folders, per_mode=30):
+    """Generated tokens of up to per_mode played games of each mode, as a rough estimate of the cost of the games left.
+    Only the folders of the models, games and prompts of the grid are listed, and only per_mode records per mode are
+    read, spread over all of them: reading every record of a results folder on Google Drive takes minutes."""
+    tokens = {}
+    for mode in grid["modes"]:
+        paths = []
+        for folder in folders:
+            for model in grid["models"]:
+                for game in grid["games"]:
+                    for prompt in grid["prompts"]:
+                        path = os.path.join(folder, model_folder(model), game, prompt, mode)
+                        if os.path.isdir(path):
+                            paths += [os.path.join(path, name) for name in sorted(os.listdir(path))
+                                      if name.endswith(".json")]
+        step = max(1, len(paths) / per_mode) # evenly spaced, so that all the levels and models count
+        for path in [paths[int(i * step)] for i in range(min(per_mode, len(paths)))]:
+            with open(path) as f:
+                record = json.load(f)
+            if record.get("tokens"):
+                tokens.setdefault(mode, []).append(record["tokens"]["generated"])
+    return tokens
+
+
 def summary(grid, results, read, models=None):
     """Prints, for every model and mode, how many games are played and how many are left."""
     folders = [results, *read]
     done, left = Counter(), Counter()
     for game_id in grid_games(grid, models):
         (done if is_played(folders, game_id) else left)[game_id[0], game_id[3]] += 1
-    # generated tokens per game of each mode in the games already played, as a rough estimate of the cost
-    tokens = {}
-    for record in iter_records(*folders):
-        if record.get("tokens") and record["mode"] in grid["modes"] and record["game"] in grid["games"]:
-            tokens.setdefault(record["mode"], []).append(record["tokens"]["generated"])
+    tokens = token_samples(grid, folders)
     print(f"{'model':<45}{'mode':>6}{'played':>8}{'left':>6}{'~Mtokens left':>15}")
     for model in grid["models"]:
         if models and model not in models:
@@ -73,7 +95,7 @@ def summary(grid, results, read, models=None):
                 estimate = f"{left[model, mode] * sum(tokens[mode]) / len(tokens[mode]) / 1e6:.1f}"
             print(f"{model:<45}{mode:>6}{done[model, mode]:>8}{left[model, mode]:>6}{estimate:>15}")
     print(f"total: {sum(done.values())} played, {sum(left.values())} left "
-          "(the token estimate uses the games already played with the same mode, any model)")
+          "(the token estimate uses some games already played with the same mode, models, games and prompts of the grid)")
 
 
 def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_parallel="auto",

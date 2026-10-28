@@ -215,3 +215,55 @@ doing, and whether the thinking modes (0, e1, r4, er4, lr4) play differently whe
   (nothing). Given the free pilot, plain will probably behave like free; it is still the baseline the other prompts
   have to be compared with.
 - Tests: plain has the system prompt of free, an empty self-evaluation, and none of the banned words.
+
+### Faster dry-run summary (2026-10-28)
+- **Problem:** `summary()` (the "played / left" table of the notebooks and of `--dry-run`) took over 4 minutes on
+  Colab. Counting played and left games is cheap (one file check per game); the token estimate opened and parsed
+  every record of the whole results folder (about 8000, with their trajectories) to keep the ones of the grid's
+  modes, and on Colab the folder is Google Drive, where every file open is a network request.
+- **Fix:** `run.token_samples()` lists only the folders of the grid's models, games, prompts and modes, and reads at
+  most 30 records per mode, evenly spaced over them (so all levels and models count). Locally 0.54 s → 0.03 s, with
+  the same estimates (e.g. e1 2.3 against 2.5 Mtokens left).
+- Difference: the estimate now uses only the grid's models and prompts, not any model; a mode with no games of the
+  grid played yet shows no estimate.
+
+### Related work found (2026-10-28)
+- **Strat-Reasoner** (arXiv 2605.04906): the closest. Qwen3-4B, Tic-Tac-Toe / Kuhn Poker / Hanabi (Connect Four out of
+  distribution). The prompt forces 4 fields (OpponentIntent, OpponentPrediction, MyIntent, MyPrediction) and an LLM
+  judge scores them against the opponent's own reasoning at t-1 and its action at t+1; the score is an RL reward.
+  So opponent modelling is imposed and trained, not emergent. Their alignment measure is the template for our
+  Level A/B check; the difference is that we do not ask for it.
+- **EMO** (NAACL 2025), **SOM** (2605.07301): explicit opponent models built by the agent; prompted by design.
+- **Observer, Not Player** (2512.19210): the LLM only observes and predicts a player's strategy; argues win rate
+  mixes opponent modelling, planning and luck.
+- **Kosinski** (2302.02083): the "spontaneously emerged" ToM framing, on false-belief tests, not in agent traces.
+- **TextArena** (2504.11442), **SPIRAL** (2506.24119, Qwen3-4B self-play on zero-sum games), **GTBench**
+  (2402.12348, includes Connect Four), **GameBench** (2406.06613), **Game Reasoning Arena** (2508.03368),
+  **LLM Chess** (github maxim-saplin/llm_chess): game benchmarks, scores and illegal moves, not reasoning content.
+- **TALES** (2504.14128): text adventures incl. TextWorld; no study of when/how much reasoning models think.
+- **The Danger of Overthinking** (2502.08235): long reasoning hurts agents (analysis paralysis); relevant to e1 vs
+  r4 and to the free prompt's long board-reconstruction reasonings.
+- Keeping reasoning in context: a tool-calling study (2606.00135) finds that keeping the thinking history helps
+  Qwen3-4B/8B by about 3-5% on multi-turn BFCL; OpenAI drops it by default. Our r4/er4/lr4 comparison is a
+  controlled ablation of exactly this, in games.
+- **Gaps we fill:** nobody measures whether opponent modelling appears *unprompted* in the reasoning of thinking
+  models, checked against the opponent's own reasoning (Strat-Reasoner asks for it and trains it); nobody varies
+  how much the prompt structures the reasoning (CoT > neutral > free > plain) and measures the effect on it; nobody
+  compares when-to-think schedules and keeping vs dropping old reasoning in games.
+
+### Connect Four: the same prompts on a simpler game (2026-10-28)
+- **Why:** in chess, Qwen3-4B spends much of its thinking working out where the pieces are, and the free pilot
+  suggested that understanding the position, not the prompt, is what limits reasoning about the opponent. Connect
+  Four has a board that is easy to read (7 columns) and explicit threats (three in a row), so if the bottleneck is the
+  position, opponent reasoning should appear more often there, and the prompts may differ more.
+- **New grid** `grids/duel_c4_prompts.yaml`: Qwen3-4B self-play, prompts CoT, neutral, free and plain (all already
+  written for Connect Four in `duel_prompts.py`), 8 games each, 32 in total: modes e1 and r4 against self-e1 and
+  self-r4 (the mode pairs of the chess pilots), seeds 1-2, so every pair plays once as X and once as O.
+- `default` is left out: it asks "Do you think you're winning?", a different kind of question, with no reasoning
+  steps but also no reason to compare it here.
+- No adjudication: a Connect Four game always ends (four in a row or a full board, at most 21 moves per side), so
+  there are no repetition draws and the results should separate the modes better than in chess. max_steps 30.
+- CoT is included here as the upper bound: it explicitly asks whether the opponent can connect four and what its best
+  reply is, so it shows how much opponent reasoning the model produces when asked.
+- To look at the results in `analysis.ipynb`: `duel_game = "connect_four"` and `duel_prompt` = the prompt (the
+  advantage panel stays empty: Stockfish is only for chess).
