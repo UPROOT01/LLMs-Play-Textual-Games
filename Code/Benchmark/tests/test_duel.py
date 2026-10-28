@@ -355,14 +355,16 @@ def test_duel_prompts():
     steps, no user and no request to be brief (it does not structure the reasoning)."""
     for game, prompts in DUEL_PROMPTS.items():
         assert set(prompts) <= set(DUEL_SAMPLING)
-        for prompt in ("neutral", "free"):
+        for prompt in ("neutral", "free", "plain"):
             text = (prompts[prompt]["system"] + prompts[prompt]["selfeval"]).lower()
             for word in ("opponent", "threat", "other player"):
                 assert word not in text, (game, prompt, word)
-        free = (prompts["free"]["system"] + prompts["free"]["selfeval"]).lower()
-        for word in ("user", "step", "concise", "brief", "candidate", "evaluate", "how to win"):
-            assert word not in free, (game, word)
-    print("ok duel prompts: neutral and free do not mention the opponent, free does not structure the reasoning")
+        for prompt in ("free", "plain"):
+            text = (prompts[prompt]["system"] + prompts[prompt]["selfeval"]).lower()
+            for word in ("user", "step", "concise", "brief", "candidate", "evaluate", "how to win"):
+                assert word not in text, (game, prompt, word)
+        assert prompts["plain"]["system"] == prompts["free"]["system"] and not prompts["plain"]["selfeval"].strip()
+    print("ok duel prompts: neutral, free and plain do not mention the opponent, free and plain do not structure the reasoning")
 
 
 def test_duel_grid_files():

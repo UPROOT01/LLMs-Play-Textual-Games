@@ -1,0 +1,21 @@
+# Duel self-play with the "plain" prompt: the same games of duel_selfplay.yaml and duel_free.yaml, only the prompt
+# changes. plain is the model's own thinking: on the turns where it thinks, nothing is added to the observation (only
+# the switch that turns the thinking on), so it is the baseline with no instruction about how to reason.
+# From the most to the least steered: CoT (asks about the opponent), neutral (steps, no opponent), free ("Think about
+# the game"), plain (nothing).
+# Pilot: limit 8 plays seed 1 of the opponents self-e1 and self-r4 with every mode, the same 8 games of the other pilots.
+models:
+  - Qwen/Qwen3-4B
+modes: [e1, r4, er4, lr4]
+prompts: [plain]
+games:
+  chess: [self-e1, self-r4, self-er4, self-lr4]
+seeds: 1-10
+max_steps: 80
+max_illegal: 3
+illegal_policy: random
+adjudicate: stockfish
+adjudicate_cp: 300
+colors: alternate
+game_options:
+  chess: {board: ascii, legal_moves: true, history: false}

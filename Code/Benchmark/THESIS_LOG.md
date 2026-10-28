@@ -165,3 +165,53 @@ doing, and whether the thinking modes (0, e1, r4, er4, lr4) play differently whe
   answers (no legality reminder).
 - `tests/test_duel.py`: every prompt of a grid must exist; neutral and free must not contain "opponent", "threat" or
   "other player"; free must not contain "user", "step", "concise", "brief", "candidate", "evaluate", "how to win".
+
+### Free pilot: less structure did not bring more opponent reasoning (2026-10-28)
+- 10 games (the 8 of the neutral pilot, plus e1 and r4 against self-er4), Qwen3-4B, 228 reasonings. Same sentence
+  counts as for neutral (keyword patterns, so rough):
+
+  | | neutral | free |
+  |---|---|---|
+  | words per reasoning (median / mean) | 569 / 890 | 1357 / 1528 |
+  | starts with "The user is playing as..." | 91% | 28% |
+  | sentences reading the board | 18% | 22% |
+  | reasonings dominated by reading the board (>25% of the sentences) | 8 / 167 | 43 / 228 |
+  | "Wait" per reasoning (median) | 3 | 14 |
+  | sentences judging its own candidate moves | 9.1% | 4.6% |
+  | sentences attributing an intention or threat to the opponent | 2.2 per 1000 | 1.1 per 1000 |
+  | illegal answers per game (both sides) | 2.5 | 3.9 |
+
+- The "user" frame mostly disappears ("Okay, let's see. The board position..."), and the reasonings get more than
+  twice as long, but the extra length goes into reconstructing the board, square by square, with many more "Wait".
+  Without the steps, the model spends its thinking on working out where the pieces are, and judges its own moves
+  less, not the opponent's more.
+- Real intention guesses: still a handful, about as rare as with neutral. The best one: er4 vs e1, ply 18. Black
+  asks itself "But why would White play Be6? Maybe to attack the Black king or to develop." White's own reasoning at
+  ply 17: "Be6 ... a strong move to develop the Bishop and support the center ... attacking the Black knight on f6".
+  The second guess is right. (Be6 also left the bishop to be taken by dxe6 or fxe6, and Black did not take it.)
+- **Reading:** at 4B the bottleneck looks like understanding the position, not the prompt: neutral's structure was
+  not suppressing opponent reasoning, if anything it pushed the model past the board and into comparing moves.
+  The prompt does change the frame (the "user" disappears), which is worth reporting by itself.
+- Cost: the e1 games take up to 4 times longer (82 min against 18 for e1 vs self-e1).
+
+### All the self-play games end in threefold repetition (2026-10-28)
+- All 18 self-play games so far (neutral and free) are draws by threefold repetition, also with huge advantages: in
+  free lr4 vs self-e1 Black is 14 points of material ahead (Stockfish -42 pawns for White) and the game ends when
+  both kings and queens shuffle back and forth (Ke3-Ke4-Ke3, Qd7-Qe8-Qd7). The winning side does not know how to
+  convert, and the draw is claimed automatically (`claim_draw=True`). So the self-play results are all 0.5 and say
+  nothing about which mode plays better; the Stockfish advantage at the end is the only measure that separates them.
+- Not changed yet. Options: end the game only on the automatic rules (fivefold repetition, 75 moves), so that more
+  games reach max_steps and are adjudicated; or adjudicate the repetition draws too; or show the move history,
+  since the models only see the current board and may not notice they are repeating.
+
+### Plain prompt: the model's own thinking (2026-10-28)
+- **Why:** free still adds an instruction ("Think about the game, then say your move"). The real baseline is the
+  model thinking as it does by default, with no instruction about the reasoning at all.
+- **Change:** `plain` in `duel_prompts.py`: the system prompt of free, and on the turns where the model thinks
+  nothing is added to the observation, only the switch that turns the thinking on (`/think` for Qwen3). Same
+  sampling as CoT, neutral and free, so only the prompt changes. New grid `grids/duel_plain.yaml`, the same 160
+  games; `limit = 8` is again the same 8 games of the other pilots.
+- The scale is now CoT (asks about the opponent) > neutral (steps) > free ("Think about the game") > plain
+  (nothing). Given the free pilot, plain will probably behave like free; it is still the baseline the other prompts
+  have to be compared with.
+- Tests: plain has the system prompt of free, an empty self-evaluation, and none of the banned words.

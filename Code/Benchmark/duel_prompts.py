@@ -9,6 +9,8 @@ moves") still frame the task as finding the best move in a fixed position, and i
 the position") makes the model reason as an assistant advising a user ("Okay, let's see. The user is playing as
 Black..."). So free says only which game is played and how to answer, and asks to think: no steps, no "concise", no
 "how to win", no user, and no opponent. Same sampling of CoT and neutral, so that only the prompt changes.
+"plain" is the model's own thinking: the system prompt of free, and nothing added to the observation on the turns
+where it thinks (only the switch that turns the thinking on). The baseline with no instruction about the reasoning.
 """
 from prompts import SAMPLING
 
@@ -59,6 +61,13 @@ You are shown the position and you reply with your move in standard algebraic no
 Think about the game, then say your move in standard algebraic notation. Only output the move, nothing else.
 """,
         },
+        "plain": {
+            "system": """
+You are playing a game of chess.
+You are shown the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Only output the move, nothing else.
+""",
+            "selfeval": "\n", # nothing: the observation, then the switch that turns the thinking on
+        },
     },
     "connect_four": {
         "default": {
@@ -106,8 +115,15 @@ You are shown the board and you reply with the column where you drop your disc, 
 Think about the game, then say your move as a column number. Only output the number, nothing else.
 """,
         },
+        "plain": {
+            "system": """
+You are playing a game of Connect Four. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
+You are shown the board and you reply with the column where you drop your disc, like \"4\". Only output the column number, nothing else.
+""",
+            "selfeval": "\n", # nothing: the observation, then the switch that turns the thinking on
+        },
     },
 }
 
 # same sampling of the textual games, so that the only difference is the game
-DUEL_SAMPLING = {**SAMPLING, "neutral": SAMPLING["CoT"], "free": SAMPLING["CoT"]}
+DUEL_SAMPLING = {**SAMPLING, "neutral": SAMPLING["CoT"], "free": SAMPLING["CoT"], "plain": SAMPLING["CoT"]}
