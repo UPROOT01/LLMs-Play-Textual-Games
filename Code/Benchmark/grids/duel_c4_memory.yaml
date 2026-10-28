@@ -1,0 +1,23 @@
+# Connect Four self-play: does remembering its own reasoning change how the model reasons about the opponent?
+# e1 thinks every turn but its reasonings leave the context (ephemeral): at every move it sees the boards and the
+# moves of the game, but not what it thought before. l1 also thinks every turn, but its last reasoning stays in the
+# context until the next one: it can read what it expected the opponent to do, and compare it with what happened.
+# Same thinking frequency, only the memory changes (the r4 modes of the other grids keep all their reasonings, but
+# they also think less often, so they cannot separate the two things).
+# "1" (keep every reasoning) is left out: a Connect Four reasoning is ~2400 words, so after ~10 moves the context
+# exceeds the 40k tokens of the engine and the answers are replaced by illegal ones.
+# 16 games: e1 and l1 against self-e1 and self-l1, plain and free prompts (the two with most opponent guesses),
+# seeds 1-2 (each pair once as X, once as O). e1 vs self-e1 repeats games of duel_c4_prompts.yaml.
+models:
+  - Qwen/Qwen3-4B
+modes: [e1, l1]
+prompts: [plain, free]
+games:
+  connect_four: [self-e1, self-l1]
+seeds: 1-2
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+game_options:
+  connect_four: {legal_moves: true}

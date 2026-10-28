@@ -80,7 +80,7 @@ def test_reasonings_in_the_context():
     for name, model in EXAMPLE_MODELS.items():
         profile = PROFILES[name]()
         tokenizer = AutoTokenizer.from_pretrained(model)
-        for mode in ("0", "e1", "r4", "er4", "lr4"):
+        for mode in ("0", "e1", "r4", "er4", "lr4", "l1"):
             generate = ScriptedModel(tokenizer, profile)
             agent = SelfEvalAgent(profile, tokenizer, generate, mode, "CoT", rng=random.Random(0))
             kept_counts = []
@@ -90,7 +90,7 @@ def test_reasonings_in_the_context():
                 kept_counts.append(len(kept))
                 if mode in ("r4",):
                     assert kept == list(range(1, generate.n + 1))
-                elif mode == "lr4":
+                elif mode in ("lr4", "l1"):
                     assert kept == ([generate.n] if generate.n else [])
                 else:
                     assert kept == []
@@ -99,9 +99,11 @@ def test_reasonings_in_the_context():
                 # the normal turns' empty reasonings never stay in the context
                 assert "<think>\n\n</think>" not in agent.context
             assert (generate.n > 0) == (mode != "0")
+            if mode in ("e1", "l1"): # every turn after the first
+                assert generate.n == 39
             stats = agent.token_stats()
             assert stats["think_turns"] == generate.n and stats["think_turns"] + stats["normal_turns"] == 40
-        print(f"ok {name}: reasonings kept by r4 (all), lr4 (last), e1/er4/0 (none)")
+        print(f"ok {name}: reasonings kept by r4 (all), lr4 and l1 (last), e1/er4/0 (none)")
 
 
 if __name__ == "__main__":

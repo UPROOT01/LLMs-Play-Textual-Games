@@ -267,3 +267,186 @@ doing, and whether the thinking modes (0, e1, r4, er4, lr4) play differently whe
   reply is, so it shows how much opponent reasoning the model produces when asked.
 - To look at the results in `analysis.ipynb`: `duel_game = "connect_four"` and `duel_prompt` = the prompt (the
   advantage panel stays empty: Stockfish is only for chess).
+
+### Plain (chess) and Connect Four results (2026-10-28)
+Qwen3-4B self-play. Chess: neutral 8 games, free 17, plain 8. Connect Four: 8 games per prompt (CoT, neutral, free,
+plain).
+
+**Outcomes**
+- Chess: all 33 self-play games are draws by threefold repetition, now with every prompt. Two plain games end in a
+  repetition although one side had a forced mate (Stockfish ±99995). The chess win/draw/loss results say nothing
+  until the repetition rule is changed (see "All the self-play games end in threefold repetition").
+- Connect Four: every game ends with four in a row, no draws, almost no illegal answers (0-0.4 per game, against
+  2-3 in chess). **e1 beats r4 in 14 of the 16 games between them** (7 of 8 with e1 as the agent, 7 of 8 with e1 as
+  the opponent), with every prompt: thinking at every move clearly wins in Connect Four. First player wins 4 of 8
+  with CoT, so no strong first-move advantage at this level.
+
+**Reasoning about the opponent.** Intention guesses counted with a strict pattern ("O / the opponent / they is
+trying to / aiming / planning / going for / setting up / building ..."):
+
+| | reasonings with an intention guess | guesses per reasoning |
+|---|---|---|
+| chess neutral / free / plain | 7% / 3% / 5% | 0.07 / 0.04 / 0.09 |
+| Connect Four CoT | 27% | 0.80 |
+| Connect Four neutral | 28% | 0.47 |
+| Connect Four free | 42% | 1.11 |
+| Connect Four plain | 45% | 1.20 |
+
+- **In Connect Four the behaviour appears, and without being asked.** About 6-10 times more intention guesses than
+  in chess. The free reasonings use the word "opponent" 1.7 times per reasoning, more than CoT (1.3), although the
+  free prompt never mentions it.
+- **The less the prompt steers, the more the model guesses intentions**: plain and free about 45%, neutral and CoT
+  about 27%. CoT asks a concrete question ("Can your opponent connect four with their next move?"), and the model
+  answers it by checking the board; it does not ask itself what the opponent wants. So the prompt that asks about
+  the opponent produces threat checking, the prompts that do not ask produce more mind reading.
+- This supports the reading of the free pilot: in chess the bottleneck is understanding the position; in a game the
+  model can read, opponent modelling emerges.
+- The prompt also changes the frame again: "the user" in the first lines in 91% of the neutral reasonings, 73% CoT,
+  56% plain, 34% free.
+
+**Are the guesses right?** Checked by hand in the e1 vs self-e1 games (both sides reason at every move), each guess
+against the opponent's own reasoning on the move before:
+- right: plain seed 1, ply 5. X: "since the opponent just played in column 3, maybe they are trying to block me".
+  O at ply 4: "the best move is to block X's potential vertical line in column 3". Unprompted, with the word
+  "opponent", and exactly right;
+- right: free seed 2, ply 6 (O: "X is trying to create a line in those columns"; X: "That way, I can start building a
+  vertical line"), and ply 10 (O: "X is trying to create a vertical line"; X: column 5 "connects to existing Xs");
+- wrong: plain seed 1, ply 11 (X: "O is trying to connect... a vertical line in column 5... a horizontal line in row
+  5"; O was blocking X's vertical line in column 4), and ply 14 (O: "X is trying to complete a line"; X was blocking
+  O in column 5);
+- wrong: free seed 2, ply 7 (X lists vertical, horizontal and diagonal plans for O; O had no plan, it played column 6
+  "to continue the pattern" of even columns), ply 9 (X: "O is trying to build a vertical line in column 4"; O chose
+  column 4 because it "is the center"), ply 11 (several plans; O played column 6 because it "is available").
+- **Pattern:** the model almost always attributes an attacking plan to the opponent ("trying to make a line"). It is
+  right when the opponent was in fact attacking, and wrong when the opponent was blocking or had no plan. It also
+  often lists several hypotheses (vertical, horizontal, diagonal), so "right" has to be judged on the first or main
+  guess, not on any of them. Both points matter for the labelling rubric.
+- Checking needs the opponent to reason on that move: in e1 vs r4 games many guesses are right on the board (e.g. "O
+  is trying to complete a vertical line in column 5", O had three in column 5) but the intention cannot be checked.
+
+**Next:** more Connect Four games (the effect is clear, the sample is small), e1 vs e1 for the most checkable pairs;
+the semi-automatic labelling of the guesses against the opponent's reasoning.
+
+### Automatic reasoning analysis: reasoning_analysis.ipynb (2026-10-28)
+- **Why:** the tables of the last entries were computed with one-off scripts; they have to be reproducible and
+  re-run on every new batch of results.
+- `reasoning_analysis.py` reads the `.thoughts.jsonl` of every duel game and counts, per reasoning: words, "the
+  user" frame, sentences reading the board, "Wait", the word "opponent", and the intention guesses (the other side,
+  "opponent" or "they" + is / might be / could also be... + trying / aiming / planning / going for / setting up /
+  building). The patterns are rough on purpose: they compare groups, they do not judge sentences.
+- `reasoning_analysis.ipynb`: the comparison table per game and prompt, the same per thinking mode, the outcomes
+  (wins, draws, losses, endings, illegal answers), a sample of guesses, and the export of every guess next to the
+  end of the opponent's reasoning on the move before to `labels/guess_pairs.csv`, with an empty `label` column to
+  fill by hand (right / partly / wrong / unclear). Re-running keeps the labels already written; the last cell gives
+  the share of right guesses per game and prompt.
+- The pattern was widened to accept an adverb ("could also be setting up"); the counts barely change (chess plain
+  4.5% -> 5.1% of reasonings, the other groups unchanged).
+- First export: 102 reasonings with guesses, 55 checkable (the opponent reasoned on the move guessed about).
+
+### Related work: Strat-Reasoner (He et al., arXiv 2605.04906, 2026)
+**What it does.** RL fine-tuning (GRPO-style, LoRA) of Qwen3-4B for strategic reasoning in two-player games. Every
+turn the model must fill a structured "recursive reasoning" block after its free thinking: OpponentIntent (what the
+opponent meant with its last move), OpponentPrediction (what the opponent expects me to do), MyIntent, MyPrediction
+(the opponent's next move). During training the two players' blocks are compared ("centralized CoT"): e.g. my
+OpponentIntent against the opponent's own MyIntent; an LLM judge (the base model itself) scores the agreement
+between 0 and 1 (bands: 0-0.3 inconsistent, 0.3-0.6 partial, 0.6-0.8 mostly accurate, 0.8-1 highly consistent),
+and that score is added to the game reward. Trained on Tic-Tac-Toe, Kuhn Poker, MiniHanabi; tested also on Connect
+Four, Leduc Hold'em, SimpleHanabi, against MCTS / Nash-equilibrium bots. No chess. They report +22.1% on average over
+the games and results close to GPT-5-mini and Gemini-2.5-Flash. (Numbers read from the HTML version, whose tables
+are partly garbled: to be checked on the PDF before citing.)
+
+**Same measurement idea.** Their alignment score is exactly our check: one player's guess about the opponent's
+intention, compared with the opponent's own reasoning. This supports our method; their judge bands can be our
+labelling rubric (right ≈ 0.8-1, partly ≈ 0.3-0.8, wrong ≈ 0-0.3). Their evidence that the judge is reliable is thin
+(one Tic-Tac-Toe example scored by six judges); we label by hand first and only then a model judge, measuring the
+agreement (Cohen's kappa).
+
+**What we add / where we differ.**
+- They *force* opponent modelling (a mandatory structured block) and *train* it; we ask whether it *appears by itself*
+  in the untrained model. Their premise is that current LLMs reason "non-strategically" in multi-agent games, but
+  they do not measure it: no alignment score of the base model is reported. Our results are that missing baseline,
+  on the same model (Qwen3-4B): without being asked, it attributes intentions to the opponent in about 45% of its
+  Connect Four reasonings (plain, free) but in only about 5% in chess. "Non-strategic" depends on the game.
+- They keep free thinking before the structured block to avoid "cognitive degradation caused by rigid formatting",
+  but do not test it. Our Connect Four results are evidence on that choice: the structured or opponent-asking prompts
+  (CoT, neutral) give fewer intention guesses (about 27%) than the unstructured ones (about 45%). Asking about the
+  opponent (CoT: "can your opponent connect four?") produces threat checking, not mind reading.
+- Recursive reasoning (their OpponentPrediction, "what does the opponent expect me to do") also appears unprompted
+  in our games: plain, Connect Four, seed 1, ply 5, X: "since the opponent just played in column 3, maybe they are
+  trying to block me", which matches O's own reasoning ("block X's potential vertical line in column 3").
+- Their games are small and easy to read (Tic-Tac-Toe, Kuhn Poker), and they leave out chess. Our chess results
+  suggest why: when the model cannot read the position, it does not get to the opponent.
+- Our error pattern (the model assumes the opponent attacks, and is wrong when the opponent blocks or has no plan)
+  is the kind of bias their alignment reward should correct; worth saying in the thesis as a reason why training
+  helps.
+- Setting: they train two separate agents and evaluate against bots; we use one untrained model with two separate
+  contexts and self-evaluation modes (how often it thinks), which they do not vary.
+
+**Possible link with our numbers:** their Connect Four opponent is MCTS (10 and 100 simulations). An MCTS opponent
+for Connect Four in duel.py would make our base-model scores directly comparable with their Qwen3-4B baseline.
+
+### Strat-Reasoner, checked on the PDF: what supports "LLMs are bad at this"? (2026-10-28)
+
+Read on the PDF (v2, ICML 2026). The table numbers in the entry above are confirmed (Table 2: base Qwen3-4B on
+Connect Four 63.20/57.01 vs MCTS-10, 62.77/58.39 vs MCTS-100; Strat-Reasoner 70.39/70.26, 75.93/69.26).
+
+The claim that LLMs are bad at strategic reasoning is made, but nothing cited shows it:
+- Intro: "Current LLMs, even Large Reasoning Models (LRMs), perform poorly in multi-agent environments because
+  single-agent reasoning paradigm is non-strategic." That sentence has no citation. The one before it cites Zhang et
+  al. 2024 ("LLM as a Mastermind", arXiv 2404.01230), a survey from April 2024. It is older than reasoning models and
+  gives no verdict on performance (checked on the abstract).
+- "LLM agents are more unpredictable as their decision making involves a complex reasoning process (Zhao et al., 2024)".
+  That reference is a survey on explainability of LLMs, not about games or opponents.
+- "The opponent's thought process contains rich strategic information that outcome-based signals fail to capture
+  (Lightman et al., 2023)". Lightman is "Let's verify step by step" (process reward on math), with no opponents.
+- SPIRAL and MARSHAL are said to "lack explicit modeling of opponents' reasoning". This is a design claim about those
+  training methods (MARSHAL's abstract measures game scores, not whether the model reasons about the opponent).
+- Figure 1 ("unstructured reasoning fails to handle strategic traps") is a drawing, not data.
+- Their own evidence is the base model's game score against bots (Tables 1-2). That measures playing strength, not
+  whether the model thinks about the opponent. The normalisation of the scores is not defined ("computed from the raw
+  OpenSpiel returns"), and the prompt used for the baselines is not stated.
+- No ablation gives the untrained model the recursive prompt, and no alignment score of the base model is reported.
+  The "w/o CoT-adv" ablation is still trained, and only on MiniHanabi.
+
+Their own case study (Appendix H, Tic-Tac-Toe) shows unprompted opponent reasoning in the free thinking, highlighted
+in blue by the authors: "maybe they're trying to prevent X from completing a line", "the opponent might be trying to
+create a line", "they might be aiming for a diagonal". These are the sentences our intention pattern counts. The same
+case also shows errors: O's move at (0,2) does not block X's row, and the final MyPrediction, "Blocking by placing O
+in (1,2)", is impossible because X has just won on (1,2).
+
+Their prompt (Listing E.1) asks for "CONCISE" thinking, "No self-correction loops", plus a length penalty. That is the
+kind of instruction that, in our neutral prompt, went with fewer spontaneous intention guesses.
+
+For the thesis: their premise is asserted, not measured. Our data (Qwen3-4B, about 45% of Connect Four reasonings
+contain an intention guess without being asked) is a direct measurement of what they assume is absent. The
+literature that does test LLMs' strategic play against solvers (e.g. GTBench, Duan et al. 2024) measures play
+strength; the references must be checked before citing.
+
+### Is it because the reasonings are ephemeral? New mode l1 and grid duel_c4_memory.yaml (2026-10-28)
+
+**Question.** Most self-play reasonings come from e1, which drops every reasoning from the context. Could the
+opponent reasoning we see (or don't see) depend on that? A model that remembers what it thought could, for example,
+check whether the opponent did what it expected.
+
+**What "ephemeral" removes.** Only the agent's own reasonings. The boards, the opponent's moves ("O played 3.") and
+the agent's answers stay in the context in every mode. So e1 does not forget the game; it forgets its own thoughts.
+
+**What the existing data says (and why it is not enough).** The r4 modes keep all their reasonings. They have fewer
+intention guesses than e1, not more (Connect Four: plain 23% vs 51%, neutral 12% vs 31%; free 40% vs 42%). But r4
+also thinks less often (about every 4 turns, after normal turns without thinking) and with a longer context, so
+memory and thinking frequency are mixed. Also, Qwen3 is trained with the earlier thinking removed from the
+conversation (its chat template strips it), so a kept reasoning is unusual input for the model.
+
+**Change.** New mode "lN" in agent.py (parse_mode): it thinks every N turns, at fixed intervals, and keeps only its
+last reasoning in the context until the next one (like lrN, but without the random intervals). l1 is e1 with
+memory of the previous reasoning: same thinking frequency, only the memory changes. Test in
+tests/test_profiles.py (l1 keeps exactly the last reasoning and thinks on the same turns as e1).
+"1" (think every turn, keep everything) already exists but is not usable here: a Connect Four reasoning is ~2400
+words, so after ~10 moves the context passes the 40k tokens of the engine, and when the context is full the
+answers are replaced by illegal ones.
+
+**Grid.** grids/duel_c4_memory.yaml: Qwen3-4B, Connect Four, modes e1 and l1 against self-e1 and self-l1, plain and
+free prompts, seeds 1-2, 16 games (e1 vs self-e1 repeats games of duel_c4_prompts.yaml). Compare with
+summary(table, by=["game", "prompt", "player_mode"]) in reasoning_analysis.ipynb. Things to look at: the share of
+reasonings with guesses, whether l1 reasonings refer back to their previous expectation ("I expected O to block…"),
+and whether their guesses are more often right.

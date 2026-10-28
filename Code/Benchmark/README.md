@@ -16,7 +16,7 @@ Nothing in `Code/Experiments` or `Code/Self-evaluation` is changed: the old game
 | `records.py` | where the records are and what they contain |
 | `tests/` | the new agent sends the same prompts as the old one (Qwen3); the profiles match the official templates; the runner end to end |
 
-Modes: `0` never thinks; `e1` thinks every turn; `r4` / `er4` / `lr4` think about every 4 turns and keep all / none / the last of their reasonings in the context.
+Modes: `0` never thinks; `e1` thinks every turn; `r4` / `er4` / `lr4` think about every 4 turns and keep all / none / the last of their reasonings in the context; `l1` thinks every turn like `e1` but keeps its last reasoning.
 
 Workflow: `colab.ipynb` (pilot with `limit = 8`, then the whole grid) → copy `MyDrive/LLMs-Play-Textual-Games/Benchmark/results` into `results_new/` → `analysis.ipynb`.
 To add a model: an entry in `profiles.MODELS` (a new family also needs a profile and a check in `tests/test_profiles.py`), then add it to a grid.
@@ -31,12 +31,13 @@ The records go in the same results folders, with the same path (`level<opponent>
 
 | File | What it does |
 |---|---|
-| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt), `duel_free.yaml` and `duel_plain.yaml` (the same games with the free and plain prompts), `duel_c4_prompts.yaml` (Connect Four self-play, 8 games for each of CoT, neutral, free, plain) |
+| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt), `duel_free.yaml` and `duel_plain.yaml` (the same games with the free and plain prompts), `duel_c4_prompts.yaml` (Connect Four self-play, 8 games for each of CoT, neutral, free, plain), `duel_c4_memory.yaml` (Connect Four, e1 against l1: does remembering the last reasoning change the opponent reasoning?) |
 | `run_duel.py` | the `run.py` of the two-player games (`--dry-run` too) |
 | `colab_duel.ipynb` | runs a duel grid on Colab (installs python-chess and Stockfish) |
 | `duel.py` | the agent with the prompts of the game, the opponents, the game loop (illegal answers, forfeit, max_steps) |
 | `duel_games.py` | the games: what a side sees, its legal moves, how an answer becomes a move |
 | `duel_prompts.py` | the prompts of each game, as in `prompts.py` |
+| `reasoning_analysis.py`, `reasoning_analysis.ipynb` | what the reasonings talk about (length, "the user" frame, board reading, intention guesses about the opponent), per game, prompt and mode; the guesses next to the opponent's own reasoning, exported to `labels/guess_pairs.csv` for labelling by hand |
 | `tests/test_duel.py` | rules and parsing, opponents, the game loop, `run_duel` end to end |
 
 The score is the agent's: win 1, draw 0.5, loss 0 (`max_score` 1). An illegal answer is not played: the agent reads that it is not legal, with the legal moves (not the board again), and answers again;

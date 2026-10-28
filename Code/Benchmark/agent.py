@@ -24,7 +24,7 @@ LOG_GAME = "GAME ++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 LOG_AGENT = "AGENT -------------------------------------------------\n"
 LOG_SELFEVAL = "SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n"
 
-MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|)(?P<n>\d+)$")
+MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|)(?P<n>\d+)$")
 
 
 def parse_mode(mode):
@@ -34,7 +34,9 @@ def parse_mode(mode):
     "N": every N turns, all its reasonings stay in the context;
     "rN": about every N turns (a random interval between N/2 and 3N/2), all its reasonings stay in the context;
     "erN": about every N turns, its reasonings never stay in the context;
-    "lrN": about every N turns, only its last reasoning stays in the context, until the next self-evaluation.
+    "lrN": about every N turns, only its last reasoning stays in the context, until the next self-evaluation;
+    "lN": every N turns, only its last reasoning stays in the context (l1: it thinks every turn like e1, but it
+        remembers what it thought on its previous move).
     """
     match = MODE_PATTERN.match(mode)
     if match is None:
@@ -44,7 +46,7 @@ def parse_mode(mode):
         return dict(selfeval_turns=0, random_turns=False, keep="none")
     return dict(selfeval_turns=n,
                 random_turns=kind in ("r", "er", "lr"),
-                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last"}[kind])
+                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "last"}[kind])
 
 
 class SelfEvalAgent:

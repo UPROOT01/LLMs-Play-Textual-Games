@@ -350,6 +350,21 @@ def test_observation_tokens():
         print(f"  chess observation, board={board}: {tokens} tokens")
 
 
+def test_reasoning_features():
+    """The counts of reasoning_analysis.py on a made-up reasoning of O in Connect Four."""
+    from reasoning_analysis import features
+    text = ("Okay, let's see. The user is playing as O. Wait, row 6 has X in column 3. "
+            "Maybe X is trying to make a vertical line in column 3. The opponent could also be setting up a diagonal. "
+            "O is trying to win too, but that is not a guess about X. I will block column 3.")
+    found = features(text, "O")
+    assert found["user_frame"] and found["waits"] == 1 and found["opponent_words"] == 1
+    assert found["guesses"] == ["Maybe X is trying to make a vertical line in column 3.",
+                                "The opponent could also be setting up a diagonal."], found["guesses"]
+    assert features("White is trying to attack. Black is trying to defend.", "White")["guesses"] == \
+        ["Black is trying to defend."]
+    print("ok reasoning features: user frame, board, opponent, intention guesses")
+
+
 def test_duel_prompts():
     """neutral and free never mention the opponent (reasoning about it must come from the model); free also has no
     steps, no user and no request to be brief (it does not structure the reasoning)."""
@@ -384,6 +399,7 @@ def test_duel_grid_files():
 
 
 if __name__ == "__main__":
+    test_reasoning_features()
     test_duel_prompts()
     test_duel_grid_files()
     test_chess_rules()
