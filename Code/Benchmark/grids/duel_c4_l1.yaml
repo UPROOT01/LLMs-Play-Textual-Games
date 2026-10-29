@@ -1,0 +1,20 @@
+# Connect Four self-play: the corrected l1 against every mode of duel_c4_memory.yaml.
+# l1 thinks every turn (like e1) and, while thinking, reads its previous reasoning, which is then replaced by the new
+# one. The l1 games of duel_c4_memory.yaml were played with a bug (the previous reasoning was removed before the
+# model read it, so l1 played like e1): they were renamed e1b (see THESIS_LOG.md).
+# l1 is always the agent; the opponent is every mode, l1 included. Seeds 1-4: each opponent is met twice as X and
+# twice as O per prompt, so every pair has 8 games, like the pairs of duel_c4_memory.yaml (4 with each mode as agent).
+# 40 games: 1 mode x 5 opponents x plain and free x seeds 1-4.
+models:
+  - Qwen/Qwen3-4B
+modes: [l1]
+prompts: [plain, free]
+games:
+  connect_four: [self-e1, self-l1, self-r4, self-er4, self-lr4]
+seeds: 1-4
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+game_options:
+  connect_four: {legal_moves: true}

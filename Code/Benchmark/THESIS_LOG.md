@@ -452,3 +452,101 @@ none / last / all at the lower frequency, so frequency and memory can be told ap
 summary(table, by=["game", "prompt", "player_mode"]) in reasoning_analysis.ipynb. Things to look at: the share of
 reasonings with guesses, whether l1 reasonings refer back to their previous expectation ("I expected O to block…"),
 and whether their guesses are more often right.
+
+### Memory run results: duel_c4_memory.yaml (2026-10-29)
+100 games (Qwen3-4B, Connect Four, modes e1/l1/r4/er4/lr4 against each other, plain and free, seeds 1-2); with
+the earlier Connect Four games, 50 games each for plain and free. All ended in four in a row; illegal answers
+almost zero (0.06-0.12 per game). First player won 45 of 100: no first-move advantage at this level.
+
+**Who wins** (self-play, each game counted for both players, a mode against itself left out; 32 games per mode,
+8 per pair):
+
+| mode | e1 | l1 | lr4 | r4 | er4 |
+|---|---|---|---|---|---|
+| average score | 0.78 | 0.69 | 0.38 | 0.38 | 0.28 |
+
+- Thinking at every move wins clearly: e1 and l1 beat every "about every 4 moves" mode (e1 vs r4 8 of 8; l1 0.62-0.88
+  against the r4 family). Confirms the e1 > r4 result of duel_c4_prompts.
+- Memory does not help: e1 vs l1 0.62 for e1 (8 games, not significant), and among the r4 family keeping all (r4),
+  the last (lr4) or none (er4) of the reasonings gives 0.38 / 0.38 / 0.28. **Frequency of thinking matters, memory
+  of the reasoning does not** (at this sample size).
+
+**Reasoning about the opponent** (reasonings with an intention guess):
+
+| player mode | free | plain |
+|---|---|---|
+| e1 | 54% | 45% |
+| l1 | 59% | 47% |
+| lr4 | 52% | 57% (28 reasonings) |
+| er4 | 44% | 40% |
+| r4 | 42% | 21% |
+
+- l1 guesses as often as e1 (59 vs 54%, 47 vs 45%): keeping the previous reasoning does not increase opponent
+  modelling. So the ephemeral reasonings of e1 were not what limited it.
+  **Correction (same day): not valid. l1 had a bug and never read its previous reasoning while thinking, so it
+  played exactly like e1 (see the next entry). The e1/l1 comparisons here only measure run-to-run noise.**
+- l1 never uses its memory for the opponent: 0 of 254 l1 reasonings refer back to a previous expectation ("I
+  expected O to...", "as predicted", "O did not block as..."); same for e1 (0 / 324). The phrases "earlier I
+  thought" / "my previous analysis" appear about 10 times, but they are self-corrections inside the same reasoning
+  about the board ("earlier I thought column 1 was full"), not memory of the previous turn. The model does not
+  track whether its predictions came true.
+- r4 (all reasonings kept, thinks rarely) has the fewest guesses, especially with plain (21%); with the frequency
+  mixed in, it is not clear if the long context or the rare thinking causes it.
+- Prompts, now with 50 games each: free 54% > plain 45% > neutral 28% ≈ CoT 27% (8 games each). Same ordering as
+  before: the prompts that do not mention the opponent produce more intention guesses than the one that asks about it.
+- Board reading is still heavy in Connect Four: about 35% of the sentences, median 17-22 "Wait" per reasoning,
+  with real misreadings (e.g. "X O X O X O X" read as four X in a row).
+
+**Labels:** labels/guess_pairs.csv has 375 reasonings with guesses, 202 checkable; none labelled yet. The accuracy
+of the guesses is now the missing piece.
+
+### Results of duel_c4_memory.yaml, and a bug in l1 (2026-10-29)
+
+100 games, all ended by four in a row, 0.09 illegal answers per game, no answer hit the token limit. First player
+(X) won 45 of 100 (23 as agent X, 22 as opponent X): no first-move advantage to correct for.
+
+**Bug: l1 never read its previous reasoning while thinking.** The "last" mode removes the kept reasoning at the
+start of the next self-evaluation, before the model generates (that is how lrN worked in the old agent too). With
+l1 the next self-evaluation is the next turn, so the reasoning was gone every time the model could have used it:
+l1 played exactly like e1. The token counts show it: largest prompt e1 996, l1 1165 tokens (a kept reasoning is
+~3500), while r4 reaches 5518. The test only checked the context after each turn, not the prompt at generation.
+Fix: lN now has its own keep mode "previous": the last reasoning stays during the next self-evaluation and is
+removed after the new one is generated. The test now checks what the model reads at each self-evaluation (l1: its
+previous reasoning only; r4: all; lr4, er4, e1: none), and fails on the old code. lrN is unchanged.
+**Note on lr4:** lr4 never reads its last reasoning while thinking either; it reads it only during the normal
+(non-thinking) turns in between. This is intended (lr4 is meant to work like that), unlike l1. So the only mode in our data that thinks with its own past
+reasonings in view is r4.
+The l1 games must be played again (see the renaming below). The old l1 games are an accidental replicate of e1, useful as a noise
+estimate.
+
+**Strength: how often it thinks matters, memory does not show.** Score of each mode over its 40 game sides (both
+as agent and as opponent): e1 0.73, l1 (= e1) 0.65, r4 0.40, lr4 0.40, er4 0.33. Thinking every turn beats thinking
+about every 4 turns; among the every-4 modes, keeping none / the last / all reasonings gives about the same.
+
+**Opponent reasoning (share of reasonings with an intention guess, plain + free):**
+e1 49% (243 reasonings), l1 = e1 replicate 53% (254), er4 42% (50), lr4 55% (51), r4 31% (54).
+- e1 vs its replicate differ by ~4 points: differences of that size are noise.
+- r4, the only mode that reads all its past reasonings while thinking, has the fewest guesses (31%, vs 42% for er4
+  which reads none). In the earlier grid too (r4 < e1). Remembering past reasonings, at least in this form, does not
+  increase opponent reasoning; if anything it reduces it. Only ~50 reasonings per every-4 mode, so this is a hint.
+- r4 almost never refers back to what it thought: 2 sentences in 54 reasonings ("Earlier, I thought that column 4
+  was blocked..."), both about the board, none about an expectation of the opponent. The kept reasonings are read
+  as context, not used as a plan or a prediction to check. This is consistent with Qwen3 being trained with the
+  earlier thinking removed from the conversation.
+- Ephemerality is therefore not what limits the opponent reasoning in our results. The proper test, l1 with the
+  fix (every turn, previous reasoning in view), is still to be run.
+
+**Renamed the buggy l1 runs to e1b (2026-10-29).** The 36 Connect Four games with the old l1 (20 as agent, 16 as
+opponent "self-l1") were played with e1's behaviour, so they are now called e1b ("a second e1"): folders
+connect_four/{plain,free}/l1 -> e1b, files levelself-l1-* -> levelself-e1b-*, and in the records mode "l1" -> "e1b",
+level/opponent "self-l1" -> "self-e1b", plus the first line of the transcripts and the mode columns of
+labels/guess_pairs.csv. Nothing else changed in the games. In the tables e1b is a replicate of e1 (noise estimate).
+Since no l1 result exists any more, running duel_c4_memory.yaml again plays only the 36 l1 games, with the fixed
+mode (the same files must be renamed or removed in the Colab/Drive copy of the results, otherwise they are skipped
+there).
+
+**Grid for the corrected l1: grids/duel_c4_l1.yaml (2026-10-29).** l1 as agent against self-e1, self-l1, self-r4,
+self-er4, self-lr4, plain and free, seeds 1-4 (colors alternate: two games as X, two as O per opponent and prompt).
+40 games; every pair gets 8 games, like the pairs of duel_c4_memory.yaml (there 4 with each mode as agent, here all 8
+with l1 as agent). Run this grid instead of duel_c4_memory.yaml, which would also play the 16 games with l1 as the
+opponent.

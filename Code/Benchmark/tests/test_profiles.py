@@ -62,11 +62,13 @@ class ScriptedModel:
 
     def __init__(self, tokenizer, profile):
         self.tokenizer, self.profile, self.n = tokenizer, profile, 0
+        self.think_prompts = [] # the prompt of every self-evaluation
 
     def __call__(self, prompt_ids, max_tokens, sampling):
         prompt = self.tokenizer.decode(prompt_ids)
         if max_tokens == 10000:
             self.n += 1
+            self.think_prompts.append(prompt)
             start = "" if self.profile.think_prefill else "<think>\n"
             text = f"{start}reasoning {self.n}\n</think>\n\ngo north"
             assert prompt.endswith(self.profile.assistant_start + self.profile.think_prefill)
@@ -101,6 +103,12 @@ def test_reasonings_in_the_context():
             assert (generate.n > 0) == (mode != "0")
             if mode in ("e1", "l1"): # every turn after the first
                 assert generate.n == 39
+            # what the agent reads while it thinks: l1 its previous reasoning only, lr4 and the others none of them
+            # (lr4 drops it before the next self-evaluation), r4 all of them
+            for n, prompt in enumerate(generate.think_prompts, start=1):
+                read = [k for k in range(1, n) if f"reasoning {k}\n</think>" in prompt]
+                expected = {"l1": [n - 1] if n > 1 else [], "r4": list(range(1, n))}.get(mode, [])
+                assert read == expected, (mode, n, read)
             stats = agent.token_stats()
             assert stats["think_turns"] == generate.n and stats["think_turns"] + stats["normal_turns"] == 40
         print(f"ok {name}: reasonings kept by r4 (all), lr4 and l1 (last), e1/er4/0 (none)")

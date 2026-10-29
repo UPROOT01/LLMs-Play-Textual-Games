@@ -35,8 +35,10 @@ def parse_mode(mode):
     "rN": about every N turns (a random interval between N/2 and 3N/2), all its reasonings stay in the context;
     "erN": about every N turns, its reasonings never stay in the context;
     "lrN": about every N turns, only its last reasoning stays in the context, until the next self-evaluation;
-    "lN": every N turns, only its last reasoning stays in the context (l1: it thinks every turn like e1, but it
-        remembers what it thought on its previous move).
+    "lN": every N turns, and its last reasoning stays in the context also during the next self-evaluation, which
+        replaces it (l1: it thinks every turn like e1, but while thinking it reads what it thought on its previous
+        move; with lrN the last reasoning leaves the context before the next self-evaluation, so it is never read
+        while thinking).
     """
     match = MODE_PATTERN.match(mode)
     if match is None:
@@ -46,7 +48,7 @@ def parse_mode(mode):
         return dict(selfeval_turns=0, random_turns=False, keep="none")
     return dict(selfeval_turns=n,
                 random_turns=kind in ("r", "er", "lr"),
-                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "last"}[kind])
+                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "previous"}[kind])
 
 
 class SelfEvalAgent:
@@ -87,7 +89,7 @@ class SelfEvalAgent:
         if self.random_turns:
             self._draw_selfeval_turns()
         self.after_selfeval = False
-        self.last_reasoning = None # index of the piece of the reasoning kept by the "last" mode
+        self.last_reasoning = None # index of the piece of the reasoning kept by the "last" and "previous" modes
         self.last_thought = None # text of the last reasoning (read by duel.py to save the reasonings of a game)
         self._write_log("CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-")
 
@@ -131,12 +133,15 @@ class SelfEvalAgent:
         return self._clean(self._decode(output_ids[self._answer_start(output_ids):]))
 
     def _self_evaluation(self, obs):
-        if self.last_reasoning is not None: # "last" mode: the previous reasoning leaves the context
+        if self.keep == "last" and self.last_reasoning is not None: # the previous reasoning leaves the context
             self.pieces[self.last_reasoning] = ""
             self.last_reasoning = None
         self.pieces.append(self.profile.user(obs + self.selfeval_prompt, think=True) + self.profile.assistant_start)
 
         output_ids, capped = self._generate(think=True)
+        if self.last_reasoning is not None: # "previous" mode: the previous reasoning was read, now it is replaced
+            self.pieces[self.last_reasoning] = ""
+            self.last_reasoning = None
         if capped:
             reasoning, command = "", self.rng.choice(SUBSTITUTE_COMMANDS)
         else:
@@ -150,7 +155,7 @@ class SelfEvalAgent:
 
         if self.keep != "none":
             self.pieces.append(reasoning)
-            if self.keep == "last":
+            if self.keep in ("last", "previous"):
                 self.last_reasoning = len(self.pieces) - 1
         self.pieces.append(command + self.profile.end_of_turn)
 

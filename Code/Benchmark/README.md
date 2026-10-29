@@ -31,7 +31,7 @@ The records go in the same results folders, with the same path (`level<opponent>
 
 | File | What it does |
 |---|---|
-| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt), `duel_free.yaml` and `duel_plain.yaml` (the same games with the free and plain prompts), `duel_c4_prompts.yaml` (Connect Four self-play, 8 games for each of CoT, neutral, free, plain), `duel_c4_memory.yaml` (Connect Four, every pair of e1, l1, r4, er4, lr4: does remembering its reasonings change the opponent reasoning?) |
+| `grids/duel_*.yaml` | `duel_tier1.yaml` (Qwen3 sizes against random/greedy/Stockfish), `duel_selfplay.yaml` (Qwen3-4B against itself, every pair of thinking modes, neutral prompt), `duel_free.yaml` and `duel_plain.yaml` (the same games with the free and plain prompts), `duel_c4_prompts.yaml` (Connect Four self-play, 8 games for each of CoT, neutral, free, plain), `duel_c4_memory.yaml` (Connect Four, every pair of e1, l1, r4, er4, lr4: does remembering its reasonings change the opponent reasoning?), `duel_c4_l1.yaml` (the corrected l1 against every mode, 40 games) |
 | `run_duel.py` | the `run.py` of the two-player games (`--dry-run` too) |
 | `colab_duel.ipynb` | runs a duel grid on Colab (installs python-chess and Stockfish) |
 | `duel.py` | the agent with the prompts of the game, the opponents, the game loop (illegal answers, forfeit, max_steps) |
