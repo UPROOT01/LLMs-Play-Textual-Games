@@ -82,8 +82,56 @@ def reasoning_table(*folders):
                                  ply=thought["ply"], color=thought["color"], player=thought["player"],
                                  player_mode=record["mode"] if thought["player"] == "agent" else opponent_mode,
                                  move=thought["move"], retry=number > 0, reasoning=text,
+                                 player_result=player_result(record, thought["player"]),
                                  **features(text, thought["color"])))
     return pd.DataFrame(rows)
+
+
+FLIP = {"win": "loss", "loss": "win", "draw": "draw"}
+
+
+def player_result(record, player):
+    """The result of the game for the agent or the opponent (after the adjudication, if any)."""
+    result = record.get("adjudicated_result") or record["result"]
+    return result if player == "agent" else FLIP[result]
+
+
+def add_tokens(table, model="Qwen/Qwen3-4B"):
+    """The column tokens: the length of every reasoning in tokens of the model's tokenizer (the reasonings of the
+    .thoughts.jsonl are text; a game's total is in its record, see game_tokens())."""
+    from transformers import AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained(model)
+    return table.assign(tokens=[len(tokenizer.encode(text, add_special_tokens=False)) for text in table.reasoning])
+
+
+def game_tokens(*folders):
+    """One row per player of every duel game with reasonings: tokens generated in the game (thinking and answers),
+    thinking turns, thinking tokens per thinking turn, and the player's result."""
+    import pandas as pd
+    rows = []
+    for record, _ in iter_games(*folders):
+        self_play = str(record["level"]).startswith("self-")
+        players = [("agent", record["mode"], record.get("tokens"))]
+        if self_play:
+            players.append(("opponent", record["level"][len("self-"):], record.get("opponent_tokens")))
+        for player, mode, tokens in players:
+            if not tokens:
+                continue
+            rows.append(dict(**{name: record[name] for name in GAME_KEY}, player=player, player_mode=mode,
+                             generated=tokens["generated"], thinking=tokens["generated_thinking"],
+                             think_turns=tokens["think_turns"],
+                             tokens_per_think=tokens["generated_thinking"] / max(tokens["think_turns"], 1),
+                             result=player_result(record, player)))
+    return pd.DataFrame(rows)
+
+
+def labelled_outcomes(table, labels_file):
+    """The labelled guesses of labels_file (label.py, or claude_labels.csv) with the result of the guesser's game."""
+    import pandas as pd
+    labels = pd.read_csv(labels_file, dtype={"level": str})
+    results = table.drop_duplicates(GAME_KEY + ["ply"], keep="last")[GAME_KEY + ["ply", "player_result"]]
+    results = results.assign(level=results.level.astype(str))
+    return labels.merge(results, on=GAME_KEY + ["ply"], how="left")
 
 
 def summary(table, by=("game", "prompt")):

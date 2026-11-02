@@ -25,6 +25,7 @@ LOG_AGENT = "AGENT -------------------------------------------------\n"
 LOG_SELFEVAL = "SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n"
 
 MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|)(?P<n>\d+)$")
+GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$")
 
 
 def parse_mode(mode):
@@ -39,16 +40,26 @@ def parse_mode(mode):
         replaces it (l1: it thinks every turn like e1, but while thinking it reads what it thought on its previous
         move; with lrN the last reasoning leaves the context before the next self-evaluation, so it is never read
         while thinking).
+    "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, grand30...), never on a
+        clock, and its reasonings never stay in the context; "lg<gate>": the same, keeping the last reasoning as lN.
+        The settings have gate=<gate name> (None for the other modes); the agent needs a gate object (agent.gate).
     """
+    match = GATE_MODE_PATTERN.match(mode)
+    if match is not None:
+        from gate import parse_gate
+        parse_gate(match["gate"]) # raises if the gate does not exist
+        return dict(selfeval_turns=0, random_turns=False, keep="previous" if match["memory"] else "none",
+                    gate=match["gate"])
     match = MODE_PATTERN.match(mode)
     if match is None:
         raise ValueError(f"unknown mode {mode!r}")
     kind, n = match["kind"], int(match["n"])
     if n == 0:
-        return dict(selfeval_turns=0, random_turns=False, keep="none")
+        return dict(selfeval_turns=0, random_turns=False, keep="none", gate=None)
     return dict(selfeval_turns=n,
                 random_turns=kind in ("r", "er", "lr"),
-                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "previous"}[kind])
+                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "previous"}[kind],
+                gate=None)
 
 
 class SelfEvalAgent:
@@ -67,6 +78,10 @@ class SelfEvalAgent:
         self.mean_turns = settings["selfeval_turns"]
         self.random_turns = settings["random_turns"]
         self.keep = settings["keep"]
+        self.gate_name = settings["gate"]
+        self.gate = None # a gate.Gate, set by the owner of the agent (duel.DuelAgent) for the gate modes
+        self.shadow = False # also answer every thinking turn without thinking first (the fast move), as a measure
+        self.last_move_info = None # what happened at the last act(): see act()
         self.prompt = prompt
         self.system_prompt = PROMPTS[prompt]["system"]
         self.selfeval_prompt = PROMPTS[prompt]["selfeval"]
@@ -109,18 +124,63 @@ class SelfEvalAgent:
     # ---------------------------------------------------------------- turns
 
     def act(self, obs, done=False):
-        """The command to play after the observation obs. done: the game is over (the agent is reset)."""
+        """The command to play after the observation obs. done: the game is over (the agent is reset).
+        last_move_info records the turn: think (did it think), gate (the gate's decision, see gate.py), fast (the
+        answer without thinking when one was generated: by the oracle gate, or by shadow on a thinking turn) and
+        command."""
         if done:
             self.reset()
             return ":)"
-        if self.counter == self.selfeval_turns:
+        info = self.last_move_info = dict(think=False, gate=None, fast=None, command=None)
+        fast = None
+        if self.gate_name is not None:
+            if self.gate is None:
+                raise RuntimeError(f"mode {self.mode} needs a gate: only the two-player games have them")
+            decision = self.gate.decide(self, obs)
+            info["gate"] = {key: value for key, value in decision.items() if key != "fast"}
+            think, fast = decision["think"], decision.get("fast")
+            if fast is not None and think: # the fast answer is not played: its tokens are the cost of the gate
+                self.turns[fast["turn"]]["kind"] = "gate"
+        else:
+            think = self.counter == self.selfeval_turns
+        if think and self.shadow and fast is None:
+            fast = self.preview(obs)
+            self.turns[fast["turn"]]["kind"] = "shadow"
+        if fast is not None:
+            info["fast"] = dict(command=fast["command"], generated=fast["generated"], capped=fast["capped"])
+        info["think"] = think
+        if think:
             self.counter = 0
-            return self._self_evaluation(obs)
+            command = self._self_evaluation(obs)
+        else:
+            command = self._normal_turn(obs, fast)
+        info["command"] = command
+        return command
 
-        self.pieces.append(self.profile.user(obs, think=False if self.after_selfeval else None)
-                           + self.profile.assistant_start)
+    def _user_piece(self, obs):
+        """The piece of a normal turn before the answer."""
+        return self.profile.user(obs, think=False if self.after_selfeval else None) + self.profile.assistant_start
+
+    def preview(self, obs):
+        """The answer the agent would give now without thinking, generated without touching the context (the gates and
+        the shadow measure use it). The turn is recorded as "preview": _normal_turn() makes it the normal turn if the
+        answer is played, act() marks it "gate" or "shadow" if it is not. Returns dict(command, generated, capped,
+        turn: index in self.turns, obs)."""
+        prompt = self.context + self._user_piece(obs) + self.profile.nothink_prefill
+        output_ids, capped = self._generate(think=False, prompt=prompt, kind="preview")
+        command = self.rng.choice(SUBSTITUTE_COMMANDS) if capped else \
+            self._clean(self._decode(output_ids[self._answer_start(output_ids):]))
+        return dict(command=command, generated=len(output_ids), capped=capped, turn=len(self.turns) - 1, obs=obs)
+
+    def _normal_turn(self, obs, fast=None):
+        """A turn without thinking: fast is a preview() of this same observation, played instead of generating again."""
+        self.pieces.append(self._user_piece(obs))
         self.after_selfeval = False
-        command = self._normal_answer()
+        if fast is not None and fast["obs"] == obs:
+            self.turns[fast["turn"]]["kind"] = "normal"
+            command = fast["command"]
+        else:
+            command = self._normal_answer()
         self.pieces.append(command + self.profile.end_of_turn)
         self._write_log(LOG_GAME + obs + "\n" + LOG_AGENT + command)
         self.counter += 1
@@ -167,14 +227,18 @@ class SelfEvalAgent:
 
     # ---------------------------------------------------------------- generation
 
-    def _generate(self, think):
-        """Output ids of the model and whether the answer is too long (reached ~the limit of tokens)."""
-        max_tokens = THINK_MAX_TOKENS if think else NORMAL_MAX_TOKENS
-        prefill = self.profile.think_prefill if think else self.profile.nothink_prefill
-        prompt_ids = self.tokenizer.encode(self.context + prefill, add_special_tokens=False)
+    def _generate(self, think, prompt=None, kind=None, max_tokens=None):
+        """Output ids of the model and whether the answer is too long (reached ~the limit of tokens).
+        prompt: the text to complete (default: the context with the prefill of the kind of turn); kind: what the
+        turn is for in the statistics ("think", "normal", "preview", "gate", "shadow"; default from think)."""
+        max_tokens = max_tokens or (THINK_MAX_TOKENS if think else NORMAL_MAX_TOKENS)
+        if prompt is None:
+            prompt = self.context + (self.profile.think_prefill if think else self.profile.nothink_prefill)
+        prompt_ids = self.tokenizer.encode(prompt, add_special_tokens=False)
         output_ids, hit_limit = self.generate(prompt_ids, max_tokens, self.sampling["think" if think else "normal"])
         capped = len(output_ids) >= 0.95 * max_tokens or hit_limit
-        self.turns.append(dict(think=think, generated=len(output_ids), prompt=len(prompt_ids), capped=capped))
+        self.turns.append(dict(think=think, kind=kind or ("think" if think else "normal"),
+                               generated=len(output_ids), prompt=len(prompt_ids), capped=capped))
         return output_ids, capped
 
     def _answer_start(self, output_ids):
@@ -199,14 +263,20 @@ class SelfEvalAgent:
         return self.turns[-1]["prompt"] + self.turns[-1]["generated"] if self.turns else 0
 
     def token_stats(self):
-        """Generated and read tokens of the turns played so far."""
-        think = [turn for turn in self.turns if turn["think"]]
-        normal = [turn for turn in self.turns if not turn["think"]]
-        return dict(generated=sum(turn["generated"] for turn in self.turns),
+        """Generated and read tokens of the turns played so far. generated: what playing cost (the thinking, normal
+        and gate turns); the shadow answers (generated_shadow) are a measure, not a cost, and are not in it."""
+        by_kind = {kind: [turn for turn in self.turns if turn["kind"] == kind]
+                   for kind in ("think", "normal", "gate", "shadow")}
+        think, normal = by_kind["think"], by_kind["normal"]
+        return dict(generated=sum(turn["generated"] for turn in self.turns if turn["kind"] != "shadow"),
                     generated_thinking=sum(turn["generated"] for turn in think),
                     generated_normal=sum(turn["generated"] for turn in normal),
+                    generated_gate=sum(turn["generated"] for turn in by_kind["gate"]),
+                    generated_shadow=sum(turn["generated"] for turn in by_kind["shadow"]),
                     think_turns=len(think),
                     normal_turns=len(normal),
+                    gate_turns=len(by_kind["gate"]),
+                    shadow_turns=len(by_kind["shadow"]),
                     capped_think_turns=sum(turn["capped"] for turn in think),
                     capped_normal_turns=sum(turn["capped"] for turn in normal),
                     max_prompt=max((turn["prompt"] for turn in self.turns), default=0))

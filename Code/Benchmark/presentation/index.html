@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LLMs playing two-player games: do they think about the opponent?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ink: #1d2433; --ink2: #4a5468; --muted: #7b8497; --line: #e3e6ec; --bg: #f6f7f9; --card: #ffffff;
+    --blue: #2a78d6; --green: #1f8a4c; --red: #c8463d; --amber: #c27a00; --purple: #5b4bb5; --gray: #9aa3b2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #20242c; font-family: "Inter", "Segoe UI", system-ui, sans-serif; color: var(--ink); }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; margin: auto; width: min(100vw, 177.78vh); height: min(100vh, 56.25vw);
+    background: var(--bg); padding: 4.2% 5.5% 5%; display: none; flex-direction: column;
+    font-size: min(2.3vh, 1.3vw);
+  }
+  .slide.active { display: flex; }
+  .slide h1 { font-size: 2.6em; margin: 0 0 .25em; letter-spacing: -.01em; }
+  .slide h2 { font-size: 2.05em; margin: 0 0 .9em; letter-spacing: -.01em; }
+  .slide h3 { font-size: 1.15em; margin: 0 0 .5em; color: var(--ink2); text-transform: uppercase; letter-spacing: .06em; }
+  .slide p, .slide li { font-size: 1.22em; line-height: 1.45; color: var(--ink); }
+  .slide ul { margin: .2em 0 0; padding-left: 1.2em; }
+  .slide li { margin: .35em 0; }
+  .kicker { color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: .95em; margin-bottom: .6em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.2em; min-height: 0; align-items: start; margin-top: .4em; }
+  .cols.c3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols.wide-left { grid-template-columns: 1.35fr 1fr; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1.1em 1.3em; }
+  .card p, .card li { font-size: 1.1em; }
+  .card .big, .big { font-size: 3.4em; font-weight: 800; line-height: 1; }
+  .note { color: var(--muted); font-size: 1em !important; margin-top: auto; }
+  .tag { display: inline-block; padding: .1em .55em; border-radius: 99px; font-size: .9em; font-weight: 600; background: #e8eefb; color: var(--blue); }
+  .tag.red { background: #fbe9e7; color: var(--red); } .tag.green { background: #e5f4eb; color: var(--green); }
+  .tag.amber { background: #fbf1df; color: var(--amber); }
+  blockquote { margin: .4em 0; padding: .55em .9em; border-left: 4px solid var(--blue); background: #eef3fb; font-size: 1.08em; line-height: 1.45; border-radius: 0 6px 6px 0; }
+  blockquote.red { border-color: var(--red); background: #fbefed; }
+  blockquote.green { border-color: var(--green); background: #ebf6ef; }
+  blockquote small { display: block; color: var(--ink2); margin-top: .3em; font-size: .85em; }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .92em; background: #eceff4; padding: .05em .35em; border-radius: 4px; }
+  pre { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 1em; background: #1f2430; color: #e6e9ef; padding: .8em 1em; border-radius: 8px; margin: .3em 0; line-height: 1.4; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 1.12em; }
+  th, td { text-align: left; padding: .42em .6em; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink2); font-weight: 600; font-size: .9em; text-transform: uppercase; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.hl td { background: #eef3fb; font-weight: 600; }
+
+  /* bar charts */
+  .bars { display: flex; flex-direction: column; gap: .55em; margin-top: .3em; }
+  .bar { display: grid; grid-template-columns: 10em 1fr 3.6em; align-items: center; gap: .7em; font-size: 1.08em; }
+  .bar .label { color: var(--ink2); text-align: right; }
+  .bar .track { height: 1.45em; background: #e9ecf1; border-radius: 4px; position: relative; overflow: hidden; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; width: 0; transition: width .7s ease; }
+  .bar .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .slide.active .fill { width: var(--w); }
+  .mid { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px dashed #7b8497; }
+
+  .footer { position: absolute; left: 5.5%; right: 9em; bottom: 2.2%; display: flex; justify-content: space-between; color: var(--muted); font-size: .95em; }
+  .progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--blue); transition: width .3s; }
+  .nav { position: fixed; right: 14px; bottom: 12px; display: flex; gap: 6px; z-index: 5; }
+  .nav button { background: #ffffffcc; border: 1px solid #cfd4dc; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; }
+  .title-slide { justify-content: center; background: linear-gradient(135deg, #1d2433 0%, #2a3a5c 100%); color: #fff; }
+  .title-slide h1 { font-size: 3.4em; color: #fff; max-width: 80%; }
+  .title-slide p { color: #c9d3e6; font-size: 1.5em; max-width: 75%; }
+  .title-slide .kicker { color: #8fb8f2; }
+  .board { font-family: ui-monospace, monospace; font-size: 1.05em; line-height: 1.25; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: .6em .9em; white-space: pre; display: inline-block; }
+  .flow { display: flex; align-items: stretch; gap: .8em; margin: .6em 0; }
+  .flow .step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .8em 1em; }
+  .flow .step b { display: block; margin-bottom: .3em; }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 1.8em; }
+  .legend { display: flex; gap: 1.2em; font-size: 1em; color: var(--ink2); margin: .4em 0 0; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: .9em; height: .9em; border-radius: 2px; margin-right: .35em; vertical-align: -.1em; background: var(--c); }
+  .stack { display: flex; height: 2.2em; border-radius: 5px; overflow: hidden; margin: .5em 0; }
+  .stack div { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1em; border-right: 2px solid var(--bg); }
+  .stack div:last-child { border-right: none; }
+  .graph { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: block; }
+  .howto { background: #fff8e8; border: 1px solid #f0dca8; border-radius: 10px; padding: .8em 1.1em; }
+  .howto h3 { color: var(--amber); }
+  .howto p, .howto li { font-size: 1em !important; margin: .3em 0; }
+  .stacked { display: flex; flex-direction: column; gap: .8em; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<section class="slide title-slide">
+  <div class="kicker">Thesis progress · Part 2: two-player games</div>
+  <h1>Do LLMs think about their opponent, without being asked?</h1>
+  <p>From cooking to chess and Connect Four: the same thinking modes, an opponent that reacts, and the model playing against itself.</p>
+  <p style="font-size:1.1em; margin-top:2em; color:#9fb0cc">Qwen3 · vLLM benchmark · 26 – 29 October 2026</p>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="kicker">Why</div>
+  <h2>Why two-player games?</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>The cooking games test planning against a <b>fixed</b> environment.</li>
+        <li>An opponent adds what the environment doesn't have: <b>another mind</b>, which reacts.</li>
+        <li>Two questions:
+          <ul>
+            <li>Do the thinking modes (<code>0</code>, <code>e1</code>, <code>r4</code>, <code>er4</code>, <code>lr4</code>) play differently when the world fights back?</li>
+            <li>Does a model <b>spontaneously</b> reason about what its opponent is doing, and is it <b>right</b>?</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>The thinking modes (from Part 1)</h3>
+      <table>
+        <tr><th>mode</th><th>thinks</th><th>keeps its reasonings</th></tr>
+        <tr><td><code>0</code></td><td>never</td><td>–</td></tr>
+        <tr><td><code>e1</code></td><td>every move</td><td>none (ephemeral)</td></tr>
+        <tr><td><code>r4</code></td><td>~every 4 moves</td><td>all</td></tr>
+        <tr><td><code>er4</code></td><td>~every 4 moves</td><td>none</td></tr>
+        <tr><td><code>lr4</code></td><td>~every 4 moves</td><td>the last one</td></tr>
+        <tr><td><code>l1</code> <span class="tag">new</span></td><td>every move</td><td>the previous one</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div class="kicker">What was built</div>
+  <h2>The duel system</h2>
+  <div class="cols c3">
+    <div class="card">
+      <h3>Games</h3>
+      <p><b>Chess</b> (python-chess): board as ASCII, legal moves listed, SAN or UCI answers accepted.</p>
+      <p><b>Connect Four</b>: 6×7, answer a column number. Simpler board, explicit threats.</p>
+      <p class="note">Legal moves are listed like TextWorld's admissible commands: otherwise we would measure notation, not play.</p>
+    </div>
+    <div class="card">
+      <h3>Opponents = "levels"</h3>
+      <p><code>random</code>, <code>greedy</code> (one move ahead), Stockfish <code>sf&lt;N&gt;</code> / <code>elo&lt;N&gt;</code></p>
+      <p><code>self-&lt;mode&gt;</code>: <b>the same model</b> in a second, separate context, with its own mode.</p>
+      <p>Score: win 1 · draw 0.5 · loss 0. Colours alternate with the seed.</p>
+    </div>
+    <div class="card">
+      <h3>Saved per game</h3>
+      <p>The record (result, moves, illegal, tokens…), and next to it:</p>
+      <p><code>.transcript.md</code>: both players' reasonings move by move, to read side by side.</p>
+      <p><code>.thoughts.jsonl</code>: the same as data, for the analysis.</p>
+    </div>
+  </div>
+  <p class="note">Files: <code>duel_games.py</code>, <code>duel.py</code>, <code>duel_prompts.py</code>, <code>run_duel.py</code>, <code>adjudicate.py</code>, <code>colab_duel.ipynb</code>, grids <code>duel_*.yaml</code>, <code>tests/test_duel.py</code></p>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="kicker">First problem</div>
+  <h2>Chess pilot: lots of illegal and forced moves</h2>
+  <div class="flow">
+    <div class="step"><b>Symptom</b>Many illegal answers; after 3 a random move is <i>forced</i>.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Read the logs</b>The parser was fine. Each retry repeated the whole position.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Cause</b>Prompts grew to <b>80–97k tokens</b> (limit 40k). The model lost track and echoed the error.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Fix: short retries</b>Only "That is not a legal move", the legal moves and "Your move:".</div>
+  </div>
+  <div class="cols" style="margin-top:1em">
+    <div class="card">
+      <h3>Stockfish adjudication</h3>
+      <p>A game stopped at <code>max_steps</code> is a draw on the board even if one side is far ahead. Stockfish (depth 16) evaluates the final position: ≥ 3 pawns ahead wins. The board result is kept too.</p>
+    </div>
+    <div class="card">
+      <h3>Why it matters</h3>
+      <p>The first self-play game was a draw by repetition with White <b>about 15 pawns down</b>. Win/draw/loss hides how a game went, so the final evaluation is saved for every game.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="kicker">The experiment</div>
+  <h2>Model against model</h2>
+  <div class="cols wide-left">
+    <div>
+      <ul>
+        <li>Qwen3-4B on both sides, <b>two separate contexts</b>, every pair of modes (e1 vs r4, r4 vs e1, …).</li>
+        <li>Each player sees only <b>the board and the other's moves</b>, never its reasoning.</li>
+        <li>We read the reasonings afterwards and ask: does a player attribute an intention to the other, and does it match <b>the other's own reasoning</b>?</li>
+        <li><b>Not forced on purpose.</b> No question about the opponent. The hope is an <b>emergent</b> behaviour.</li>
+      </ul>
+      <p class="note">Postponed for a later experiment: a side question ("what will your opponent play?") asked and then removed from the context.</p>
+    </div>
+    <div class="card">
+      <h3>What a guess check looks like</h3>
+      <blockquote>X, ply 5: "since the opponent just played in column 3, maybe <b>they are trying to block me</b>"</blockquote>
+      <blockquote class="green">O, ply 4 (its own reasoning): "the best move is to <b>block X's potential vertical line in column 3</b>"</blockquote>
+      <p style="margin-top:.6em"><span class="tag green">right</span> Unprompted, and exactly what O intended.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="kicker">The prompts</div>
+  <h2>How much does the prompt steer the reasoning?</h2>
+  <table>
+    <tr><th style="width:11%">prompt</th><th>what the model reads on a thinking turn</th><th style="width:22%">mentions the opponent?</th></tr>
+    <tr><td><b>CoT</b></td><td>3 steps: evaluate material, king safety and <i>what your opponent's last move threatens</i>; candidates + <i>your opponent's best reply</i>; check legality</td><td><span class="tag red">yes, asks about it</span></td></tr>
+    <tr><td><b>neutral</b></td><td>The same 3 steps without the opponent: "Evaluate the position. List 2 or 3 candidate moves and compare them…", "be concise and brief"</td><td><span class="tag">no, but structured</span></td></tr>
+    <tr><td><b>free</b></td><td>"Think about the game, then say your move." System prompt without "the user".</td><td><span class="tag">no</span></td></tr>
+    <tr><td><b>plain</b></td><td><i>Nothing</i>: the board message plus the <code>/think</code> switch. The model's own default thinking.</td><td><span class="tag">no</span></td></tr>
+  </table>
+  <p style="margin-top:1em">Same sampling for all four, so only the prompt changes. A test fails if neutral, free or plain contain "opponent", "threat" or "other player", or if free/plain contain steps, "brief", "evaluate", "user".</p>
+  <p class="note">Your question that started this: "isn't neutral steering it against the possibility?" The structure was a real candidate cause.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="kicker">Chess results</div>
+  <h2>In chess the model is busy reading the board</h2>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><th>Qwen3-4B, chess self-play</th><th class="num">neutral</th><th class="num">free</th></tr>
+        <tr><td>words per reasoning (median)</td><td class="num">569</td><td class="num">1357</td></tr>
+        <tr><td>starts "The user is playing as…"</td><td class="num">91%</td><td class="num">28%</td></tr>
+        <tr><td>reasonings dominated by board reading</td><td class="num">8/167</td><td class="num">43/228</td></tr>
+        <tr><td>"Wait" per reasoning (median)</td><td class="num">3</td><td class="num">14</td></tr>
+        <tr class="hl"><td>sentences about opponent intentions</td><td class="num">2.2‰</td><td class="num">1.1‰</td></tr>
+      </table>
+      <p style="margin-top:.8em">Less structure → longer reasonings, but the extra length goes into <b>rebuilding the board square by square</b>, not into the opponent.</p>
+    </div>
+    <div>
+      <blockquote class="red">"the queen is on d1? Wait, no. The queen is on d1. The white queen is on d1? Wait, no…"<small>a neutral reasoning that loops for thousands of words</small></blockquote>
+      <blockquote>Black: "But <b>why would White play Be6?</b> Maybe to attack the Black king or to develop."<small>White's own reason: "develop the Bishop and support the center". One of the rare good guesses.</small></blockquote>
+      <p><b>Reading:</b> at 4B the bottleneck in chess is <b>understanding the position</b>, not the prompt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="kicker">Chess results</div>
+  <h2>Every self-play chess game is a draw by repetition</h2>
+  <div class="cols wide-left">
+    <div>
+      <ul>
+        <li><b>All 33</b> self-play games (neutral, free, plain) end in <b>threefold repetition</b>.</li>
+        <li>Also hugely lopsided ones: in one game Black is <b>14 points of material ahead</b>, and both sides shuffle Ke3–Ke4–Ke3 / Qd7–Qe8–Qd7.</li>
+        <li>Two plain games are repetitions where one side had a <b>forced mate</b>.</li>
+        <li>So chess win/draw/loss says nothing yet; only the Stockfish advantage at the end separates the modes.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Open decision</h3>
+      <p>1. End only on the automatic rules (fivefold, 75 moves), so games reach <code>max_steps</code> and get adjudicated.</p>
+      <p>2. Adjudicate repetition draws too.</p>
+      <p>3. Show the move history: the models only see the current board and may not notice they are repeating.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="kicker">Connect Four</div>
+  <h2>A board the model can read: the behaviour appears</h2>
+  <div class="cols">
+    <div>
+      <h3>Reasonings with an intention guess about the opponent</h3>
+      <div class="bars">
+        <div class="bar"><span class="label">chess, any prompt</span><span class="track"><span class="fill" style="--w:7%; background:var(--gray)"></span></span><span class="val">3–7%</span></div>
+        <div class="bar"><span class="label">C4 · CoT</span><span class="track"><span class="fill" style="--w:27%; background:var(--red)"></span></span><span class="val">27%</span></div>
+        <div class="bar"><span class="label">C4 · neutral</span><span class="track"><span class="fill" style="--w:28%; background:var(--purple)"></span></span><span class="val">28%</span></div>
+        <div class="bar"><span class="label">C4 · plain</span><span class="track"><span class="fill" style="--w:45%; background:var(--blue)"></span></span><span class="val">45%</span></div>
+        <div class="bar"><span class="label">C4 · free</span><span class="track"><span class="fill" style="--w:54%; background:var(--green)"></span></span><span class="val">54%</span></div>
+      </div>
+      <p class="note" style="margin-top:.8em">Keyword pattern ("O / the opponent / they is trying to, aiming, planning, setting up, building…"). Free/plain: 50 games each; CoT/neutral: 8 each.</p>
+    </div>
+    <div>
+      <ul>
+        <li><b>6–10× more</b> than in chess: when the position is readable, opponent modelling <b>emerges</b>.</li>
+        <li><b>The less the prompt steers, the more it guesses intentions.</b> Free uses the word "opponent" more than CoT, though it never mentions it.</li>
+        <li>The CoT prompt says: <i>"FIRST STEP: Can you connect four with this move? Can your opponent connect four with their next move, so that you have to block it?"</i> The model answers exactly that, column by column: <b>threat checking</b> (is there a three in a row to block?), not asking itself <i>why</i> the opponent moved or what it plans.</li>
+        <li>Still heavy board reading: ~35% of sentences, with real misreadings ("X O X O X O X" read as four X in a row).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <div class="kicker">Connect Four</div>
+  <h2>Which mode wins? How often it thinks</h2>
+  <div class="cols">
+    <div>
+      <h3>Average score per mode (self-play, both sides counted)</h3>
+      <div class="bars">
+        <div class="bar"><span class="label">e1 · every move</span><span class="track"><span class="fill" style="--w:73%; background:var(--green)"></span><span class="mid" style="left:50%"></span></span><span class="val">0.73</span></div>
+        <div class="bar"><span class="label">r4 · keeps all</span><span class="track"><span class="fill" style="--w:40%; background:var(--blue)"></span><span class="mid" style="left:50%"></span></span><span class="val">0.40</span></div>
+        <div class="bar"><span class="label">lr4 · keeps last</span><span class="track"><span class="fill" style="--w:40%; background:var(--amber)"></span><span class="mid" style="left:50%"></span></span><span class="val">0.40</span></div>
+        <div class="bar"><span class="label">er4 · keeps none</span><span class="track"><span class="fill" style="--w:33%; background:var(--purple)"></span><span class="mid" style="left:50%"></span></span><span class="val">0.33</span></div>
+      </div>
+      <p class="note" style="margin-top:.8em">40 game sides per mode; dashed line = an even result. All games end in four in a row; first player wins 45/100.</p>
+    </div>
+    <div>
+      <ul>
+        <li><b>Thinking every move wins clearly</b>: e1 beat r4 in 14 of 16 games in the first grid, with every prompt.</li>
+        <li><b>Memory of the reasoning doesn't show</b>: keeping none / the last / all gives about the same among the every-4 modes.</li>
+        <li>e1 was played twice on the same games: the two runs differ by about 0.08, so differences of that size are noise.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <div class="kicker">Memory</div>
+  <h2>Is it because the reasonings are forgotten?</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>e1 drops every reasoning. Could memory help the model track the opponent? New mode <code>l1</code>: every move, keeps the previous reasoning in view.</li>
+        <li>The only mode that thinks with past reasonings in view is <b>r4</b>, and it guesses the <b>least</b>: 31% vs 42–55%.</li>
+        <li>r4 almost never refers back to what it thought (2 of 54 reasonings, both about the board).</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Finding</h3>
+      <p class="big" style="color:var(--blue)">0 / 578</p>
+      <p>e1 reasonings that check an earlier expectation: "I expected O to…", "as predicted", "O did not block as…".</p>
+      <p>The model <b>guesses</b> what the opponent wants but <b>never checks</b> whether the guess came true. Consistent with Qwen3 being trained with past thinking stripped from the conversation.</p>
+      <p class="note">Still to run: <code>grids/duel_c4_l1.yaml</code> (40 games of l1).</p>
+    </div>
+  </div>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <div class="kicker">Accuracy</div>
+  <h2>Are the guesses right? Labelling</h2>
+  <div class="cols">
+    <div>
+      <p>Each guess is paired with <b>the opponent's own reasoning</b> on the move guessed about (<code>labels/guess_pairs.csv</code>: 375 reasonings with guesses, 202 checkable).</p>
+      <div class="card">
+        <h3>Rubric</h3>
+        <p><span class="tag green">right</span> the main guess matches the opponent's reason</p>
+        <p><span class="tag amber">partly</span> right kind of plan, wrong detail, or the right one is not the main guess</p>
+        <p><span class="tag red">wrong</span> a different reason (blocking ≠ attacking, or no plan at all)</p>
+        <p><span class="tag">unclear</span> no readable reason / too vague &nbsp; <span class="tag">not a guess</span> not about the opponent</p>
+      </div>
+    </div>
+    <div>
+      <h3>Tools</h3>
+      <pre>$ python label.py
+[1/50] connect_four, free, seed 2 | guesser O, ply 6
+Board the guesser saw ...
+GUESSER >>> "...maybe they are trying to..."
+OPPONENT ...end of its reasoning...
+label [r]ight [p]artly [w]rong [u]nclear [n]ot a guess</pre>
+      <ul>
+        <li>Fixed sample of 50, saved after every answer, resumable.</li>
+        <li>Plan: hand labels as reference → a larger model as judge on the same 50 → agreement with <b>Cohen's kappa</b> → the judge labels the rest only if it agrees.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 13 -->
+<section class="slide">
+  <div class="kicker">Accuracy · first labels</div>
+  <h2>Mostly wrong, in a consistent way</h2>
+  <div class="cols">
+    <div>
+      <h3>50 sampled guesses (labelled by Claude, to be checked)</h3>
+      <div class="stack">
+        <div style="flex:7; background:var(--green)">7</div>
+        <div style="flex:8; background:var(--amber)">8</div>
+        <div style="flex:25; background:var(--red)">25</div>
+        <div style="flex:4; background:var(--gray)">4</div>
+        <div style="flex:6; background:#59606e">6</div>
+      </div>
+      <div class="legend">
+        <span style="--c:var(--green)">right</span><span style="--c:var(--amber)">partly</span><span style="--c:var(--red)">wrong</span><span style="--c:var(--gray)">unclear</span><span style="--c:#59606e">not a guess</span>
+      </div>
+      <p style="margin-top:1em">Of the 44 real guesses: <b>16% right</b>, 18% partly, <b>57% wrong</b>.</p>
+      <h3 style="margin-top:1em">Why wrong (25)</h3>
+      <div class="bars">
+        <div class="bar"><span class="label">opponent was blocking</span><span class="track"><span class="fill" style="--w:40%; background:var(--red)"></span></span><span class="val">10</span></div>
+        <div class="bar"><span class="label">opponent had no plan</span><span class="track"><span class="fill" style="--w:36%; background:var(--red)"></span></span><span class="val">9</span></div>
+        <div class="bar"><span class="label">right plan, other line</span><span class="track"><span class="fill" style="--w:24%; background:var(--red)"></span></span><span class="val">6</span></div>
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li><b>Attack bias:</b> the model assumes the opponent is building a line. Right when it was; wrong when it was blocking or had no plan ("the first empty column", "continue the pattern").</li>
+        <li>5 of the 7 right guesses are attacks; only 2 say "O is blocking".</li>
+        <li><b>Self/other confusion</b> (12%): "the user" is the model itself.</li>
+      </ul>
+      <blockquote class="red">O: "the user's previous moves were in column 2, so maybe they are trying to create a vertical line in column 2"<small>Column 2 is O's own. "The user" = O. Counted by the pattern as a guess about X.</small></blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- 14 -->
+<section class="slide">
+  <div class="kicker">Related work</div>
+  <h2>What others have done</h2>
+  <div class="cols" style="grid-template-columns:1.5fr 1fr; font-size:.9em">
+    <div>
+      <table>
+        <tr><th>work</th><th>what it does</th></tr>
+        <tr class="hl"><td>Strat-Reasoner (2026)</td><td>Qwen3-4B, forced OpponentIntent / Prediction fields, scored against the opponent's reasoning, used as an RL reward</td></tr>
+        <tr><td>EMO, SOM</td><td>explicit opponent models, built on purpose</td></tr>
+        <tr><td>Observer, Not Player</td><td>the model only watches and predicts a strategy</td></tr>
+        <tr><td>TextArena, SPIRAL, GTBench, …</td><td>game scores and illegal moves, not what the reasoning contains</td></tr>
+        <tr><td>Danger of Overthinking</td><td>long reasoning hurts agents</td></tr>
+        <tr><td>Kosinski (2023)</td><td>"spontaneous" theory of mind, on false-belief tests</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Nobody has</h3>
+      <ul>
+        <li>measured opponent modelling that appears <b>unprompted</b> in a thinking model, checked against <b>the opponent's own reasoning</b>;</li>
+        <li>varied <b>how much the prompt structures the reasoning</b> (CoT → plain) and measured the effect;</li>
+        <li>compared <b>when to think</b> and <b>what to keep</b> (e1/r4/er4/lr4/l1) in games.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 15 -->
+<section class="slide">
+  <div class="kicker">Related work</div>
+  <h2>Against Strat-Reasoner</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Their premise: current LLMs reason "non-strategically". <b>Asserted, not measured</b>: no alignment score of the base model, the citations don't support it.</li>
+        <li>They report <b>no alignment numbers at all</b>, only game returns, and a judge check on one example.</li>
+        <li><b>Our data is the baseline they assume</b>, on the same model.</li>
+        <li>Their own case study shows the same unprompted sentences we count, and the same kind of errors.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Our labels on their judge scale</h3>
+      <p class="big" style="color:var(--amber)">≈ 0.34</p>
+      <p>"partial", close to "inconsistent" (band midpoints, 40 guesses, unverified labels).</p>
+      <table style="margin-top:.6em">
+        <tr><td>happens without being asked</td><td class="num"><b>45–54%</b> of C4 reasonings</td></tr>
+        <tr><td>right / at least partly</td><td class="num"><b>16% / 34%</b></td></tr>
+        <tr><td>self/other confusion</td><td class="num"><b>12%</b></td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- graphs: guessing and winning -->
+<section class="slide">
+  <div class="kicker">Does it help?</div>
+  <h2>Guessing right doesn't go with winning (yet)</h2>
+  <div class="cols" style="grid-template-columns: 1fr 1.15fr">
+    <div class="stacked">
+      <img class="graph" src="img/labels_vs_winning.png" style="max-height:40vh; object-fit:contain" alt="share of guessers who won, by label">
+      <div class="howto">
+        <h3>How to read it</h3>
+        <p>One bar per label of the 50 guesses. Height = the share of those guessers who <b>won their game</b>; <i>n</i> = guesses with that label. Dotted line = an even result (0.5).</p>
+        <p>If guessing right helped, the green bar would be the tallest.</p>
+      </div>
+    </div>
+    <div>
+      <ul>
+        <li>Right guesses won 4 of 7, partly 6 of 8, wrong 16 of 24. Right + partly vs wrong: <b>Fisher p = 1.0</b>, so no difference.</li>
+        <li>The sample is far too small to conclude anything: 50 guesses, some from the same game, labels by Claude.</li>
+        <li>Who wins depends mostly on the <b>thinking mode</b> (e1 beats r4), and e1 also guesses more often, so the mode has to be held fixed (next slide).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="kicker">Does it help?</div>
+  <h2>Guessing often doesn't predict winning either</h2>
+  <img class="graph" src="img/guessing_vs_winning.png" alt="share of reasonings with a guess, winners vs losers, per mode" style="max-height:42%; object-fit:contain">
+  <div class="cols" style="margin-top:.6em; font-size:.86em">
+    <div class="howto">
+      <h3>How to read it</h3>
+      <p><b>Left:</b> every dot is one player in one Connect Four self-play game (212 in all). Height = the share of its reasonings with a guess about the opponent. Green = it won, red = it lost; boxes show the middle half, the line the median. Split by thinking mode, so the mode, which decides much of the result, is held fixed.</p>
+      <p><b>Right:</b> players grouped by how often they guess; height = the share of games they won.</p>
+    </div>
+    <div>
+      <ul>
+        <li>Winners 42% vs losers 43% of reasonings with a guess (<b>Mann-Whitney p = 0.97</b>); no difference within any mode.</li>
+        <li>No trend by group (50% → 59% → 70% → 40%). The 75–100% group is mostly every-4 players with one or two reasonings, who lose because of their mode.</li>
+        <li>r4 / er4 / lr4 points sit at 0 or 1 because they reason only a few times per game. (e1b = a second run of e1.)</li>
+        <li><b>As the model does it, modelling the opponent doesn't help it win</b>, consistent with the guesses being mostly wrong.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- graphs: length -->
+<section class="slide">
+  <div class="kicker">Length</div>
+  <h2>More guesses in longer reasonings, only because they're longer</h2>
+  <div class="cols" style="grid-template-columns: 1.45fr 1fr; font-size:.9em">
+    <img class="graph" src="img/tokens_vs_guesses.png" alt="guesses against reasoning length">
+    <div class="stacked">
+      <div class="howto">
+        <h3>How to read it</h3>
+        <p><b>Left:</b> every dot is one reasoning, by length (tokens) and number of guesses it contains, coloured by prompt. Black line = the average in each tenth of the lengths. ρ = Spearman correlation.</p>
+        <p><b>Right:</b> guesses per 1000 tokens, by length. A <b>flat</b> line means the guesses just come with the extra words; a rising line would mean long reasonings are more "about the opponent".</p>
+      </div>
+      <ul>
+        <li><b>Connect Four</b> (top): ρ = 0.27, p &lt; 1e-13, but the rate stays roughly flat (plain 0.17–0.34 per 1000 tokens; free even falls).</li>
+        <li><b>Chess</b> (bottom): ρ = 0.05, not significant. Almost no guesses at any length.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- graphs: tokens -->
+<section class="slide">
+  <div class="kicker">Cost</div>
+  <h2>How many tokens each prompt costs</h2>
+  <img class="graph" src="img/tokens_per_prompt.png" alt="tokens per reasoning and per game, by prompt" style="max-height:42%; object-fit:contain">
+  <div class="cols" style="margin-top:.6em; font-size:.86em">
+    <div class="howto">
+      <h3>How to read it</h3>
+      <p><b>Left:</b> length of one reasoning (thinking tokens), per prompt and game. <b>Right:</b> tokens one player generates in a whole game, only modes e1 and r4 (played with every prompt), so the prompts are compared on the same games.</p>
+      <p>Bars = median; whiskers = the middle half (25–75%); <i>n</i> = reasonings (left) or player-games (right): each self-play game counts twice, once for each side, if that side played in mode e1 or r4. No CoT bar in chess: CoT was only run against the bots there.</p>
+    </div>
+    <div>
+      <ul>
+        <li><b>Connect Four:</b> about the same length with every prompt (medians 3300–3900 tokens per reasoning, 7–9k per player per game).</li>
+        <li><b>Chess:</b> neutral reasonings are much shorter (≈ 800 vs ≈ 1900 tokens): its steps cut the board reconstruction.</li>
+        <li>Per game, chess plain costs about <b>twice</b> the others (median ≈ 19k tokens).</li>
+        <li>So the prompts that bring more opponent modelling (free, plain) don't cost more in Connect Four.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- third person -->
+<section class="slide">
+  <div class="kicker">Next · a new idea</div>
+  <h2>The model talks about itself in the third person. Can we use it?</h2>
+  <div class="cols">
+    <div>
+      <h3>What we see</h3>
+      <blockquote>"Okay, let's see. <b>The user is playing Connect Four, and I need to figure out the best move for O.</b>"<small>O, describing itself. 60% of plain reasonings and a third of free ones start like this.</small></blockquote>
+      <ul>
+        <li>The model reasons as an <b>advisor</b> to a player, not as the player.</li>
+        <li>It reads back its own moves as someone else's plan ("the user's previous moves were in column 2, so maybe they are trying to…"): 12% of the counted guesses.</li>
+        <li>Question: is this distance <b>useful</b> (an outside view of the game) or does it <b>blur</b> who is who?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Proposed experiment: a two-agent player</h3>
+      <div class="flow" style="flex-direction:column; gap:.4em">
+        <div class="step"><b>External agent, "the friend"</b>An advisor who watches the game from outside, in the third person, and comments on both sides: "X seems to be building column 4; O should…"</div>
+        <div class="step"><b>Internal agent, "the player"</b>First person, reads the friend's advice and chooses the move.</div>
+      </div>
+      <ul style="margin-top:.4em">
+        <li>Same model, two contexts, like self-play.</li>
+        <li>Measure: wins, guess rate, guess accuracy, and whether the self/other confusion disappears.</li>
+        <li>Compare against e1 alone, at a similar token cost.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 16 -->
+<section class="slide">
+  <div class="kicker">Summary</div>
+  <h2>What we know so far</h2>
+  <div class="cols" style="font-size:.88em">
+    <div>
+      <ul>
+        <li>Opponent modelling <b>emerges without being asked</b>, in a game the model can read (Connect Four), barely in chess.</li>
+        <li><b>Less prompt structure → more of it.</b> Asking about the opponent (CoT: <i>"Can your opponent connect four with their next move, so that you have to block it?"</i>) gives threat checking instead: scanning for a line to block, not guessing a plan.</li>
+        <li>It is <b>mostly wrong</b>, with an attack bias, and never checked afterwards.</li>
+        <li><b>Thinking every move wins</b>; memory of past reasonings doesn't show.</li>
+        <li>Guessing the opponent, right or often, <b>doesn't predict winning</b>; guesses grow with length, not with "interest" in the opponent.</li>
+        <li>The model often treats itself as a third party ("the user").</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Caveats</h3>
+      <ul>
+        <li>One model (Qwen3-4B), small samples (8–50 games per cell).</li>
+        <li>Counts use keyword patterns (~12% false positives so far).</li>
+        <li>Accuracy labels are Claude's, not yet checked by hand.</li>
+        <li>Chess outcomes are all repetition draws.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 17 -->
+<section class="slide">
+  <div class="kicker">Next</div>
+  <h2>Next steps</h2>
+  <div class="cols">
+    <div>
+      <ol style="font-size:.9em">
+        <li><p><b>Check the 50 labels by hand</b> (<code>label.py</code> + <code>claude_labels.csv</code>), compute Cohen's kappa, then label the rest.</p></li>
+        <li><p><b>Run l1</b> (<code>grids/duel_c4_l1.yaml</code>, 40 games): does memory change the guesses?</p></li>
+        <li><p><b>Decide the repetition rule</b> in chess, then rerun.</p></li>
+        <li><p><b>Prompted vs unprompted</b>: give the untrained model Strat-Reasoner's fields and score them with the same rubric.</p></li>
+      </ol>
+    </div>
+    <div>
+      <ol start="5" style="font-size:.9em">
+        <li><p><b>Tighten the pattern</b>: drop "the user / they" sentences that refer to the guesser's own colour.</p></li>
+        <li><p><b>MCTS opponent</b> for Connect Four, to compare game scores with Strat-Reasoner.</p></li>
+        <li><p><b>Larger model</b> (8B): more opponent modelling, less board confusion?</p></li>
+        <li><p><b>Friend + player</b>: an external third-person advisor and an internal first-person player (slide 20).</p></li>
+        <li><p>Later: the <b>side-question probe</b> ("what will your opponent play?", then removed from the context).</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="footer" id="footer"><span>Do LLMs think about their opponent?</span><span id="counter"></span></div>
+<div class="progress" id="progress"></div>
+<div class="nav"><button onclick="go(-1)">‹</button><button onclick="go(1)">›</button><button onclick="toggleFs()">⛶</button></div>
+
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  let current = Math.max(0, Math.min(slides.length - 1, parseInt(location.hash.slice(1) || "1", 10) - 1)) || 0;
+  function show(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle("active", j === current));
+    document.getElementById("counter").textContent = `${current + 1} / ${slides.length}`;
+    document.getElementById("progress").style.width = `${100 * (current + 1) / slides.length}%`;
+    document.getElementById("footer").style.display = current === 0 ? "none" : "flex";
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+  function go(d) { show(current + d); }
+  function toggleFs() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  document.addEventListener("keydown", e => {
+    if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(1); }
+    if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(-1); }
+    if (e.key === "Home") show(0);
+    if (e.key === "End") show(slides.length - 1);
+    if (e.key === "f") toggleFs();
+  });
+  document.getElementById("deck").addEventListener("click", e => {
+    if (e.target.closest("button, a, pre")) return;
+    go(e.clientX > window.innerWidth / 3 ? 1 : -1);
+  });
+  show(current);
+</script>
+</body>
+</html>

@@ -18,7 +18,12 @@ Grid keys besides those of run.py: max_steps (moves of the agent before a draw),
 ("random" or "forfeit"), colors ("alternate": first player on the odd seeds, second on the even ones; "first";
 "second"), game_options (per game, the options of duel_games: e.g. chess: {board: fen, legal_moves: false}),
 adjudicate ("stockfish": the chess games stopped at max_steps are won by the side ahead by adjudicate_cp centipawns
-in Stockfish's evaluation of the final position, see duel.py; the other games are not affected).
+in Stockfish's evaluation of the final position, see duel.py; the other games are not affected),
+shadow_fast_move (true: on every thinking turn the agents also answer without thinking first, a fast move that is
+recorded and not played: what thinking changed), solver ("auto": the Connect Four solver judges every move when it is
+compiled, see c4solver.py; true: required; false: never; the gate modes goracle / gcrit always need it).
+Next to the record, .moves.jsonl: one line per move of an agent (ply, side, player, move, think, gate decision, fast
+move, the solver's view of the position and the quality of the move, tokens by kind: see duel.play_duel()).
 """
 import argparse
 import json
@@ -31,7 +36,40 @@ from records import LEGACY_RESULTS, record_path, save_record
 from run import grid_games, is_played, load_grid, summary
 
 DUEL_DEFAULTS = dict(max_steps=100, max_illegal=3, illegal_policy="random", colors="alternate", game_options={},
-                     adjudicate=None, adjudicate_cp=300)
+                     adjudicate=None, adjudicate_cp=300, shadow_fast_move=False, solver="auto")
+
+
+def grid_needs_solver(grid):
+    """Whether a mode of the grid (agent or self-play opponent) is a gate that asks the Connect Four solver."""
+    from agent import parse_mode
+    from duel import parse_opponent
+    from gate import needs_solver
+    modes = set(grid["modes"])
+    for levels in grid["games"].values():
+        for level in levels:
+            kind, mode = parse_opponent(level)
+            if kind == "self":
+                modes.add(mode)
+    return any(parse_mode(mode)["gate"] and needs_solver(parse_mode(mode)["gate"]) for mode in modes)
+
+
+def grid_solver(grid):
+    """The shared Connect Four solver for the grid: always when a gate needs it (an error if it is not compiled),
+    when it is available and the grid plays Connect Four (solver: "auto": every move is judged), never with
+    solver: false. None when there is none."""
+    import c4solver
+    setting = grid.get("solver", "auto")
+    needed = grid_needs_solver(grid)
+    if setting is False and needed:
+        raise ValueError("the grid has gate modes that need the solver, but solver: false")
+    if setting is False or "connect_four" not in grid["games"]:
+        return None
+    if not c4solver.available():
+        if needed or setting is True:
+            raise FileNotFoundError("the Connect Four solver is not compiled: python c4solver.py --setup")
+        print("note: the Connect Four solver is not compiled (python c4solver.py --setup): the moves are not judged")
+        return None
+    return c4solver.shared_solver()
 
 
 def load_duel_grid(path):
@@ -65,6 +103,7 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             or (grid["adjudicate"] == "stockfish" and "chess" in grid["games"]):
         stockfish_path() # missing Stockfish fails now, not in the middle of the games
     folders = [results, *read]
+    solver = grid_solver(grid) # missing solver fails now, not in the middle of the games
     for model in grid["models"]:
         if models and model not in models:
             continue
@@ -84,21 +123,24 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             kind, opponent_mode = parse_opponent(level, game)
             name = "|".join(str(part) for part in game_id)
 
+            game_solver = solver if game == "connect_four" else None
+            shadow = bool(grid["shadow_fast_move"])
+
             def make_agent(generate):
                 agent = DuelAgent(profile, engine.tokenizer, generate, mode, game, prompt, rng=random.Random(name),
-                                  log=path[:-len(".json")] + ".log")
+                                  log=path[:-len(".json")] + ".log", solver=game_solver, shadow=shadow)
                 opponent = None
                 if kind == "self":
                     opponent = DuelAgent(profile, engine.tokenizer, generate, opponent_mode, game, prompt,
                                          rng=random.Random(name + "|opponent"),
-                                         log=path[:-len(".json")] + ".opponent.log")
+                                         log=path[:-len(".json")] + ".opponent.log", solver=game_solver, shadow=shadow)
                 return Contestants(agent, opponent)
             play_kwargs = dict(game=game, level=level, seed=seed, color=agent_color(seed, grid["colors"]),
                                max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
                                illegal_policy=grid["illegal_policy"],
                                game_options=grid["game_options"].get(game, {}),
                                adjudicate_with=grid["adjudicate"] if game == "chess" else None,
-                               adjudicate_cp=grid["adjudicate_cp"])
+                               adjudicate_cp=grid["adjudicate_cp"], solver=game_solver)
             return game_id, make_agent, play_kwargs
 
         def on_result(game_id, contestants, result):
@@ -107,14 +149,18 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             thoughts = result.pop("thoughts") # next to the record, not in it: with e1 they are long
             with open(path + ".thoughts.jsonl", "w") as f:
                 f.writelines(json.dumps(thought) + "\n" for thought in thoughts)
-            write_transcript(path + ".transcript.md", {**result, "thoughts": thoughts},
+            move_records = result.pop("move_records") # one line per move of an agent: solver, gate, fast move
+            with open(path + ".moves.jsonl", "w") as f:
+                f.writelines(json.dumps(move) + "\n" for move in move_records)
+            write_transcript(path + ".transcript.md", {**result, "thoughts": thoughts, "move_records": move_records},
                              f"{game}, {model} ({prompt}): the agent ({mode}) against {level}, seed {seed}")
             record = dict(model=model, mode=mode, prompt=prompt, game=game, level=level, seed=seed, opponent=level,
                           norm_score=result["score"] / result["max_score"], **result,
                           max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
                           illegal_policy=grid["illegal_policy"], game_options=grid["game_options"].get(game, {}),
                           adjudicate=grid["adjudicate"] if game == "chess" else None,
-                          adjudicate_cp=grid["adjudicate_cp"],
+                          adjudicate_cp=grid["adjudicate_cp"], shadow_fast_move=grid["shadow_fast_move"],
+                          solver=solver is not None and game == "connect_four",
                           loop_window=None, tokens=contestants.agent.token_stats(),
                           opponent_tokens=contestants.opponent.token_stats() if contestants.opponent else None,
                           time_kind="wall", profile=profile.name, settings=engine.description,

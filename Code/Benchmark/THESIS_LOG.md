@@ -454,6 +454,10 @@ reasonings with guesses, whether l1 reasonings refer back to their previous expe
 and whether their guesses are more often right.
 
 ### Memory run results: duel_c4_memory.yaml (2026-10-29)
+**Superseded:** the l1 of this run was buggy and played exactly like e1 (see the next entry; renamed e1b). The
+conclusions below about memory ("l1 guesses as often as e1", "memory does not help") do not hold: they compare e1
+with itself. The rest (who wins by thinking frequency, prompts, board reading) stands.
+
 100 games (Qwen3-4B, Connect Four, modes e1/l1/r4/er4/lr4 against each other, plain and free, seeds 1-2); with
 the earlier Connect Four games, 50 games each for plain and free. All ended in four in a row; illegal answers
 almost zero (0.06-0.12 per game). First player won 45 of 100: no first-move advantage at this level.
@@ -550,3 +554,178 @@ self-er4, self-lr4, plain and free, seeds 1-4 (colors alternate: two games as X,
 40 games; every pair gets 8 games, like the pairs of duel_c4_memory.yaml (there 4 with each mode as agent, here all 8
 with l1 as agent). Run this grid instead of duel_c4_memory.yaml, which would also play the 16 games with l1 as the
 opponent.
+
+### Labelling the guesses by hand: label.py (2026-10-29)
+- **Why:** we know how often the model guesses the opponent's intention, not how often it is right. A sample
+  labelled by hand is the reference; an automatic judge (a larger model with the same rubric) can label the rest
+  only if it agrees with the hand labels (Cohen's kappa).
+- `python label.py` shows, in the terminal, a fixed random sample (seed 0) of 50 checkable guesses from
+  labels/guess_pairs.csv, one at a time: the board the guesser saw (rebuilt from the record), its guess sentences
+  with some of the reasoning before them, and the end of the opponent's reasoning on the move guessed about. Keys:
+  right / partly / wrong / unclear / not_a_guess, an optional note; more context on demand; undo; resumable. The
+  labels are saved after every answer in labels/human_labels.csv. `-n 80` extends the sample, keeping the first 50.
+- **Rubric** (in label.py, shown with `h`): judge the main intention attributed to the opponent against the reason
+  the opponent gives for its move; several hypotheses -> the main one; the intention, not the board reading; only
+  the move just before.
+- **New label not_a_guess,** found in the first sampled pair: O writes "the user's previous moves were in column 2,
+  so maybe they are trying to create a vertical line in column 2", but column 2 is O's own: the model calls itself
+  "the user", and the pattern counts it as a guess about X. The share of not_a_guess measures the precision of the
+  automatic counts (the "with_guess_%" of the tables are an upper bound until then).
+
+### First labels, by Claude: labels/claude_labels.csv (2026-10-29)
+- The same 50 pairs of label.py (seed 0: 47 Connect Four, 3 chess), labelled by Claude with the rubric of label.py,
+  each with a short note giving the reason. To be checked by hand; then they are the first "judge" to compare with
+  the human labels (Cohen's kappa).
+- Counts: wrong 25, partly 8, right 7, not_a_guess 6, unclear 4. Among the 44 real guesses: right 16%, partly 18%,
+  wrong 57%, unclear 9%.
+- **not_a_guess 6 of 50 (12%):** 4 are the model talking about itself ("the user" = its own colour, or "X is trying
+  to block" written by X), 1 about its own captures (chess), 1 a negation. So about 1 in 8 of the automatic
+  "guesses" are not about the opponent.
+- **Why the guesses are wrong** (25): the opponent was blocking and the guess said attacking (10); the opponent had
+  no plan (a pattern of columns, "the central column", "it is available") and the guess gave it one (9); the right
+  kind of plan but another line (6).
+- **The right ones** (7): 5 are attacking plans when the opponent was attacking, 2 are "O is blocking", one of them
+  with the CoT prompt. The model attributes attacking plans by default; it rarely imagines the opponent defending.
+- Two hard cases for the rubric: guesses that list several hypotheses (partly when the right one is not the main
+  one) and hedged conditionals ("if O is trying to block") judged as the guess they state.
+
+### Our labels against Strat-Reasoner (2026-10-29)
+- Checked again on the paper: it reports **no alignment score** (base or trained, start or end of training) and no
+  accuracy of the opponent's next-move prediction. Only game returns (Tables 1-4) and, for the judge's robustness,
+  six judges scoring one OpponentIntent pair 0.85-1.00 (Table 5). So no number of theirs can be set against ours.
+- Our labels in their bands (right 0.8-1 -> 0.9, partly 0.3-0.6 -> 0.45, wrong 0-0.3 -> 0.15, unclear left out):
+  untrained, unprompted Qwen3-4B, Connect Four, average about 0.34 ("partial", close to "inconsistent"). Rough:
+  midpoints of the bands, 40 guesses, labels by Claude still to be checked by hand.
+- What we can say: this is the baseline they assume but do not measure. The base model does model the opponent
+  without being asked (45-54% of reasonings) but is right in about 1 of 6 guesses (16% right, 34% at least partly),
+  with a systematic attack bias; 12% of the pattern's "guesses" are self/other confusion, which their structured
+  fields avoid by construction.
+- To make it comparable: give the untrained model their recursive block (OpponentIntent, MyPrediction...) and score
+  it the same way (prompted vs unprompted on the same games); an MCTS opponent for Connect Four for their game scores.
+
+### Guessing, winning and tokens: new section of reasoning_analysis.ipynb (2026-10-29)
+- **Why:** does modelling the opponent help to win? Is the number of guesses just a matter of length? How much do
+  the prompts cost?
+- **Code:** reasoning_analysis.py gets `player_result` (each reasoning's player won / drew / lost, after
+  adjudication), `add_tokens()` (tokens of each reasoning, Qwen3 tokenizer), `game_tokens()` (tokens generated per
+  player per game, from the records), `labelled_outcomes()` (labels joined with the guesser's result). Graphs saved
+  in graphs/: labels_vs_winning, guessing_vs_winning, tokens_vs_guesses, tokens_per_prompt (.pdf).
+- **Right guesses and winning** (Claude's 50 labels, Connect Four): guessers with right guesses won 4 of 7, partly
+  6 of 8, wrong 16 of 24; right+partly vs wrong, Fisher p = 1.0. No sign that guessing right goes with winning; the
+  sample is far too small to say more.
+- **Guessing often and winning** (all Connect Four self-play, 212 player-games): share of reasonings with a guess,
+  winners 42% vs losers 43% (Mann-Whitney p = 0.97); no significant difference within any mode either. Win rate by
+  guess share: 0-25% 50%, 25-50% 59%, 50-75% 70%, 75-100% 40%: no trend; the 75-100% group is mostly every-4
+  players with one or two reasonings, which lose more because of their mode. **Guessing the opponent, as the model
+  does it, does not predict winning**; consistent with guesses being mostly wrong.
+- **Length and guesses:** Connect Four, Spearman ρ = 0.27 (p < 1e-13): longer reasonings contain more guesses. But
+  the guesses per 1000 tokens stay roughly flat with length (plain about 0.17-0.34; free decreasing): the guesses
+  come with length, longer reasonings are not more "opponent-minded". Chess: ρ = 0.05, not significant.
+- **Tokens per prompt:** in Connect Four a reasoning has a similar length with every prompt (medians about 3300-3900
+  tokens; neutral shortest, plain longest). In chess neutral is much shorter (median about 800 tokens vs about 1900
+  for free and plain): the steps of neutral cut the board reconstruction. Per game (modes e1 and r4 only, which
+  every prompt played): Connect Four about 7-9k tokens per player with every prompt; chess plain about twice the
+  others (median about 19k).
+
+### Presentation updated, and a planned experiment: friend + player (2026-10-29)
+- presentation/index.html (22 slides): new slides with the four graphs of reasoning_analysis.ipynb (labels vs
+  winning, guessing vs winning, tokens vs guesses, tokens per prompt), each with a "how to read it" box; the l1 bug
+  is left out (only the result matters there).
+- **Planned: a two-agent player.** The model often reasons in the third person, as an advisor to "the user" (about
+  60% of plain and a third of free Connect Four reasonings), and sometimes reads its own moves as someone else's plan
+  (12% of the counted guesses). Is that outside view useful, or does it blur who is who? Experiment: an external
+  agent ("the friend"), which watches the game in the third person and comments on both sides, and an internal agent
+  ("the player"), first person, which reads the friend's comment and chooses the move. Same model, two contexts.
+  Measure wins, guess rate and accuracy, whether the self/other confusion disappears; compare with e1 alone at a
+  similar token cost.
+
+### Literature: detecting overthinking and deciding when to think with a second model (2026-10-30)
+Search done to find what is missing around our ephemerality / thinking-frequency results. Relevant lines of work:
+- **Overthinking score for agents** (The Danger of Overthinking, 2502.08235): Claude 3.5 Sonnet as judge, 0-10, on
+  SWE-bench trajectories; "overthinking" = internal reasoning instead of interacting with the environment; validated
+  on only 20 traces, no agreement coefficient. The definition does not transfer to games (a move is irreversible,
+  there is nothing to "try").
+- **Monitors that stop the reasoning**: Behavior Cue Reasoning (2605.07021) uses Qwen3-8B no-think as monitor that
+  says continue/stop at answer-change points, tested on AIME and a TextWorld cooking game; requires fine-tuning the
+  actor to emit cues. ROM (2603.22016), LYNX (2512.05325), TERMINATOR, EAT (2509.26522): probes or entropy on the
+  actor's own hidden states, math only.
+- **Routers that decide before generating**: Route to Reason (2505.19435, Qwen3-4B think vs no-think per query),
+  Think When Needed (2601.18146), Sonata (Apple). All per query, none per move of a game.
+- **Step-level depth in agents**: CogRouter (2602.12662, four depths per step, RL-trained, ALFWorld/ScienceWorld);
+  HybridAgent (2610.18861); LaRMA (2503.11074: Act-only sometimes beats ReAct); Thinking vs Doing (2506.07976:
+  more interaction beats more reasoning per step). Cooperative single-agent tasks, nothing adversarial.
+- **Games**: entropy-guided adaptive CoT on Tic-Tac-Toe (2601.10775, own-token entropy, minimax as oracle); Game
+  Reasoning Arena (reasoning categories per move, no cost analysis). No per-move thinking trigger in Connect Four
+  or chess.
+- **Memory of the reasoning across turns**: only vendor docs (Qwen preserve_thinking, Fireworks, MiniMax) with
+  qualitative claims; no published keep / drop / summarize ablation. Our e1 / l1 / r4 / er4 / lr4 design is the
+  only controlled one found.
+- **"Wait" tokens**: NoWait (2506.08343), thinking trap (2506.23840), hedging density (2607.00482): reflection
+  tokens as a signal of unproductive reasoning, math only. Our Connect Four reasonings have 17-22 "Wait" each.
+Gaps for the thesis are listed in the answer of 2026-10-30 (summary: no per-move trigger from a second model in
+adversarial games; no solver-grounded definition of overthinking in games; no surprise-triggered thinking from
+failed opponent predictions; no "summarize" arm between keep and drop; no human-agreement study for an
+overthinking judge).
+
+## Part 3: when to think (November 2026)
+
+### The gate: a second decision before each move, and the solver as oracle (2026-11-02)
+**Question.** Our modes decide *when* to think with a clock (e1 every move, r4 about every 4), and thinking more often
+won. Which moves deserve the thinking? Option 1 of the plan of 2026-10-30: a gate that decides before each move,
+compared with the clock, with a solver as ground truth (the literature has per-query routers and RL-trained per-step
+depth in cooperative tasks, nothing per move in an adversarial game, and no exact oracle).
+
+**The oracle: c4solver.py.** Pascal Pons's Connect Four solver (C++, AGPL, with its 34 MB opening book; cloned,
+compiled and downloaded by `python c4solver.py --setup`, also in the Colab setup cell), run as a subprocess shared by
+all the games. For every position it gives the exact value of each column for the player to move (win / draw / loss,
+and how soon). From 518 positions of our records: 0.9 s in total, worst 0.13 s, so it costs nothing next to a
+reasoning. Definitions: a move is a **blunder** when its class (win / draw / loss) is worse than the best move's
+(it changes the game-theoretic value); a position is **critical** when a single move keeps the value (n_safe = 1).
+Invalid positions (a won game, a full column) get no answer from the solver, so they are checked before asking (the
+first version waited forever on them).
+
+**The gates (gate.py, modes g<gate>, lg<gate> keeps the last reasoning like l1):**
+- `goracle`: the agent answers fast first (no thinking); if the solver says the fast move is a blunder or it is not
+  legal, the agent thinks instead and the fast answer is discarded (its tokens count as the gate's cost). It thinks
+  exactly when thinking could repair something: the ceiling of every gate.
+- `gcrit<k>`: thinks when at most k moves (default 1) keep the value. The solver is the gate: no model tokens.
+- `gself`: the same model, without thinking, reads the board in a context of its own and answers YES / NO to "does
+  this position need careful thought?" (8 tokens at most). The gate one could use in practice.
+- `grand<p>`: thinks with probability p%: at the firing rate of another gate, it controls for frequency alone.
+  To run after the others, at their measured rates.
+A gate mode never thinks on a clock. The e1 habit of not thinking on the very first move stays as it was.
+
+**The shadow fast move (grid key shadow_fast_move).** On every thinking turn, every agent (the opponent too) first
+answers without thinking; that answer is recorded and not played, and its tokens are kept apart (not a cost). For e1
+and r4 this gives, move by move, what thinking changed: the fast move and the thought move, both judged by the
+solver (repaired: fast blunder, final fine; spoiled: fast fine, final blunder). This is the solver-grounded
+measurement of where thinking is wasted that option 2 (the overthinking rubric) will build on.
+
+**Records.** Every move of an agent goes to `.moves.jsonl` next to the record (position: scores, best class, safe
+moves; quality of the move; the gate's decision and reason; the fast move and its quality; tokens by kind: think,
+normal, gate, shadow), and the record gets blunders, blunder_rate, think_moves, think_rate, fast_blunders, repaired,
+spoiled (opponent_ versions in self-play). The transcript marks the blunders and the gate's decisions. The
+token statistics get generated_gate / gate_turns / generated_shadow / shadow_turns; `generated` stays the cost of
+playing (gate tokens included, shadow excluded). Tests: tests/test_gate.py (solver, gates, memory, shadow,
+play_duel, run_duel end to end with the fake engine).
+
+**Grid: grids/duel_c4_gate.yaml.** Qwen3-4B, Connect Four, modes goracle, gcrit, gself, e1, r4 (grand later), against
+greedy and self-e1, plain and free, seeds 11-14 (new seeds so that e1 and r4 are replayed with the shadow fast
+moves): 80 games. Analysis: `python gate_analysis.py <results>`: per mode the blunder rate on all / critical /
+quiet moves and on the moves thought / not thought, what thinking changed, the gates' precision and recall against
+"critical" and against "the fast move was a blunder", strength vs tokens (graphs/strength_vs_tokens.pdf,
+blunders_by_mode.pdf).
+
+**What the solver already says about the 116 old Connect Four games (judged from their histories, 1640 moves):**
+- Blunder rate by mode: e1 27.6%, e1b 28.7%, r4 34.1%, lr4 41.1%, er4 42.0%. Thinking every move blunders less,
+  as the scores said; about 1 move in 4 of the best mode still changes the game value.
+- About a quarter of the positions are critical (one move keeps the value). There the model blunders in 61% (e1) to
+  91% (er4) of the moves; on the quiet positions 16-24%. Nearly all the damage is on the critical moves: a gate that
+  finds them is the whole question.
+- In the every-4 modes, the moves that were thought are about as often blunders as the moves that were not
+  (r4 33% vs 34%, er4 36% vs 43%, lr4 47% vs 40%). A reasoning on a random move repairs little; with e1 the
+  difference is 26% vs 36% (few unthought moves). This is the first direct sign that *which* moves are thought
+  matters more than how many, the premise of the gate.
+- The every-4 modes think on 16-19% of the critical moves and as often on the quiet ones: the clock cannot tell them
+  apart, as expected.
+Note: the old e1 numbers mix prompts (CoT, neutral, free, plain) and opponents; the gate grid fixes them.
