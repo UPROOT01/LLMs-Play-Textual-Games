@@ -1,0 +1,29 @@
+# Connect Four: keep, drop or summarize? The missing arm of the memory ablation (duel_c4_memory.yaml, duel_c4_l1.yaml).
+# After each reasoning the "s" modes (agent.py) ask the model, without thinking and in a context of its own, for a
+# three-sentence summary of what it thought (plan, dangers, what it expects), and the summary stands in the context
+# in the place of the reasoning:
+#   s1    thinks every move, all the summaries stay (compress instead of keep: "1" cannot be played, its context
+#         overflows after ~10 moves of ~2400-word reasonings);
+#   ls1   thinks every move, only the last summary stays, read during the next reasoning and then replaced (like l1);
+#   l1    keeps the last reasoning in full (the control for ls1: is a summary as good as the whole reasoning?);
+#   e1    drops every reasoning (the control for both);
+#   sr4   thinks about every 4 moves, all the summaries stay (against r4, lr4 and er4 of the earlier grids);
+#   lsr4  about every 4 moves, only the last summary stays (against lr4).
+# The summaries cost a few tokens each (tokens.generated_summary); the prompt of the summary never shows the board.
+# Opponents: greedy and self-e1, as in duel_c4_gate.yaml; the e1 games of that grid are not played again.
+# 96 games: 6 modes x 2 opponents x plain and free x seeds 11-14 (16 already played).
+models:
+  - Qwen/Qwen3-4B
+modes: [s1, ls1, l1, e1, sr4, lsr4]
+prompts: [plain, free]
+games:
+  connect_four: [greedy, self-e1]
+seeds: 11-14
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}

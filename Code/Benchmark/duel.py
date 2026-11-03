@@ -220,7 +220,9 @@ def play_duel(contestants, game, level, seed, color=0, max_steps=100, max_illega
     of the position before it (position: scores of the columns, best class, safe moves) and the quality of the move
     played (quality: score, class, blunder), with the gate's decision and the fast move when there are any
     (see agent.act()); and the record gets the blunder counts (blunders, opponent_blunders) and the thinking
-    frequency of the gate modes (think_moves / think_rate). Without a solver, `moves` has the gate decisions only."""
+    frequency of the gate modes (think_moves / think_rate). Without a solver, `moves` has the gate decisions only.
+    Every move also has the agent's prediction of the reply (prediction: the surprise gate's extractor, or the answer
+    with the "predict" prompt) and the record counts them (predictions, prediction_hits)."""
     if illegal_policy not in ("random", "forfeit"):
         raise ValueError(f"unknown illegal_policy {illegal_policy!r}")
     if adjudicate_with not in (None, "stockfish") or (adjudicate_with and game != "chess"):
@@ -303,7 +305,7 @@ def play_duel(contestants, game, level, seed, color=0, max_steps=100, max_illega
                 illegal=agent_counts["illegal"], forced=agent_counts["forced"],
                 opponent_counts=opponent_counts if kind == "self" else None,
                 plies=len(state.history), history=list(state.history), trajectory=trajectory, thoughts=thoughts,
-                move_records=moves, **moves_summary(moves, solver is not None),
+                move_records=moves, **moves_summary(moves, solver is not None, state.history),
                 loop_stopped=False, seconds=round(time.perf_counter() - start, 1), **state.summary(color))
 
 
@@ -312,11 +314,18 @@ def _move_record(state, side, player, move, forced, illegal, attempts, scores, a
     (position, quality: see c4solver.analyze_scores() and move_quality()), the agent's decisions (attempts: the
     last_move_info of every answer, see agent.act()), and the tokens it generated for this move, by kind."""
     from c4solver import analyze_scores, move_quality
+    command = attempts[-1]["command"] if attempts else None
+    after = attempts[-1].get("after") if attempts else None
     record = dict(ply=len(state.history) + 1, side=side, color=state.sides[side], player=player, move=move,
                   forced=forced, illegal=illegal, think=any(attempt["think"] for attempt in attempts),
                   gate=attempts[0]["gate"] if attempts and attempts[0]["gate"] is not None else None,
                   fast=next((attempt["fast"] for attempt in attempts if attempt["fast"] is not None), None),
-                  attempts=len(attempts), position=None, quality=None, fast_quality=None)
+                  attempts=len(attempts), position=None, quality=None, fast_quality=None,
+                  # the move the agent expects from the other player: by the extractor of the surprise gate (after)
+                  # or, for every mode with the "predict" prompt, parsed from the answer
+                  prediction=(after or {}).get("expected") if after else (state.parse_prediction(command) if command else None),
+                  prediction_regex=(after or {}).get("regex") if after else (state.parse_prediction(command) if command else None),
+                  extracted=after)
     if scores is not None:
         record["position"] = analyze_scores(scores)
         record["quality"] = move_quality(scores, move) if move is not None else None
@@ -327,16 +336,19 @@ def _move_record(state, side, player, move, forced, illegal, attempts, scores, a
     turns = agent.turns[turns_before:] if hasattr(agent, "turns") else []
     record["tokens"] = {kind: sum(turn.get("generated", 0) for turn in turns
                                   if turn.get("kind", "think" if turn["think"] else "normal") == kind)
-                        for kind in ("think", "normal", "gate", "shadow")}
+                        for kind in ("think", "normal", "gate", "shadow", "summary")}
     return record
 
 
-def moves_summary(moves, with_solver):
+def moves_summary(moves, with_solver, history=()):
     """The numbers of the record about the moves of both players: how many times each thought (think_moves,
     think_rate: the thinking frequency, what a gate mode chooses by itself), and with the solver how many of their
     moves were blunders (blunders, blunder_rate; the first move of the game is counted too) and how often the fast
-    move of a thinking turn (oracle gate or shadow) was a blunder that thinking then repaired or not."""
+    move of a thinking turn (oracle gate or shadow) was a blunder that thinking then repaired or not.
+    With the moves of the game (history): how many moves came with a prediction of the other player's reply
+    (predictions) and how many came true (prediction_hits; the reply is the next move of the history)."""
     summary = {}
+    history = list(history)
     for player in ("agent", "opponent"):
         own = [move for move in moves if move["player"] == player]
         prefix = "" if player == "agent" else "opponent_"
@@ -344,6 +356,9 @@ def moves_summary(moves, with_solver):
             continue
         summary[prefix + "think_moves"] = sum(move["think"] for move in own)
         summary[prefix + "think_rate"] = round(summary[prefix + "think_moves"] / len(own), 3)
+        predicted = [move for move in own if move.get("prediction") is not None and move["ply"] < len(history)]
+        summary[prefix + "predictions"] = len(predicted)
+        summary[prefix + "prediction_hits"] = sum(str(move["prediction"]) == str(history[move["ply"]]) for move in predicted)
         if with_solver:
             judged = [move for move in own if move["quality"] is not None]
             summary[prefix + "blunders"] = sum(bool(move["quality"]["blunder"]) for move in judged)
@@ -410,4 +425,6 @@ def _move_notes(record):
         if record.get("fast_quality"):
             fast += " (blunder)" if record["fast_quality"]["blunder"] else " (fine)"
         notes.append(fast)
+    if record.get("prediction") is not None:
+        notes.append(f"expects {record['prediction']}")
     return notes

@@ -14,6 +14,8 @@ Tables:
                        blunder, or spoiled a good fast move
     gate_quality()     per gate mode: how often it fired, and precision / recall against two ground truths: the
                        position is critical (solver), and the fast move was a blunder (where a fast move exists)
+    surprise_quality() per mode: how often the answers predicted the reply, how often the prediction came true, and
+                       for the surprise gate the blunder rate on the moves where it was / was not surprised
     strength_table()   per mode and opponent: score, blunders per game, tokens per game (for strength_vs_tokens())
 Graphs (graphs/): strength_vs_tokens, blunders_by_mode.
 
@@ -120,14 +122,27 @@ def move_table(*folders, rebuild=True):
                              fast_blunder=bool(fast_quality["blunder"]) if fast_quality else None,
                              changed=(move.get("fast_move") != move["move"]) if move.get("fast_move") else None,
                              tokens_think=tokens.get("think"), tokens_gate=tokens.get("gate"),
-                             tokens_normal=tokens.get("normal"),
+                             tokens_normal=tokens.get("normal"), tokens_summary=tokens.get("summary"),
+                             prediction=move.get("prediction"), prediction_regex=move.get("prediction_regex"),
+                             reply=record["history"][move["ply"]] if move["ply"] < len(record["history"]) else None,
+                             surprised=gate.get("surprised") if gate else None,
                              player_result=player_result(record, move["player"])))
-    return pd.DataFrame(rows)
+    table = pd.DataFrame(rows)
+    if not table.empty: # hit: the predicted reply was played (None where there is no prediction or no reply)
+        known = table.prediction.notna() & table.reply.notna()
+        table["hit"] = [(str(p) == str(r)) if ok else None
+                        for p, r, ok in zip(table.prediction, table.reply, known)]
+    return table
 
 
 def _rate(series):
     series = series.dropna()
     return round(series.mean() * 100, 1) if len(series) else None
+
+
+def _keys(by):
+    """The grouping columns: a name or a sequence of names."""
+    return [by] if isinstance(by, str) else list(by)
 
 
 def mode_summary(table, by=("player_mode",)):
@@ -136,9 +151,9 @@ def mode_summary(table, by=("player_mode",)):
     import pandas as pd
     judged = table[table.judged]
     rows = []
-    for key, group in judged.groupby(list(by)):
+    for key, group in judged.groupby(_keys(by)):
         key = key if isinstance(key, tuple) else (key,)
-        rows.append(dict(zip(by, key), games=len(group.drop_duplicates(GAME_KEY)), moves=len(group),
+        rows.append(dict(zip(_keys(by), key), games=len(group.drop_duplicates(GAME_KEY)), moves=len(group),
                          think_pct=_rate(group.think), critical_pct=_rate(group.critical),
                          blunder_pct=_rate(group.blunder),
                          blunder_critical_pct=_rate(group[group.critical == True].blunder),
@@ -147,7 +162,7 @@ def mode_summary(table, by=("player_mode",)):
                          blunder_fast_pct=_rate(group[~group.think].blunder),
                          think_on_critical_pct=_rate(group[group.critical == True].think),
                          think_on_quiet_pct=_rate(group[group.critical == False].think)))
-    return pd.DataFrame(rows).set_index(list(by))
+    return pd.DataFrame(rows).set_index(_keys(by))
 
 
 def thinking_value(table, by=("player_mode",)):
@@ -156,14 +171,14 @@ def thinking_value(table, by=("player_mode",)):
     import pandas as pd
     both = table[table.think & table.fast_blunder.notna() & table.blunder.notna()]
     rows = []
-    for key, group in both.groupby(list(by)):
+    for key, group in both.groupby(_keys(by)):
         key = key if isinstance(key, tuple) else (key,)
-        rows.append(dict(zip(by, key), thinking_moves=len(group), changed_pct=_rate(group.changed),
+        rows.append(dict(zip(_keys(by), key), thinking_moves=len(group), changed_pct=_rate(group.changed),
                          fast_blunder_pct=_rate(group.fast_blunder), final_blunder_pct=_rate(group.blunder),
                          repaired=int((group.fast_blunder & ~group.blunder).sum()),
                          spoiled=int((~group.fast_blunder & group.blunder).sum()),
                          unrepaired=int((group.fast_blunder & group.blunder).sum())))
-    return pd.DataFrame(rows).set_index(list(by)) if rows else pd.DataFrame()
+    return pd.DataFrame(rows).set_index(_keys(by)) if rows else pd.DataFrame()
 
 
 def _precision_recall(fired, truth):
@@ -184,15 +199,37 @@ def gate_quality(table, by=("player_mode",)):
     import pandas as pd
     gated = table[table.gate_fired.notna()]
     rows = []
-    for key, group in gated.groupby(list(by)):
+    for key, group in gated.groupby(_keys(by)):
         key = key if isinstance(key, tuple) else (key,)
         critical = _precision_recall(group.gate_fired, group.critical)
         fast = _precision_recall(group.gate_fired, group.fast_blunder)
-        rows.append(dict(zip(by, key), moves=len(group), fired_pct=_rate(group.gate_fired),
+        rows.append(dict(zip(_keys(by), key), moves=len(group), fired_pct=_rate(group.gate_fired),
                          critical_precision=critical["precision"], critical_recall=critical["recall"],
                          fast_blunder_n=fast["n"], fast_blunder_precision=fast["precision"],
                          fast_blunder_recall=fast["recall"]))
-    return pd.DataFrame(rows).set_index(list(by)) if rows else pd.DataFrame()
+    return pd.DataFrame(rows).set_index(_keys(by)) if rows else pd.DataFrame()
+
+
+def surprise_quality(table, by=("player_mode",)):
+    """Per group: moves, moves with a prediction of the reply (predicted_pct), predictions that came true (hit_pct),
+    agreement between the extractor and the regex reading of the answer where both exist (agree_pct), and for the
+    surprise gate the thinking rate and the blunder rate when it was surprised, when the reply was as expected, and
+    when it had no expectation."""
+    import pandas as pd
+    rows = []
+    for key, group in table.groupby(_keys(by)):
+        key = key if isinstance(key, tuple) else (key,)
+        both = group[group.prediction.notna() & group.prediction_regex.notna()]
+        surprised = group[group.surprised == True]
+        expected = group[group.surprised == False]
+        blind = group[group.surprised.isna() & group.gate_reason.eq("no expectation")]
+        rows.append(dict(zip(_keys(by), key), moves=len(group), predicted_pct=_rate(group.prediction.notna()),
+                         hit_pct=_rate(group.hit), agree_pct=_rate(both.prediction.astype(str) == both.prediction_regex.astype(str)),
+                         surprised_pct=_rate(group.surprised.dropna() == True) if group.surprised.notna().any() else None,
+                         blunder_surprised_pct=_rate(surprised.blunder), blunder_expected_pct=_rate(expected.blunder),
+                         blunder_no_expectation_pct=_rate(blind.blunder),
+                         critical_when_surprised_pct=_rate(surprised.critical), critical_when_expected_pct=_rate(expected.critical)))
+    return pd.DataFrame(rows).set_index(_keys(by)) if rows else pd.DataFrame()
 
 
 def strength_table(*folders, by=("mode", "level", "prompt"), moves=None):
@@ -216,15 +253,19 @@ def strength_table(*folders, by=("mode", "level", "prompt"), moves=None):
                          opponent_blunders=record.get("opponent_blunders", opponent.get("blunders")),
                          think_rate=record.get("think_rate", agent.get("think_rate")), tokens=tokens.get("generated"),
                          tokens_gate=tokens.get("generated_gate", 0), tokens_shadow=tokens.get("generated_shadow", 0),
+                         tokens_summary=tokens.get("generated_summary", 0),
+                         predictions=record.get("predictions"), prediction_hits=record.get("prediction_hits"),
                          repaired=record.get("repaired"), spoiled=record.get("spoiled")))
     games = pd.DataFrame(rows)
     if games.empty:
         return games
-    result = games.groupby(list(by)).agg(games=("score", "size"), score=("score", "mean"), wins=("win", "sum"),
+    result = games.groupby(_keys(by)).agg(games=("score", "size"), score=("score", "mean"), wins=("win", "sum"),
                                          blunders=("blunders", "mean"), opponent_blunders=("opponent_blunders", "mean"),
                                          think_rate=("think_rate", "mean"), ktokens=("tokens", lambda t: t.mean() / 1000),
                                          ktokens_gate=("tokens_gate", lambda t: t.mean() / 1000),
-                                         repaired=("repaired", "mean"), spoiled=("spoiled", "mean"))
+                                         ktokens_summary=("tokens_summary", lambda t: t.mean() / 1000),
+                                         repaired=("repaired", "mean"), spoiled=("spoiled", "mean"),
+                                         predictions=("predictions", "mean"), prediction_hits=("prediction_hits", "mean"))
     return result.round(2)
 
 
@@ -298,6 +339,9 @@ def main(folders):
     if not quality.empty:
         print("The gates against the solver:")
         print(quality, "\n")
+    if table.prediction.notna().any():
+        print("Predictions of the reply and the surprise gate:")
+        print(surprise_quality(table[table.prediction.notna() | table.surprised.notna()]), "\n")
     strength = strength_table(*folders, by=("mode", "level"), moves=table)
     print("Strength and cost (agent's games, all prompts together):")
     print(strength)

@@ -4,7 +4,7 @@
 #   gcrit    thinks when the solver says the position is critical (one move keeps the value): no model tokens.
 #   gself    the model itself, without thinking, says YES / NO to "does this position need careful thought?".
 #   e1, r4   the fixed schedules of the earlier grids (every move / about every 4 moves), as baselines.
-#   grand<p> (to add after this run) thinks at random with the firing rate measured for gself and goracle: does
+#   grand<p> thinks at random with the firing rates measured in the first run (gcrit 28%, goracle 42%, gself 55%): does
 #            choosing the moments matter, or only how often it thinks?
 # shadow_fast_move: on every thinking turn the agents also answer without thinking first; the fast move is recorded
 # (.moves.jsonl) and not played, so for e1 and r4 we see how often thinking changed the move and whether it repaired
@@ -12,10 +12,10 @@
 # move of both players (blunders, blunder_rate).
 # Opponents: greedy (a bot: wins / blocks / avoids giving a win, no tokens) and self-e1 (the strongest mode so far).
 # Seeds 11-14 (odd: the agent is X): new games also for e1 and r4, so that every game has the shadow fast moves.
-# 80 games: 5 modes x 2 opponents x plain and free x 4 seeds.
+# 128 games: 8 modes x 2 opponents x plain and free x 4 seeds (the first 80 without the grand modes).
 models:
   - Qwen/Qwen3-4B
-modes: [goracle, gcrit, gself, e1, r4]
+modes: [goracle, gcrit, gself, e1, r4, grand28, grand42, grand55]
 prompts: [plain, free]
 games:
   connect_four: [greedy, self-e1]

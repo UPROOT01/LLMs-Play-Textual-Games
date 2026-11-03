@@ -19,12 +19,18 @@ from prompts import PROMPTS, SAMPLING
 
 THINK_MAX_TOKENS = 10000 # a self-evaluation can be long
 NORMAL_MAX_TOKENS = 100 # a normal turn is only a command
+SUMMARY_MAX_TOKENS = 160 # the summary of a reasoning (the "s" modes): a few sentences
+SUMMARY_QUESTION = ("Above is what you thought before your last move. Summarize it in at most three sentences, in "
+                    "the first person, as a note to yourself for the next moves: your plan, the dangers you saw, and "
+                    "what you expect to happen next. Write only the note.")
+SUMMARY_WRAP = "<think>\n{}\n</think>\n\n" # how a summary stands in the context: in the place of the reasoning
 SUBSTITUTE_COMMANDS = ["help", "look"] # played when an answer reaches the token limit
 LOG_GAME = "GAME ++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 LOG_AGENT = "AGENT -------------------------------------------------\n"
 LOG_SELFEVAL = "SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n"
+LOG_SUMMARY = "SUMMARY (kept in the context instead of the reasoning): +-+-+-+-+-\n"
 
-MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|)(?P<n>\d+)$")
+MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|s|sr|ls|lsr|)(?P<n>\d+)$")
 GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$")
 
 
@@ -40,8 +46,12 @@ def parse_mode(mode):
         replaces it (l1: it thinks every turn like e1, but while thinking it reads what it thought on its previous
         move; with lrN the last reasoning leaves the context before the next self-evaluation, so it is never read
         while thinking).
-    "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, grand30...), never on a
-        clock, and its reasonings never stay in the context; "lg<gate>": the same, keeping the last reasoning as lN.
+    "sN" / "srN": as N / rN, but each reasoning is replaced in the context by a summary of itself, written by the
+        model without thinking in a context of its own (SUMMARY_QUESTION): all the summaries stay (compress instead
+        of keep or drop); "lsN" / "lsrN": only the last summary stays, read during the next self-evaluation and then
+        replaced (the "previous" memory of lN). The settings have summarize=True.
+    "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, gsurp, grand30...), never on
+        a clock, and its reasonings never stay in the context; "lg<gate>": the same, keeping the last reasoning as lN.
         The settings have gate=<gate name> (None for the other modes); the agent needs a gate object (agent.gate).
     """
     match = GATE_MODE_PATTERN.match(mode)
@@ -49,17 +59,18 @@ def parse_mode(mode):
         from gate import parse_gate
         parse_gate(match["gate"]) # raises if the gate does not exist
         return dict(selfeval_turns=0, random_turns=False, keep="previous" if match["memory"] else "none",
-                    gate=match["gate"])
+                    gate=match["gate"], summarize=False)
     match = MODE_PATTERN.match(mode)
     if match is None:
         raise ValueError(f"unknown mode {mode!r}")
     kind, n = match["kind"], int(match["n"])
     if n == 0:
-        return dict(selfeval_turns=0, random_turns=False, keep="none", gate=None)
+        return dict(selfeval_turns=0, random_turns=False, keep="none", gate=None, summarize=False)
     return dict(selfeval_turns=n,
-                random_turns=kind in ("r", "er", "lr"),
-                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "previous"}[kind],
-                gate=None)
+                random_turns=kind in ("r", "er", "lr", "sr", "lsr"),
+                keep={"": "all", "r": "all", "e": "none", "er": "none", "lr": "last", "l": "previous",
+                      "s": "all", "sr": "all", "ls": "previous", "lsr": "previous"}[kind],
+                gate=None, summarize=kind in ("s", "sr", "ls", "lsr"))
 
 
 class SelfEvalAgent:
@@ -78,6 +89,7 @@ class SelfEvalAgent:
         self.mean_turns = settings["selfeval_turns"]
         self.random_turns = settings["random_turns"]
         self.keep = settings["keep"]
+        self.summarize = settings["summarize"]
         self.gate_name = settings["gate"]
         self.gate = None # a gate.Gate, set by the owner of the agent (duel.DuelAgent) for the gate modes
         self.shadow = False # also answer every thinking turn without thinking first (the fast move), as a measure
@@ -106,6 +118,9 @@ class SelfEvalAgent:
         self.after_selfeval = False
         self.last_reasoning = None # index of the piece of the reasoning kept by the "last" and "previous" modes
         self.last_thought = None # text of the last reasoning (read by duel.py to save the reasonings of a game)
+        self.last_summary = None # text of the summary that replaced it in the context (the "s" modes)
+        if self.gate is not None:
+            self.gate.reset()
         self._write_log("CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-")
 
     def _draw_selfeval_turns(self):
@@ -126,12 +141,13 @@ class SelfEvalAgent:
     def act(self, obs, done=False):
         """The command to play after the observation obs. done: the game is over (the agent is reset).
         last_move_info records the turn: think (did it think), gate (the gate's decision, see gate.py), fast (the
-        answer without thinking when one was generated: by the oracle gate, or by shadow on a thinking turn) and
-        command."""
+        answer without thinking when one was generated: by the oracle gate, or by shadow on a thinking turn), command,
+        and after (what the gate did after the answer, e.g. the prediction the surprise gate extracted; None otherwise).
+        """
         if done:
             self.reset()
             return ":)"
-        info = self.last_move_info = dict(think=False, gate=None, fast=None, command=None)
+        info = self.last_move_info = dict(think=False, gate=None, fast=None, command=None, after=None)
         fast = None
         if self.gate_name is not None:
             if self.gate is None:
@@ -155,6 +171,8 @@ class SelfEvalAgent:
         else:
             command = self._normal_turn(obs, fast)
         info["command"] = command
+        if self.gate is not None:
+            info["after"] = self.gate.after(self, command)
         return command
 
     def _user_piece(self, obs):
@@ -214,7 +232,7 @@ class SelfEvalAgent:
         self.last_thought = reasoning
 
         if self.keep != "none":
-            self.pieces.append(reasoning)
+            self.pieces.append(self._summarize(reasoning) if self.summarize else reasoning)
             if self.keep in ("last", "previous"):
                 self.last_reasoning = len(self.pieces) - 1
         self.pieces.append(command + self.profile.end_of_turn)
@@ -225,12 +243,25 @@ class SelfEvalAgent:
         self.counter += 1
         return command
 
+    def _summarize(self, reasoning):
+        """The summary of a reasoning, written by the model without thinking in a context of its own (the summary
+        never reads the game, only the reasoning), as it stands in the context in the place of the reasoning."""
+        text = reasoning.replace("<think>", "").replace("</think>", "").strip()
+        prompt = (self.profile.system(self.system_prompt) + self.profile.user(text + "\n\n" + SUMMARY_QUESTION, think=False)
+                  + self.profile.assistant_start + self.profile.nothink_prefill)
+        output_ids, capped = self._generate(think=False, prompt=prompt, kind="summary", max_tokens=SUMMARY_MAX_TOKENS)
+        summary = self._clean(self._decode(output_ids[self._answer_start(output_ids):])).strip()
+        self.last_summary = summary
+        self._write_log(LOG_SUMMARY + summary)
+        return SUMMARY_WRAP.format(summary) if summary else ""
+
     # ---------------------------------------------------------------- generation
 
     def _generate(self, think, prompt=None, kind=None, max_tokens=None):
         """Output ids of the model and whether the answer is too long (reached ~the limit of tokens).
         prompt: the text to complete (default: the context with the prefill of the kind of turn); kind: what the
-        turn is for in the statistics ("think", "normal", "preview", "gate", "shadow"; default from think)."""
+        turn is for in the statistics ("think", "normal", "preview", "gate", "shadow", "summary"; default from
+        think)."""
         max_tokens = max_tokens or (THINK_MAX_TOKENS if think else NORMAL_MAX_TOKENS)
         if prompt is None:
             prompt = self.context + (self.profile.think_prefill if think else self.profile.nothink_prefill)
@@ -263,20 +294,22 @@ class SelfEvalAgent:
         return self.turns[-1]["prompt"] + self.turns[-1]["generated"] if self.turns else 0
 
     def token_stats(self):
-        """Generated and read tokens of the turns played so far. generated: what playing cost (the thinking, normal
-        and gate turns); the shadow answers (generated_shadow) are a measure, not a cost, and are not in it."""
+        """Generated and read tokens of the turns played so far. generated: what playing cost (the thinking, normal,
+        gate and summary turns); the shadow answers (generated_shadow) are a measure, not a cost, and are not in it."""
         by_kind = {kind: [turn for turn in self.turns if turn["kind"] == kind]
-                   for kind in ("think", "normal", "gate", "shadow")}
+                   for kind in ("think", "normal", "gate", "shadow", "summary")}
         think, normal = by_kind["think"], by_kind["normal"]
         return dict(generated=sum(turn["generated"] for turn in self.turns if turn["kind"] != "shadow"),
                     generated_thinking=sum(turn["generated"] for turn in think),
                     generated_normal=sum(turn["generated"] for turn in normal),
                     generated_gate=sum(turn["generated"] for turn in by_kind["gate"]),
                     generated_shadow=sum(turn["generated"] for turn in by_kind["shadow"]),
+                    generated_summary=sum(turn["generated"] for turn in by_kind["summary"]),
                     think_turns=len(think),
                     normal_turns=len(normal),
                     gate_turns=len(by_kind["gate"]),
                     shadow_turns=len(by_kind["shadow"]),
+                    summary_turns=len(by_kind["summary"]),
                     capped_think_turns=sum(turn["capped"] for turn in think),
                     capped_normal_turns=sum(turn["capped"] for turn in normal),
                     max_prompt=max((turn["prompt"] for turn in self.turns), default=0))

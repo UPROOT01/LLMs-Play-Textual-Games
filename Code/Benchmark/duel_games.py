@@ -18,6 +18,20 @@ import re
 PIECE_VALUES = {"P": 1, "N": 3, "B": 3, "R": 5, "Q": 9, "K": 0}
 
 
+PREDICTION_PATTERN = re.compile(r"[\s,;:(\[]*(?:and\s+)?(?:I\s+)?\bexpect\w*\b", re.I) # "4 (expecting 3)", "4, I expect 3"
+CHESS_MOVE_PATTERN = re.compile(r"\b(?:O-O(?:-O)?|0-0(?:-0)?|[KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?)[+#]?")
+
+
+def split_prediction(answer):
+    """(the answer up to its prediction, the prediction's text or None): with the "predict" prompt the model says
+    its move and then the move it expects from the other player ("4 (expecting 3)"); the move is parsed from the
+    first part, the prediction from the second (see DuelGame.parse_prediction())."""
+    match = PREDICTION_PATTERN.search(answer)
+    if match is None:
+        return answer, None
+    return answer[:match.start()], answer[match.end():].strip()
+
+
 class DuelGame:
     name = None
     sides = ("first", "second")
@@ -31,6 +45,16 @@ class DuelGame:
 
     def legal_moves(self):
         raise NotImplementedError
+
+    def parse_prediction(self, answer):
+        """The move the answer expects from the other player, normalized as the game writes its moves in the history
+        (so that it compares with the move actually played), or None when the answer predicts nothing. The legality
+        of the predicted move is not checked (it is the other side's move)."""
+        _, tail = split_prediction(answer)
+        return self._prediction(tail) if tail else None
+
+    def _prediction(self, text):
+        return None
 
     def parse(self, answer):
         raise NotImplementedError
@@ -103,9 +127,15 @@ class Chess(DuelGame):
     def legal_moves(self):
         return [self.board.san(move) for move in self.board.legal_moves]
 
+    def _prediction(self, text):
+        match = CHESS_MOVE_PATTERN.search(text.replace("0-0-0", "O-O-O").replace("0-0", "O-O"))
+        return match.group(0).rstrip("+#") if match else None
+
     def parse(self, answer):
         """SAN ("Nf3", "exd5", "O-O") or UCI ("g1f3"), forgiving move numbers ("12. Nf3", "12...Nf3"), final
-        punctuation, "0-0" for "O-O" and lowercase pieces ("nf3")."""
+        punctuation, "0-0" for "O-O" and lowercase pieces ("nf3"). A prediction after the move ("Nf3 (expecting d5)")
+        is left out (split_prediction())."""
+        answer, _ = split_prediction(answer)
         for word in [answer.strip()] + _words(answer):
             word = re.sub(r"^\d+\.+", "", word).strip(".!?")
             word = word.replace("0-0-0", "O-O-O").replace("0-0", "O-O")
@@ -235,7 +265,12 @@ class ConnectFour(DuelGame):
     def legal_moves(self):
         return [str(column + 1) for column in range(self.columns) if self.grid[-1][column] is None]
 
+    def _prediction(self, text):
+        match = re.search(r"[1-7]", text)
+        return match.group(0) if match else None
+
     def parse(self, answer):
+        answer, _ = split_prediction(answer)
         legal = self.legal_moves()
         for word in [answer.strip()] + _words(answer):
             word = word.strip(".!?")

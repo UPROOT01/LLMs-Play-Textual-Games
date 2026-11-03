@@ -729,3 +729,83 @@ blunders_by_mode.pdf).
 - The every-4 modes think on 16-19% of the critical moves and as often on the quiet ones: the clock cannot tell them
   apart, as expected.
 Note: the old e1 numbers mix prompts (CoT, neutral, free, plain) and opponents; the gate grid fixes them.
+
+## 2026-11-03 — Results of the gate grid (duel_c4_gate.yaml, 80 games, Qwen3-4B, Connect Four, plain + free, seeds 11-14)
+
+Analysis on the agent's own moves (`gate_analysis.move_table("results")`, the moves of the gate grid only). Fixed a bug of
+`mode_summary` / `thinking_value` / `gate_quality`: `by="player_mode"` (a string) was iterated as letters.
+
+| mode | score | vs greedy | vs self-e1 | think % | blunder % | critical | quiet | ktokens |
+|---|---|---|---|---|---|---|---|---|
+| e1 | 0.50 | 0/8 | 8/8 | 87 | 34 | 79 | 14 | 26.7 |
+| goracle | 0.38 | 0/8 | 6/8 | 42 | 21 | 43 | 12 | 13.2 |
+| gcrit | 0.25 | 0/8 | 4/8 | 28 | 31 | 45 | 25 | 6.1 |
+| gself | 0.12 | 0/8 | 2/8 | 55 | 43 | 90 | 18 | 23.1 |
+| r4 | 0.12 | 0/8 | 2/8 | 19 | 46 | 92 | 22 | 4.8 |
+
+- **Nobody beats greedy** (0/40): one-ply lookahead is enough against Qwen3-4B in Connect Four whatever the mode. The
+  strength signal comes from self-e1 and from the solver's blunder counts.
+- **goracle** (think only when the fast move is a blunder, the ceiling of a gate) blunders least (21%, e1 34%) at half
+  the tokens of e1. But when told its fast move is a blunder, thinking repairs it only 21 times out of 49 (43%): on the
+  critical positions it still blunders 43% after thinking. The ceiling of gating is bounded by the quality of the
+  thinking itself, not by the gate.
+- **gcrit** (think when one move keeps the value, no model tokens) reaches e1's blunder rate on the critical moves
+  (45%) with a quarter of the tokens; its blunder rate on the quiet moves (25%) is that of never thinking, as designed.
+  It blunders 31% overall, better than r4 (46%) with similar cost. Illegal first answers 0.38 per game (others ~0).
+- **gself** (the model asks itself YES/NO without thinking) is useless: it fires on 55% of the moves, *less* often on
+  the critical ones (46%) than on the quiet ones (59%); precision for "critical" 28.6%, below the base rate (34%).
+  Its blunder rate on critical moves (90%) equals r4's; it costs almost as much as e1 (23k tokens) and scores like r4.
+  A no-think self-assessment of difficulty carries no information here; this is the main negative result of option 1.
+- **Shadow fast moves of e1**: thinking changed the move 56% of the time; it repaired 12 blunders and spoiled 7 good
+  fast moves out of 106 thinking turns. The net value of thinking per move is small (+5 moves in 106); the
+  unrepaired blunders (25) dominate. r4: 1 repaired, 1 spoiled.
+- **Critical vs quiet**: as in the old games, nearly all the damage is on the critical positions (79-92% blunder rate
+  for e1, gself, r4 against 14-22% on the quiet ones). The fast answer on a quiet position is fine 75-88% of the time:
+  thinking there is mostly wasted (e1 thinks on 93% of quiet moves).
+- Oddity to check: e1 beat self-e1 8/8 (both colours), the old e1 vs self-e1 games were 3-4; the two agents are
+  identical except the rng. Possibly chance (p=1/256), possibly an asymmetry introduced with the shadow fast moves
+  (both sides have them) or in the order of the generations; worth re-checking before using the self-e1 scores.
+
+Next: `grand<p>` at p = 28 (gcrit's rate), 42 (goracle's), 55 (gself's), to separate the frequency of thinking from
+the choice of the moves; a gate that reads the board for threats (a cheap heuristic, no solver) between gcrit and
+gself; more seeds (8 games per cell is thin for scores, fine for blunder rates: 105-141 moves per mode).
+
+## 2026-11-03 — Part 4 (summarize arm) and Part 5 (surprise gate): built, to run
+
+Both from the gap list of 2026-10-30 (gaps 3 and 4). Tests: tests/test_gate.py (test_summary_modes, test_predictions,
+test_surprise_gate, test_play_duel_surprise); test_duel, test_profiles, test_legacy_equivalence still pass.
+
+**Summarize (agent.py, modes s1 / ls1 / sr4 / lsr4).** The memory ablation had keep (1, l1, r4, lr4) and drop (e1,
+er4) and nothing in between. After each reasoning the model, without thinking and in a context of its own (system
+prompt + the reasoning + SUMMARY_QUESTION: at most three sentences, first person, plan / dangers / what it expects;
+the board is never shown), writes a note that stands in the context in the place of the reasoning, wrapped as a
+short `<think>…</think>`. `s` keeps every note, `ls` only the last (read during the next reasoning, then replaced,
+as l1). Cost: SUMMARY_MAX_TOKENS = 160 per thinking turn (tokens.generated_summary, inside generated). Why this
+design: the note is produced by the same model from its own reasoning, so the only variable against l1 is the
+compression; and "1" (keep everything) cannot be played in Connect Four (context overflow), so s1 is the only way to
+keep *all* the reasonings. Grid grids/duel_c4_summary.yaml: s1, ls1, l1, e1, sr4, lsr4 against greedy and self-e1,
+plain and free, seeds 11-14 (96 games, 16 of e1 already played). Questions: does a summary carry what l1 gets from the
+whole reasoning (l1 vs ls1), does keeping all the notes beat the last one (s1 vs ls1), does any memory beat none
+(vs e1), and the same at every-4 (sr4 / lsr4 vs r4 / lr4 / er4 of the memory grid).
+
+**Surprise gate (gate.py gsurp, prompt "predict").** The design discussed with the user: (1) the prompt asks the model
+to say, after its move, which move it expects from the other player ("4 (expecting 3)"; duel_games.split_prediction
+keeps the prediction out of the move parsing: without it "4, expecting 3" would have been played as 3, because
+parse() reads the last word first); (2) after every answer a second context of the same model, without thinking,
+reads what the agent wrote (the last 8000 characters of its reasoning when it thought, and its answer) and extracts
+the expected move or NONE (EXTRACT_QUESTION, 12 tokens; the regex reading of the answer is stored next to it, to
+measure their agreement); (3) before the next move the gate compares the expectation with the move actually played:
+the agent thinks when surprised, or when it had no expectation; never on the first move of a game. After an illegal
+answer the expectation does not change under the retry (pending / expected). Every move record has prediction,
+prediction_regex and extracted; the record counts predictions and prediction_hits for every mode played with the
+predict prompt (e1 and r4 too: the regex reading), so the prediction accuracy of the model is measured by itself.
+Grid grids/duel_c4_surprise.yaml: gsurp, e1, r4, gcrit, grand35 with the predict prompt, against greedy and self-e1,
+seeds 11-14 (40 games). Analysis: gate_analysis.surprise_quality(): predicted / hit / agreement rates, and the
+blunder and critical rates when surprised vs as expected vs no expectation (is surprise a proxy for criticality?).
+Caveats to keep in mind when reading it: the predict prompt names the other player (free does not), so its e1 is
+not the e1 of the gate grid; a model that predicts badly is surprised often and gsurp degenerates towards e1 (the
+firing rate tells); a prediction that comes true can still be a critical position (surprise is about the opponent's
+plan, criticality about the board), which is exactly what the critical_when_expected column measures.
+
+**Also.** grand28 / grand42 / grand55 added to duel_c4_gate.yaml (the firing rates of gcrit / goracle / gself):
+48 more games. gate_analysis.mode_summary & co. fixed for by="<one column>".

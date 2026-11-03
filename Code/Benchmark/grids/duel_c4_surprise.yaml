@@ -1,0 +1,26 @@
+# Connect Four: think when surprised. With the "predict" prompt (duel_prompts.py) every answer also names the column
+# the model expects the other player to play next ("4 (expecting 3)").
+#   gsurp   after every answer a second context of the same model reads what the agent wrote (its reasoning when it
+#           thought, and its answer) and extracts the expected column; before the next move the gate compares it with
+#           the column actually played and the agent thinks only when the expectation failed or there was none.
+#   e1, r4  the clocks, with the same prompt: their predictions are parsed from the answers (prediction_hits in the
+#           record), so we also learn how often the model predicts the opponent, and whether gsurp fires on the moves
+#           where a clock mode would have blundered (gate_analysis.surprise_quality()).
+#   gcrit   the solver's gate with this prompt, the reference for "thinking on the right moves".
+#   grand35 random thinking at about the firing rate expected for gsurp (to adjust after the first games).
+# 40 games: 5 modes x 2 opponents x 1 prompt x seeds 11-14.
+models:
+  - Qwen/Qwen3-4B
+modes: [gsurp, e1, r4, gcrit, grand35]
+prompts: [predict]
+games:
+  connect_four: [greedy, self-e1]
+seeds: 11-14
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}
