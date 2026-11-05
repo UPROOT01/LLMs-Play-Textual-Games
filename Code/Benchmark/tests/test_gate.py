@@ -464,6 +464,40 @@ def test_run_duel_grid_with_gates():
     assert run_duel.grid_solver(dict(grid, modes=["e1"], games={"chess": ["random"]})) is None
     print("ok run_duel_grid with gates: records, moves.jsonl, solver requirement")
 
+def test_board_formats():
+    """The board option of Connect Four: the row grid (default), the columns, or both; the game is the same."""
+    texts = {}
+    for board in ("grid", "columns", "both"):
+        game = ConnectFour(board=board)
+        for move in "3424424":
+            game.play(move)
+        texts[board] = game.observation(game.turn, "4")
+    assert texts["grid"] == ConnectFour.observation(_played("3424424"), 1, "4") # the default did not change
+    assert "| . X X O . . . |" in texts["grid"] and "column 4:" not in texts["grid"]
+    assert "column 2: X O\ncolumn 3: X\ncolumn 4: O O X X\ncolumn 5: empty" in texts["columns"]
+    assert "| . X X O" not in texts["columns"]
+    assert "| . X X O . . . |" in texts["both"] and "column 4: O O X X" in texts["both"]
+    for text in texts.values():
+        assert text.endswith("Columns you can play: 1, 2, 3, 4, 5, 6, 7\nYou play O. Your move (a column number):")
+    full = ConnectFour(board="columns")
+    for move in "111111":
+        full.play(move)
+    assert "column 1: X O X O X O (full)" in full.observation(0, "1")
+    try:
+        ConnectFour(board="fen")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown board must be refused")
+    print("board formats ok")
+
+
+def _played(moves):
+    game = ConnectFour()
+    for move in moves:
+        game.play(move)
+    return game
+
 
 if __name__ == "__main__":
     test_parse()
@@ -477,3 +511,4 @@ if __name__ == "__main__":
     test_shadow()
     test_play_duel_with_solver()
     test_run_duel_grid_with_gates()
+    test_board_formats()

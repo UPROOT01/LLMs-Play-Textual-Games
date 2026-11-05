@@ -809,3 +809,66 @@ plan, criticality about the board), which is exactly what the critical_when_expe
 
 **Also.** grand28 / grand42 / grand55 added to duel_c4_gate.yaml (the firing rates of gcrit / goracle / gself):
 48 more games. gate_analysis.mode_summary & co. fixed for by="<one column>".
+
+## 2026-11-04 — The three grids read together: when_to_think.ipynb
+
+The user ran the gate, summary and surprise grids with more seeds than planned (gate: seeds 1-15, 60 games per mode;
+summary and surprise: seeds 1-25, 50 games per mode and opponent): 1832 Connect Four duel games, 12.7k judged moves
+of the agent. `when_to_think.ipynb` (Code/Benchmark, runs locally on results/) has the tables, the Fisher tests, the
+graphs and a verdict per experiment. What it says:
+
+**A. Gate.** goracle (the oracle): blunder rate 23% vs e1 33% (p<0.05) at 40% of the tokens, score vs self-e1 0.63
+vs 0.57. grand42 (random, same rate) is not distinguishable from goracle on score (0.53), only on blunders. gcrit:
+score 0.43 at 30% of e1's tokens, within e1's interval. gself: precision for "critical" 22% against a base rate of
+28%, below chance; it plays like r4 at e1's cost. Thinking repairs about 45% of the fast blunders it is pointed at
+(goracle 78 of 179): the ceiling is the reasoning, not the gate. Against greedy: 22 wins in 635 games, all modes.
+
+**B. Summary arm.** Blunder rates of e1 / l1 / ls1 / s1 identical (32-34%, same on critical: 80-82%), same for r4 /
+lsr4 / sr4 (36-40%). On score vs self-e1 s1 (all the notes) is worse than e1 (0.28 vs 0.52, p=0.02); l1 and ls1 in
+between, not distinguishable from e1. Third time the memory of the reasoning changes nothing; more memory is if
+anything harmful (s1 also has more capped reasonings and illegal answers).
+
+**C. Surprise.** Prediction hit rate 18-23% for every mode = chance (the most common reply is played 21% of the
+time). gsurp fires on 74% of its moves: e1 with a few moves skipped. Faint signal: after a missed prediction the
+position is critical 23% vs 17% (p=0.02), the next move a blunder 33% vs 28% (p=0.08); unusable as a gate since 4
+replies out of 5 are "unexpected". Extractor and regex agree on 81% of the moves.
+
+**D. Across.** (1) greedy unbeaten; (2) 27% of positions critical, fast answer wrong there 86%, thought answer 67%;
+quiet positions: 18% vs 17%; (3) a selection effect we nearly reported as a finding: on thought critical moves the
+gate modes blunder ~50% and the clock modes ~75%, but only because the gates think in the opening (56% of gcrit's
+thought critical moves are at ply <= 6, where critical = "play the centre" and thinking gets it right half the
+time); from ply 7 on every family blunders 70-80% of its thought critical moves (p=0.14 / 0.17). When the position
+is hard, the reasoning fails three times out of four whoever decides that it should reason.
+
+## 2026-11-05 - The oracle read closely, and a board-format test
+
+**Questions asked about the gate results, and what the data says.**
+- goracle is a ceiling, not a method: the solver filters the fast answers, so every move played without thinking is
+  right by construction (250 of 450 moves, 0 blunders) and all its blunders are thought moves (104 of 200). It beats
+  e1 on blunders also because in e1 the thinking spoils about 10% of the fast answers that were right (48 of 476).
+  The thinking turn sees nothing of the solver nor the rejected fast answer.
+- e1 against self-e1 "wins 57%": noise. Over all the mirror games it is 68 of 125 (0.54, binomial p=0.37). Use it as
+  the yardstick: at 30-60 games a score gap under ~0.15 means nothing. The second player won 75 of 125 (p=0.03):
+  colours alternate with the seed, so no bias, and too weak to build on.
+- grand42 is not special: the scores of the random gates are not monotonic (grand28 0.33, grand35 0.60, grand42
+  0.53, grand55 0.40 at 25-30 games). The blunder rate per move is the steadier metric (random gates 27-35%, e1
+  26%, goracle 20%). To claim "random 40% = e1 at 40% of the tokens" it takes ~100 seeds per mode.
+- Open: thinking repaired 48% of the fast blunders in the goracle games and 26% in e1's (53 of 201). Different
+  prompts and positions; to check before quoting the 45%.
+
+**Why a board-format test.** The model always gets the whole board (row grid, last move, playable columns), also
+on the thinking turns. Yet in the reasoning of goracle / greedy / seed 14, ply 8, it copies the grid right and then
+reads the discs of column 4 as column 3. If the failures of the thinking on the hard positions are misreadings of
+the row grid, a text where a column is one line should raise the ceiling; if they are not, the ceiling is the
+reasoning itself. One example is not a rate: this test measures it.
+
+**What changed.** `duel_games.ConnectFour` has the option `board`: "grid" (default, unchanged), "columns" (one line
+per column, discs from the bottom up, "(full)" when full) or "both". `grids/duel_c4_board_columns.yaml` and
+`duel_c4_board_both.yaml`: goracle, e1, r4, plain prompt, greedy and self-e1, seeds 1-15 (90 games each), the same
+games of the gate grid, which is the baseline. `gate_analysis.move_table` has the column `board`. Test:
+`tests/test_gate.py::test_board_formats`.
+**Caveats.** The record path has no game options: run each grid in its own results folder (results_board_columns,
+results_board_both), or the games look already played. "columns" alone may make rows and diagonals harder to see,
+which is why "both" is there. In self-e1 the opponent reads the new board too, so read the blunder rates (per move)
+before the score. Not run yet (needs the GPU).
+

@@ -107,6 +107,7 @@ def move_table(*folders, rebuild=True):
             tokens = move.get("tokens") or {}
             rows.append(dict(**{name: record[name] for name in GAME_KEY}, player=move["player"],
                              player_mode=players.get(move["player"]), ply=move["ply"], color=move["color"],
+                             board=(record.get("game_options") or {}).get("board", "grid"),
                              move=move["move"], think=bool(move["think"]), rebuilt=move.get("tokens") is None,
                              judged=quality is not None,
                              n_safe=position["n_safe"] if position else None,

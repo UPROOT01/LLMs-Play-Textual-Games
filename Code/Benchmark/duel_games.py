@@ -245,17 +245,22 @@ class Chess(DuelGame):
 
 class ConnectFour(DuelGame):
     """Connect Four on a 6x7 board: the moves are the columns, 1 to 7. X moves first.
-    Options: legal_moves: whether the playable columns are listed."""
+    Options: legal_moves: whether the playable columns are listed; board: how the position is shown, "grid" (the
+    rows, top to bottom, as on the table), "columns" (one line per column, its discs from the bottom up: nothing to
+    count across rows to know what a column holds) or "both"."""
     name = "connect_four"
     sides = ("X", "O")
     rows, columns = 6, 7
     legal_label = "Columns you can play"
     move_request = "Your move (a column number):"
 
-    def __init__(self, rng=None, legal_moves=True):
+    def __init__(self, rng=None, legal_moves=True, board="grid"):
         super().__init__(rng)
+        if board not in ("grid", "columns", "both"):
+            raise ValueError(f"unknown board {board!r}: grid, columns or both")
         self.grid = [[None] * self.columns for _ in range(self.rows)] # grid[0] is the bottom row
         self.show_legal = legal_moves
+        self.show_board = board
         self._winner = None
 
     @property
@@ -320,6 +325,16 @@ class ConnectFour(DuelGame):
         rows = ["| " + " ".join(symbol[cell] for cell in self.grid[row]) + " |" for row in reversed(range(self.rows))]
         return "\n".join(rows) + "\n  " + " ".join(str(column + 1) for column in range(self.columns))
 
+    def _columns_text(self):
+        """One line per column: its discs from the bottom up, and whether it is full."""
+        symbol = {0: "X", 1: "O"}
+        lines = []
+        for column in range(self.columns):
+            discs = [symbol[self.grid[row][column]] for row in range(self.rows) if self.grid[row][column] is not None]
+            text = " ".join(discs) if discs else "empty"
+            lines.append(f"column {column + 1}: {text}" + (" (full)" if len(discs) == self.rows else ""))
+        return "\n".join(lines)
+
     def observation(self, side, last_move=None, feedback=None):
         lines = []
         if feedback:
@@ -329,7 +344,11 @@ class ConnectFour(DuelGame):
                          + (" and move first." if not self.history else "."))
         else:
             lines.append(f"{self.sides[1 - side]} dropped a disc in column {last_move}.")
-        lines.append("Board (the discs fall to the bottom row):\n" + self._text())
+        if self.show_board in ("grid", "both"):
+            lines.append("Board (the discs fall to the bottom row):\n" + self._text())
+        if self.show_board in ("columns", "both"):
+            lines.append("The board column by column (the discs of each column, from the bottom up):\n"
+                         + self._columns_text())
         if self.show_legal:
             lines.append(f"{self.legal_label}: " + ", ".join(self.legal_moves()))
         lines.append(f"You play {self.sides[side]}. {self.move_request}")

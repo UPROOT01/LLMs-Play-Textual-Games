@@ -1,0 +1,251 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+DUEL: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+connect_four against self-e1, seed 16, the agent plays O
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 1.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| X . . . . . . |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+2 (expecting 1)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 3.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| X O X . . . . |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+4 (expecting 3)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 5.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| X O X O X . . |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+6 (expecting 5)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 7.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| X O X O X O X |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+1 (expecting 7)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 5.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| O . . . X . . |
+| X O X O X O X |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+3 (expecting 5)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 5.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . X . . |
+| O . O . X . . |
+| X O X O X O X |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+Think about the game, then say your move as a column number and, in parentheses, the column you expect the other player to play next, like "4 (expecting 3)". Nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The current board state is:
+
+Row 1: all dots
+Row 2: all dots
+Row 3: all dots
+Row 4: . . . . X . .
+Row 5: O . O . X . .
+Row 6: X O X O X O X
+
+Columns 1-7. The last move was X dropping in column 5. Now it's my turn as O. Let me think about possible moves.
+
+First, I need to check where I can place my O. The available columns are 1,2,3,4,5,6,7. But looking at the board, column 5 already has an X in row 4 and 5. Wait, row 4 column 5 is X, and row 5 column 5 is X. So column 5 is already filled. So I can't play there. Wait, but the user says columns you can play are 1-7. Wait, maybe some columns are already filled? Let me check again.
+
+Looking at the board:
+
+Row 6 (the bottom row) is X O X O X O X. So columns 1-7 have X, O, X, O, X, O, X. So columns 1,3,5,7 are X, and 2,4,6 are O. So columns 1,3,5,7 have discs in row 6. But the other rows might have discs in other columns. For example, row 5 has O in column 1, 3, and 5. Wait, row 5 is O . O . X . . So column 1: O, column 3: O, column 5: X. So column 5 in row 5 is X. So column 5 is already filled in row 5. So when the user says columns you can play are 1-7, maybe some columns are already filled. Wait, but the user says "Columns you can play: 1, 2, 3, 4, 5, 6, 7". So maybe all columns are playable? But that can't be, because in row 6, columns 1,3,5,7 are already filled with X, and 2,4,6 with O. So maybe the available columns are those that are empty in the bottom row. Wait, but the board is shown as:
+
+Row 4: . . . . X . .
+Row 5: O . O . X . .
+Row 6: X O X O X O X
+
+So in row 6, columns 1,3,5,7 are X, and 2,4,6 are O. So columns 1,3,5,7 have X in row 6, so they are filled. Columns 2,4,6 have O in row 6. So the available columns would be columns where the bottom row (row 6) is empty. But row 6 is already filled. Wait, maybe the board is displayed with the bottom row as row 6, and the discs fall to the bottom. So if a column has a disc in row 6, it's filled. So the available columns are those where row 6 is empty. But in the current board, row 6 is filled. Wait, but the user says "Columns you can play: 1, 2, 3, 4, 5, 6, 7". So maybe all columns are playable, but some have discs already. Wait, perhaps the board is displayed with the bottom row as row 6, and the discs are stacked upwards. So if a column has a disc in row 6, that's the bottom, and if there's a disc in row 5, then the next disc would go to row 4, etc. So for example, column 5 has X in row 6 (bottom) and X in row 5. So if I drop a disc in column 5, it would go to row 4, but row 4 column 5 is already X. Wait, no. Wait, the board is shown as:
+
+Row 4: . . . . X . .
+Row 5: O . O . X . .
+Row 6: X O X O X O X
+
+So for column 5, row 4 is X, row 5 is X, row 6 is X. So that column is full. So you can't play there. But the user says columns you can play are 1-7. So maybe the available columns are those where the bottom row (row 6) is empty. But in the current state, row 6 is filled. Wait, but the user says "Columns you can play: 1, 2, 3, 4, 5, 6, 7". So maybe the user is indicating that all columns are available, but that's not possible. Maybe the board is not fully filled. Let me check again.
+
+Wait, row 4 is . . . . X . . So columns 1-4 are empty, column 5 is X, columns 6-7 are empty. Row 5 is O . O . X . . So columns 1: O, 2: empty, 3: O, 4: empty, 5: X, 6: empty, 7: empty. Row 6 is X O X O X O X. So columns 1: X, 2: O, 3: X, 4: O, 5: X, 6: O, 7: X.
+
+So for each column:
+
+Column 1: row 6 is X, row 5 is O, row 4 is empty. So the bottom of column 1 is X, but there's an O above it. So if I drop a disc in column 1, it would go to row 4 (since row 6 is full). Wait, no. The discs fall to the bottom row. So when you drop a disc into a column, it lands at the bottom of that column, which is row 6. If row 6 is already occupied, then it goes to row 5, then row 4, etc. So for column 1, row 6 is X, so the next available row is row 5, which is O. Then row 4 is empty. So if I drop in column 1, it would go to row 4. So column 1 is playable. Similarly for column 2: row 6 is O, row 5 is empty, so dropping there would go to row 5. Column 3: row 6 is X, row 5 is O, row 4 is empty. So column 3 is playable. Column 4: row 6 is O, row 5 is empty, so playable. Column 5: row 6 is X, row 5 is X, row 4 is X. So column 5 is full. So can't play there. Column 6: row 6 is O, row 5 is empty, so playable. Column 7: row 6 is X, row 5 is empty, so playable.
+
+So the available columns are 1,2,3,4,6,7. Wait, but the user says columns you can play are 1-7. Maybe the user is not considering the filled rows, but just the columns. But in reality, some columns are full. So the available columns are those where the bottom row (row 6) is empty. But in the current state, row 6 is filled. So maybe the user is indicating that all columns are available, but that's not correct. However, according to the user's message, the available columns are 1-7. So perhaps the user is not considering the filled rows, but just the columns. Maybe the user is showing the board with the bottom row as row 6, and the available columns are those where the bottom row is empty. But in this case, columns 1,2,3,4,6,7 have empty spaces in row 6? Wait, no. Row 6 is X O X O X O X. So columns 1,3,5,7 are X, and 2,4,6 are O. So columns 1,3,5,7 have X in row 6, so they are filled. Columns 2,4,6 have O in row 6, so they are filled. So all columns are filled in row 6. Therefore, the only way to play is in columns where there's space above row 6. For example, column 1 has O in row 5 and X in row 6. So if I drop in column 1, it would go to row 4. So column 1 is playable. Similarly for column 2: row 6 is O, row 5 is empty. So dropping there would go to row 5. Column 3: row 6 is X, row 5 is O, so dropping there would go to row 4. Column 4: row 6 is O, row 5 is empty. So dropping there would go to row 5. Column 5 is full. Column 6: row 6 is O, row 5 is empty. So dropping there would go to row 5. Column 7: row 6 is X, row 5 is empty. So dropping there would go to row 5.
+
+So the available columns are 1,2,3,4,6,7. But the user says columns you can play are 1-7. Maybe the user is not considering the filled rows, but just the columns. So perhaps the user is indicating that all columns are available, but that's not the case. However, the user's message says "Columns you can play: 1, 2, 3, 4, 5, 6, 7", so maybe the user is considering that all columns are available, even if they are filled. But that's not correct. However, given the user's instruction, I have to follow their message. So the available columns are 1-7. But in reality, some columns are filled. But perhaps the user is just showing the board as it is, and the available columns are those where the bottom row is empty. But in this case, all columns have something in row 6. So maybe the user is mistaken, but I have to follow their instruction.
+
+So the current move is for O. The last move was X in column 5. The board is:
+
+Row 4: . . . . X . .
+Row 5: O . O . X . .
+Row 6: X O X O X O X
+
+So the available columns for O are 1,2,3,4,6,7. But the user says columns you can play are 1-7. So I need to choose a column where I can drop an O. Let's think about possible moves.
+
+Looking for possible winning moves. Let's check if any of the available columns can create a four-in-a-row.
+
+Looking at column 1: row 4 is empty. If I drop O in column 1, it would go to row 4. Then, check if that creates a line. Let's see:
+
+Row 4 column 1: O. Row 5 column 1: O. Row 6 column 1: X. So vertically, there's O, O, X. Not a line. Horizontally, column 1 has O in row 4 and 5, but row 6 is X. So not a line. Diagonally? Let's see. From row 4 column 1 (O), moving up-right: row 3 column 2 (empty), row 2 column 3 (empty), etc. Not helpful.
+
+Column 2: row 5 is empty. If I drop O there, it would go to row 5. Then, check if that creates a line. Row 5 column 2: O. Row 4 column 2: empty. Row 6 column 2: O. So vertically, O in row 5 and 6. Not enough. Horizontally, column 2 has O in row 6 and row 5. Not enough. Diagonally? Maybe not.
+
+Column 3: row 4 is empty. If I drop O there, it would go to row 4. Then, check. Row 4 column 3: O. Row 5 column 3: O. Row 6 column 3: X. So vertically, O, O, X. Not a line. Horizontally, column 3 has O in row 4 and 5, but row 6 is X. Diagonally? Maybe not.
+
+Column 4: row 5 is empty. If I drop O there, it would go to row 5. Then, row 5 column 4: O. Row 6 column 4: O. So vertically, O in row 5 and 6. Not enough. Horizontally, column 4 has O in row 6 and row 5. Not enough. Diagonally? Maybe not.
+
+Column 6: row 5 is empty. If I drop O there, it would go to row 5. Then, row 5 column 6: O. Row 6 column 6: O. So vertically, O in row 5 and 6. Not enough. Horizontally, column 6 has O in row 5 and 6. Not enough. Diagonally? Maybe not.
+
+Column 7: row 5 is empty. If I drop O there, it would go to row 5. Then, row 5 column 7: O. Row 6 column 7: X. So vertically, O in row 5 and X in row 6. Not a line. Horizontally, column 7 has O in row 5 and X in row 6. Not enough. Diagonally? Maybe not.
+
+So none of the available columns create an immediate win. So I need to block X's possible moves or create a potential line.
+
+Looking at the board, X has discs in column 5, row 4 and 5. Also, in row 4, column 5 is X. So if X continues to play in column 5, maybe they can create a line. But since X just played in column 5, maybe they are trying to create a vertical line. Let's see: column 5 has X in row 4, 5, and 6. So that's three in a row. If X plays again in column 5, they would have four. But column 5 is already filled in row 6. So X can't play there. So maybe X is trying to create a horizontal line. Let's check row 4: column 5 is X, and row 4 has X in column 5. Row 5 has X in column 5. So maybe X is trying to extend that. But since column 5 is full, they can't.
+
+Alternatively, looking for possible lines. For example, in row 5, columns 1, 3, 5 are O, X, X. Wait, row 5 is O . O . X . . So columns 1: O, 3: O, 5: X. So if X plays in column 2 or 4, maybe they can create a line. But since X just played in column 5, maybe they are trying to extend their line.
+
+But since I'm O, I need to block X. Let's see. If X plays in column 2, then row 5 column 2 would be X. Then, row 5 would have O in column 1, X in 2, O in 3, X in 5. Not a line. Alternatively, if X plays in column 4, then row 5 column 4 is X. Then, row 5 would have O in 1, empty in 2, O in 3, X in 4, X in 5. Not a line. But maybe X is trying to create a diagonal.
+
+Alternatively, looking at column 2. If I play O in column 2, then row 5 column 2 is O. That might block X from creating a line. Or maybe play in column 4 to block.
+
+Alternatively, looking for possible moves that can create a line for O. For example, if I play in column 2, then row 5 column 2 is O. Then, check if that creates a line. Let's see: column 2 has O in row 5 and 6. So vertically, two O's. Not enough. Horizontally, row 5 has O in column 2. Not enough. Diagonally, maybe from row 5 column 2 (O) to row 4 column 1 (empty), row 3 column 0 (invalid). Not helpful.
+
+Alternatively, playing in column 4. If I play O in column 4, row 5 column 4 is O. Then, check if that creates a line. Column 4 has O in row 5 and 6. So vertically, two O's. Not enough. Horizontally, row 5 has O in column 4. Not enough. Diagonally, maybe from row 5 column 4 (O) to row 4 column 3 (empty), row 3 column 2 (empty). Not helpful.
+
+Alternatively, playing in column 3. If I play O in column 3, row 4 column 3 is O. Then, check if that creates a line. Column 3 has O in row 4 and 5 (O in row 5 column 3). So vertically, two O's. Not enough. Horizontally, row 4 column 3 is O, and row 5 column 3 is O. So two in a row. Not enough. Diagonally, maybe from row 4 column 3 (O) to row 5 column 4 (empty), row 6 column 5 (X). Not helpful.
+
+Alternatively, playing in column 6. If I play O in column 6, row 5 column 6 is O. Then, vertically, O in row 5 and 6. Not enough. Horizontally, row 5 column 6 is O. Not enough. Diagonally, maybe from row 5 column 6 (O) to row 4 column 5 (X), row 3 column 4 (empty). Not helpful.
+
+Alternatively, playing in column 7. If I play O in column 7, row 5 column 7 is O. Then, vertically, O in row 5 and X in row 6. Not enough. Horizontally, row 5 column 7 is O. Not enough. Diagonally, maybe from row 5 column 7 (O) to row 4 column 6 (empty), row 3 column 5 (empty). Not helpful.
+
+So none of the moves create an immediate win. Therefore, I need to block X's possible moves. Let's see where X might play next. The last move was X in column 5. The available columns for X are 1,2,3,4,6,7. But X is trying to win. Let's see where X can create a line.
+
+Looking at column 5: already has X in row 4, 5, 6. So if X plays again in column 5, they would have four. But column 5 is full. So X can't play there. So maybe X is trying to create a horizontal line in row 4 or 5. For example, in row 4, column 5 is X. If X plays in column 4 or 6, maybe they can create a horizontal line. Let's see:
+
+Row 4: . . . . X . . So if X plays in column 4 or 6, then row 4 would have X in column 4 or 6, but that's not enough. Alternatively, in row 5, columns 1, 3, 5 are O, O, X. If X plays in column 2 or 4, they could create a line. For example, if X plays in column 2, then row 5 would have X in column 2, which is adjacent to O in column 1 and 3. Not a line. If X plays in column 4, then row 5 would have X in column 4, adjacent to O in column 3 and X in column 5. So that's O, X, X. Not a line. But if X plays in column 2 and 4, maybe they can create a line. But since X is playing one move at a time, maybe they are trying to create a diagonal.
+
+Alternatively, looking at column 2. If X plays in column 2, then row 5 column 2 is X. Then, check if that creates a line. For example, column 2 has X in row 5 and 6 (O in row 6). Not helpful. Diagonally, from row 5 column 2 (X) to row 4 column 1 (empty), row 3 column 0 (invalid). Not helpful.
+
+Alternatively, looking at column 4. If X plays in column 4, then row 5 column 4 is X. Then, check if that creates a line. Column 4 has X in row 5 and 6 (O in row 6). Not helpful. Diagonally, from row 5 column 4 (X) to row 4 column 3 (empty), row 3 column 2 (empty). Not helpful.
+
+Alternatively, looking at column 6. If X plays in column 6, then row 5 column 6 is X. Then, check if that creates a line. Column 6 has X in row 5 and 6 (O in row 6). Not helpful. Diagonally, from row 5 column 6 (X) to row 4 column 5 (X), row 3 column 4 (empty). So that's a diagonal line of X in row 4 column 5 and row 5 column 6. If X plays in column 6, then that's two in a diagonal. But not enough for a win.
+
+So X is trying to create a diagonal or horizontal line. Since I need to block X, I should look for where X is likely to play next. The last move was X in column 5. So maybe X is trying to extend their line in column 5, but it's already full. Alternatively, they might be trying to create a horizontal line in row 4 or 5.
+
+Looking at row 4: column 5 is X. If X plays in column 4 or 6, they could create a horizontal line. For example, if X plays in column 4, then row 4 would have X in columns 4 and 5. But that's only two. If X plays in column 6, then row 4 would have X in columns 5 and 6. Again, two. Not enough. But if X plays in column 4 and 6, then they could have three in a row. But since X is playing one move at a time, maybe they are trying to create a line in another way.
+
+Alternatively, looking at column 2. If X plays in column 2, then row 5 column 2 is X. Then, check if that creates a line with other X's. For example, in column 2, row 5 is X, row 6 is O. Not helpful. But if X plays in column 2, then in row 5, there's X in column 2, adjacent to O in column 1 and 3. Not a line.
+
+Alternatively, looking at column 4. If X plays in column 4, then row 5 column 4 is X. Then, in row 5, columns 3 is O, column 4 is X, column 5 is X. So that's O, X, X. Not a line. But if X plays in column 4, then in column 4, row 5 is X, row 6 is O. Not helpful.
+
+So maybe X is trying to create a diagonal. For example, in row 5 column 5 (X), if X plays in column 6, then row 5 column 6 is X, and row 4 column 5 is X. That's a diagonal. So if X plays in column 6, they have two in a diagonal. But that's not enough for a win. However, if X plays in column 6 again, they could extend it.
+
+But since I'm O, I need to block X. So if I play in column 6, that would block X from playing there. Wait, but X is the next player. Wait, no. The last move was X in column 5. Now it's my turn as O. So I need to choose a column to play, and then X will play next. So I should choose a column that either blocks X's potential move or creates a threat for me.
+
+Looking at column 6: if I play O in column 6, then row 5 column 6 is O. That would block X from playing there. Because if X plays in column 6, they would have to go to row 5, but I already have O there. So that's a good move to block X's potential play in column 6.
+
+Alternatively, column 2: if I play O in column 2, then X can't play there. But maybe X is more likely to play in column 6. Let's see.
+
+Alternatively, looking at column 4. If I play O in column 4, then X can't play there. But maybe X is more likely to play in column 4.
+
+Alternatively, looking at column 2. If I play O in column 2, then X can't play there. But maybe X is trying to play in column 2.
+
+But how to decide which column to play? The user's previous moves were expecting the opponent to play in certain columns. For example, in the previous moves, the assistant chose 2 (expecting 1), then 4 (expecting 3), then 6 (expecting 5), then 1 (expecting 7), then 3 (expecting 5). So the pattern seems to be that the assistant is trying to block the opponent's moves by expecting them to play in a certain column.
+
+In the current situation, after X played in column 5, the assistant's move was 3 (expecting 5). So the assistant is expecting X to play in column 5 again. But column 5 is already full. So maybe the assistant is trying to block X from playing in column 5, but since it's full, that's not possible. Alternatively, maybe the assistant is trying to create a line in column 3.
+
+But in the current board, if I play O in column 3, then row 4 column 3 is O. Then, check if that creates a line. Column 3 has O in row 4 and 5 (O in row 5 column 3). So vertically, two O's. Not enough. But if X plays in column 4, then maybe they can create a line. But I'm not sure.
+
+Alternatively, looking at column 2. If I play O in column 2, then row 5 column 2 is O. That might block X from playing there. But X might play elsewhere.
+
+Alternatively, looking at column 4. If I play O in column 4, then row 5 column 4 is O. That might block X from playing there.
+
+But which is the best move? Since the assistant previously expected 5, maybe the current move is to play in column 3 (as in the previous move) and expect X to play in column 5 again. But column 5 is full. So maybe the assistant is trying to block X from playing in column 5, but since it's full, that's not possible. Alternatively, maybe the assistant is trying to create a line in column 3.
+
+Alternatively, looking at the board, if I play in column 2, then row 5 column 2 is O. Then, in row 5, columns 1 is O, 2 is O, 3 is O. That's three in a row. Wait, no. Row 5 is O . O . X . . So if I play O in column 2, then row 5 would be O O O . X . . So that's three O's in a row horizontally. That would be a win for O! Wait, that's a possibility. Wait, row 5 is currently O . O . X . . So if I play O in column 2, then row 5 becomes O O O . X . . So three O's in a row. That's a win. So that's a good move.
+
+Wait, but how? Let me check again. The current row 5 is O . O . X . . So columns 1: O, 2: empty, 3: O, 4: empty, 5: X, 6: empty, 7: empty. If I play O in column 2, then row 5 column 2 becomes O. So row 5 would be O O O . X . . So columns 1, 2, 3 are O, O, O. That's three in a row horizontally. That's a win for O. So that's a valid move. So why didn't I think of that earlier?
+
+So the correct move is to play in column 2, which would create three O's in a row horizontally. That's a win. So the answer should be 2 (expecting 5), but wait, the user's previous move was 3 (expecting 5). But in this case, playing in column 2 would be the winning move. So why didn't I think of that?
+
+Ah, I think I made a mistake in analyzing the board. Let me recheck.
+
+Row 5 is O . O . X . . So columns 1: O, 2: empty, 3: O, 4: empty, 5: X, 6: empty, 7: empty. If I play O in column 2, then row 5 becomes O O O . X . . So columns 1, 2, 3 are O, O, O. That's three in a row. So that's a win. Therefore, the correct move is to play in column 2. But why didn't I think of that earlier? Because I was checking for vertical and diagonal lines, but missed the horizontal.
+
+So the answer should be 2 (expecting 5), but the user's previous move was 3 (expecting 5). But in this case, the correct move is column 2. However, the user's previous move was 3 (expecting 5), which might be a pattern. But in this case, the correct move is column 2.
+
+Wait, but the user's last move was X in column 5. So the assistant's move is O. If I play in column 2, that would be a winning move. So the answer is 2 (expecting 5). But why did the previous assistant move choose 3 (expecting 5)? Maybe because they thought there was a threat, but in reality, playing in column 2 is a winning move.
+
+So the correct answer is 2 (expecting 5). But I need to confirm.
+
+Yes, playing in column 2 would create three O's in a row in row 5. So that's a win. Therefore, the correct move is 2 (expecting 5).
+</think>2 (expecting 5)
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+X dropped a disc in column 4.
+Board (the discs fall to the bottom row):
+| . . . . . . . |
+| . . . . . . . |
+| . . . . . . . |
+| . . . . X . . |
+| O O O X X . . |
+| X O X O X O X |
+  1 2 3 4 5 6 7
+Columns you can play: 1, 2, 3, 4, 5, 6, 7
+You play O. Your move (a column number):
+AGENT -------------------------------------------------
+3 (expecting 4)
+DUEL: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+game over: four_in_a_row, the agent's result: loss
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
