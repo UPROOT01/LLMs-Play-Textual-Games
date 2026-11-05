@@ -863,12 +863,19 @@ the row grid, a text where a column is one line should raise the ceiling; if the
 reasoning itself. One example is not a rate: this test measures it.
 
 **What changed.** `duel_games.ConnectFour` has the option `board`: "grid" (default, unchanged), "columns" (one line
-per column, discs from the bottom up, "(full)" when full) or "both". `grids/duel_c4_board_columns.yaml` and
-`duel_c4_board_both.yaml`: goracle, e1, r4, plain prompt, greedy and self-e1, seeds 1-15 (90 games each), the same
-games of the gate grid, which is the baseline. `gate_analysis.move_table` has the column `board`. Test:
-`tests/test_gate.py::test_board_formats`.
-**Caveats.** The record path has no game options: run each grid in its own results folder (results_board_columns,
-results_board_both), or the games look already played. "columns" alone may make rows and diagonals harder to see,
-which is why "both" is there. In self-e1 the opponent reads the new board too, so read the blunder rates (per move)
-before the score. Not run yet (needs the GPU).
+per column, discs from the bottom up, "(full)" when full) or "both". `gate_analysis.move_table` has the column
+`board`. Tests: `tests/test_gate.py` (test_board_formats, test_board_prompts).
 
+**How the board is chosen: the prompt name (second design).** First the board was a game option of the grid, with
+one grid and one results folder per board. It broke the rule that a game is never played twice: the path of a
+record (model / game / prompt / mode / opponent-seed) has no game options, so the first launch found "0 games to
+play" (the gate games in results/ have the same path), and the fix (own folder, no read folders) depended on
+remembering it at every launch. Now the board is a suffix of the prompt, "plain+columns" / "plain+both"
+(`run_duel.split_prompt`): the agent still gets the plain prompt, the game gets the board, and the record and its
+path say "plain+columns". So the games live in the normal results folder, are skipped when relaunched, and every
+table that groups by prompt separates them without changes. The random choices (r4's thinking turns) are seeded
+with the base prompt: the same as in the baseline games. Unknown prompts or boards fail when the grid is loaded.
+One grid: `grids/duel_c4_board.yaml`, goracle / e1 / r4, plain+both and plain+columns, greedy and self-e1, seeds
+1-15 (180 games); baseline: prompt plain in the gate grid.
+**Caveats.** "columns" alone may make rows and diagonals harder to see, which is why "both" is there. In self-e1
+the opponent reads the new board too, so read the blunder rates (per move) before the score. Not run yet (GPU).

@@ -498,6 +498,32 @@ def _played(moves):
         game.play(move)
     return game
 
+def test_board_prompts():
+    """"<prompt>+<board>": a prompt of its own in the paths, the agent's prompt and the random choices unchanged."""
+    from records import record_path
+    from run_duel import load_duel_grid, prompt_game_options, split_prompt
+    assert split_prompt("plain") == ("plain", {}) and split_prompt("free+both") == ("free", {"board": "both"})
+    grid = load_duel_grid(os.path.join(os.path.dirname(__file__), "..", "grids", "duel_c4_board.yaml"))
+    assert grid["prompts"] == ["plain+both", "plain+columns"]
+    assert prompt_game_options(grid, "connect_four", "plain+columns") == dict(legal_moves=True, board="columns")
+    assert prompt_game_options(grid, "connect_four", "plain") == dict(legal_moves=True)
+    plain, columns = (record_path("r", "m", "connect_four", prompt, "e1", "greedy", 1)
+                      for prompt in ("plain", "plain+columns"))
+    assert plain != columns and "plain+columns" in columns # the games of a board are never taken for the others
+    for bad in ("plain+fen", "nope+columns"):
+        try:
+            import run_duel, yaml, tempfile
+            with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+                yaml.safe_dump({**{k: v for k, v in grid.items()}, "prompts": [bad]}, f)
+            run_duel.load_duel_grid(f.name)
+        except (ValueError, KeyError):
+            pass
+        else:
+            raise AssertionError(f"the prompt {bad} must be refused")
+        finally:
+            os.unlink(f.name)
+    print("board prompts ok")
+
 
 if __name__ == "__main__":
     test_parse()
@@ -512,3 +538,4 @@ if __name__ == "__main__":
     test_play_duel_with_solver()
     test_run_duel_grid_with_gates()
     test_board_formats()
+    test_board_prompts()

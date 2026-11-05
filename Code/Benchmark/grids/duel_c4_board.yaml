@@ -1,0 +1,32 @@
+# Connect Four: does the way the board is written change what thinking can repair?
+# In the gate grid the oracle gate (goracle) thinks exactly on the moves where the fast answer is a blunder, and the
+# thinking repairs only about half of them; from ply 7 on every mode blunders 70-80% of the critical moves it thinks
+# about. The reasonings often misread the row grid (a disc of column 4 read as column 3). Here the same games are
+# played with another board text (duel_games.ConnectFour, option board), chosen by the prompt name
+# ("<prompt>+<board>", see run_duel.split_prompt):
+#   plain+columns  one line per column, its discs from the bottom up ("column 4: O O X X"): nothing to count
+#                  across rows.
+#   plain+both     the row grid and then the columns.
+# The board is part of the prompt name, so of the path of the record: these games sit next to the others in the
+# same results folder, are never taken for those of the plain board, and a second launch does not play them again.
+# Baseline: prompt plain in duel_c4_gate.yaml (same modes, opponents and seeds, the row grid), already played.
+# The random choices (the thinking turns of r4) are seeded without the board: the same as in the baseline games.
+# What to read: the blunder rate of the thought moves (goracle: the repair rate of the fast blunders), the blunder
+# rate of the fast moves (does the format help without thinking too?), the tokens per thinking turn.
+# In self-e1 the opponent reads the same board text as the agent.
+# 180 games: 3 modes x 2 opponents x 2 boards x 15 seeds.
+models:
+  - Qwen/Qwen3-4B
+modes: [goracle, e1, r4]
+prompts: [plain+both, plain+columns]
+games:
+  connect_four: [greedy, self-e1]
+seeds: 1-15
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}

@@ -17,6 +17,8 @@ Next to the record and its log (and, in self-play, the opponent's log .opponent.
 Grid keys besides those of run.py: max_steps (moves of the agent before a draw), max_illegal, illegal_policy
 ("random" or "forfeit"), colors ("alternate": first player on the odd seeds, second on the even ones; "first";
 "second"), game_options (per game, the options of duel_games: e.g. chess: {board: fen, legal_moves: false}),
+prompts ("<prompt>" of duel_prompts, or "<prompt>+<board>": the same prompt with that board text, e.g.
+"plain+columns" in Connect Four; a prompt of its own in the records and their paths, see split_prompt()),
 adjudicate ("stockfish": the chess games stopped at max_steps are won by the side ahead by adjudicate_cp centipawns
 in Stockfish's evaluation of the final position, see duel.py; the other games are not affected),
 shadow_fast_move (true: on every thinking turn the agents also answer without thinking first, a fast move that is
@@ -37,6 +39,20 @@ from run import grid_games, is_played, load_grid, summary
 
 DUEL_DEFAULTS = dict(max_steps=100, max_illegal=3, illegal_policy="random", colors="alternate", game_options={},
                      adjudicate=None, adjudicate_cp=300, shadow_fast_move=False, solver="auto")
+
+
+def split_prompt(prompt):
+    """A prompt of a duel grid is "<prompt>" or "<prompt>+<board>": the second shows the game with that board text
+    (the option board of duel_games: Connect Four columns / both, chess fen / both / ascii) and is a prompt of its
+    own in the records and in their paths, so its games are never taken for those of the plain board.
+    Returns (prompt of duel_prompts, the game options it sets)."""
+    base, _, board = prompt.partition("+")
+    return base, ({"board": board} if board else {})
+
+
+def prompt_game_options(grid, game, prompt):
+    """The options of the game for this prompt: those of the grid, then the board of the prompt."""
+    return {**grid["game_options"].get(game, {}), **split_prompt(prompt)[1]}
 
 
 def grid_needs_solver(grid):
@@ -76,6 +92,13 @@ def load_duel_grid(path):
     from duel import parse_opponent
     grid = {**DUEL_DEFAULTS, **load_grid(path)}
     grid["games"] = {game: [str(level) for level in levels] for game, levels in grid["games"].items()}
+    from duel_games import make_game
+    from duel_prompts import DUEL_PROMPTS
+    for game in grid["games"]:
+        for prompt in grid["prompts"]: # unknown prompts and boards fail now, not after loading the model
+            if split_prompt(prompt)[0] not in DUEL_PROMPTS[game]:
+                raise ValueError(f"unknown prompt {prompt!r} for {game}: one of {sorted(DUEL_PROMPTS[game])}")
+            make_game(game, **prompt_game_options(grid, game, prompt))
     for game, levels in grid["games"].items():
         for level in levels:
             parse_opponent(level, game) # unknown opponents fail now, not after loading the model
@@ -121,24 +144,28 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             path = record_path(results, *game_id)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             kind, opponent_mode = parse_opponent(level, game)
-            name = "|".join(str(part) for part in game_id)
+            agent_prompt = split_prompt(prompt)[0]
+            # the seeds of the random choices do not depend on the board: the same thinking turns for r4, the same
+            # opening, as in the game with the plain board
+            name = "|".join(str(part) for part in (model, game, agent_prompt, mode, level, seed))
 
             game_solver = solver if game == "connect_four" else None
             shadow = bool(grid["shadow_fast_move"])
 
             def make_agent(generate):
-                agent = DuelAgent(profile, engine.tokenizer, generate, mode, game, prompt, rng=random.Random(name),
+                agent = DuelAgent(profile, engine.tokenizer, generate, mode, game, agent_prompt,
+                                  rng=random.Random(name),
                                   log=path[:-len(".json")] + ".log", solver=game_solver, shadow=shadow)
                 opponent = None
                 if kind == "self":
-                    opponent = DuelAgent(profile, engine.tokenizer, generate, opponent_mode, game, prompt,
+                    opponent = DuelAgent(profile, engine.tokenizer, generate, opponent_mode, game, agent_prompt,
                                          rng=random.Random(name + "|opponent"),
                                          log=path[:-len(".json")] + ".opponent.log", solver=game_solver, shadow=shadow)
                 return Contestants(agent, opponent)
             play_kwargs = dict(game=game, level=level, seed=seed, color=agent_color(seed, grid["colors"]),
                                max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
                                illegal_policy=grid["illegal_policy"],
-                               game_options=grid["game_options"].get(game, {}),
+                               game_options=prompt_game_options(grid, game, prompt),
                                adjudicate_with=grid["adjudicate"] if game == "chess" else None,
                                adjudicate_cp=grid["adjudicate_cp"], solver=game_solver)
             return game_id, make_agent, play_kwargs
@@ -157,7 +184,7 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             record = dict(model=model, mode=mode, prompt=prompt, game=game, level=level, seed=seed, opponent=level,
                           norm_score=result["score"] / result["max_score"], **result,
                           max_steps=grid["max_steps"], max_illegal=grid["max_illegal"],
-                          illegal_policy=grid["illegal_policy"], game_options=grid["game_options"].get(game, {}),
+                          illegal_policy=grid["illegal_policy"], game_options=prompt_game_options(grid, game, prompt),
                           adjudicate=grid["adjudicate"] if game == "chess" else None,
                           adjudicate_cp=grid["adjudicate_cp"], shadow_fast_move=grid["shadow_fast_move"],
                           solver=solver is not None and game == "connect_four",

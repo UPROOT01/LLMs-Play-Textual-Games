@@ -394,7 +394,8 @@ def test_duel_grid_files():
                 make_game(game, rng=random.Random(0), **options)
             for game in grid["games"]:
                 for prompt in grid["prompts"]:
-                    assert prompt in DUEL_PROMPTS[game] and prompt in DUEL_SAMPLING, (name, game, prompt)
+                    base = run_duel.split_prompt(prompt)[0] # "plain+columns": the plain prompt with another board text
+                    assert base in DUEL_PROMPTS[game] and base in DUEL_SAMPLING, (name, game, prompt)
             print(f"ok {name}: {len(list(run_duel.grid_games(grid)))} games")
 
 
