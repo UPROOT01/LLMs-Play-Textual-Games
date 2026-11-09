@@ -1027,3 +1027,12 @@ model would close the thinking and then be forced to write after its command. *L
 model's mouth; the reasonings that needed it can be told apart (they start with the nudge) and read separately.
 
 Tests: `tests/test_gate.py` (test_nonempty, test_note_prompt). All suites pass.
+
+### run_remote.py plays textual grids too (2026-11-09)
+
+`run_remote.py` loaded every grid with `load_duel_grid`, so `grids/cooking_nonempty.yaml` failed with
+`KeyError: 'cooking'` (cooking is not a two-player game). *Change:* the script now looks at the games of the grid:
+two-player games (those of `duel_prompts.DUEL_PROMPTS`) go to `run_duel_grid`, textual games to `run_grid`; a grid
+that mixes the two kinds is refused. *Why here and not in the loader:* the two runners save different records and
+take different options, so the choice belongs to the script that launches them. Same folders as before
+(`results`, read `results`), so the games already played are still skipped. Checked on all 17 grids of `grids/`.
