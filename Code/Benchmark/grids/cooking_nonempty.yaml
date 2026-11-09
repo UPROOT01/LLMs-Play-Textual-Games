@@ -1,0 +1,25 @@
+# Cooking: the every-4 modes without the empty reasonings.
+# In the modes that think about every 4 turns the model often opens and closes its thinking at once
+# ("<think>\n\n</think>"): on 77-93% of the thinking turns with Qwen3-1.7B (8% with e1), on about 20% with
+# Qwen3-4B (3% in the first five thinking turns of a game, 25-30% later), on 2-5% with Qwen3-8B (why_lr4.ipynb).
+# So the every-4 modes of the 1.7B almost never reason, and a fifth of the reasonings of the 4B do not exist,
+# whatever the memory does with them. The prompt "CoT+nonempty" is CoT, and a reasoning that comes out empty is
+# generated again (up to 2 times) with its first words already written (agent.py: NONEMPTY_*).
+# It is a prompt of its own in the records (results/<model>/cooking/CoT+nonempty/...): never taken for the CoT games.
+# Baseline: the CoT games of the same modes, levels and seeds, already played (tier1.yaml; for the 4B, the
+# experiments 7, 7e and 8).
+# What to read: token statistics empty_reasonings and nonempty_retries of the record (did the retry work?), then
+# the score of er4 / lr4 / r4 against the CoT games and against e1. If the 1.7B plays once it is made to reason,
+# its "only e1 works" was an artefact; and lr4 against er4 is then a memory test on reasonings that exist.
+# 300 games: 2 models x 3 modes x 5 levels x 10 seeds. Run with run.py / colab.ipynb (a textual-game grid).
+models:
+  - Qwen/Qwen3-1.7B
+  - Qwen/Qwen3-4B
+modes: [er4, lr4, r4]
+prompts: [CoT+nonempty]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2

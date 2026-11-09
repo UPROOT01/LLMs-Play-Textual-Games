@@ -879,3 +879,151 @@ One grid: `grids/duel_c4_board.yaml`, goracle / e1 / r4, plain+both and plain+co
 1-15 (180 games); baseline: prompt plain in the gate grid.
 **Caveats.** "columns" alone may make rows and diagonals harder to see, which is why "both" is there. In self-e1
 the opponent reads the new board too, so read the blunder rates (per move) before the score. Not run yet (GPU).
+
+## 2026-11-05 - Board-format grid, first read (147 of 180 games)
+
+Seeds 1-15, greedy and self-e1, against the plain (row grid) games of the same modes and seeds. Per move, any
+player of the model by its own mode (so e1 includes the self-e1 opponents). Missing: 33 games, mostly self-e1.
+
+| | plain | plain+both | plain+columns |
+|---|---|---|---|
+| e1: fast answer a blunder | 34% (155/458) | 35% (136/389) | 33% (122/365) |
+| e1: thought move a blunder | 29% (132/459) | 31% (122/392) | 31% (112/366) |
+| e1: fast blunder repaired by thinking | 29% (45/155) | 21% (28/136) | 25% (31/122) |
+| e1: thought, critical, ply >= 7, blunder | 71% (60/84) | 78% (46/59) | 65% (40/62) |
+| goracle: gate fired (= fast answer wrong) | 47% (99/210) | 45% (106/234) | 38% (83/219), p=0.06 |
+| goracle: fast blunder repaired | 42% (39/92) | 43% (43/100) | 51% (41/81), p=0.29 |
+| goracle: blunder, all moves | 26% (54/210) | 24% (57/234) | 18% (40/219), p=0.08 |
+| r4: blunder, all moves | 40% | 39% | 39% |
+| think tokens per thought move, e1 | 4263 | 5037 | 4200 |
+
+**Reading.** The board text does not change what the model sees or what its thinking repairs: no comparison is
+significant, and e1, the largest sample (about 400 thought moves per board), is flat on every line, hard positions
+included. The only hints are goracle with columns (fewer fast blunders, fewer blunders overall, p=0.06-0.08), not
+confirmed by e1's fast answers on the same board (33% vs 34%) and found among about thirty comparisons: to recheck
+when the grid is complete, not to report. "both" costs about 20% more thinking tokens for nothing. So the misread
+grid of the example is not the bottleneck, or the model misreads the columns as well: the ceiling stays with the
+reasoning. Scores per game are too few to read (9-15 games per cell).
+
+## 2026-11-05 - when_to_think.ipynb: the surprise gate in figure A1
+
+Figure A1 (score, blunder rate, cost of the gate modes) now has the bar of gsurp, hatched and starred: it plays with
+the predict prompt and on 25 seeds, the other bars with plain + free on 15, so it is there for comparison, not as a
+like-for-like test. It thinks on 72% of its moves, costs 22k tokens per game against e1's 30k, and against e1 it is
+not distinguishable on score (0.36 vs 0.57, p=0.18) nor on blunders (32% vs 33%, p=0.82). The notebook now leaves
+out the games of the board grid (prompts with "+"), which are read apart, so its other numbers did not change.
+
+## 2026-11-05 - when_to_think.ipynb: the words explained
+
+New section after the introduction, "The words used": blunder (class of the move worse than the best class; a slower
+win is not one; none possible in a lost position), critical position (exactly one column keeps the value), quiet
+position (all the others), with a worked example (goracle vs greedy, seed 14, plies 8 and 10) and thought / fast /
+shadow / repaired / spoiled. Base rates quoted there: 26% of the positions critical (85% won, 15% drawn), 30% lost,
+37% where no blunder is possible, blunder rate 18% on quiet and 76% on critical positions (all modes, 20193 moves).
+Why: the figures use these words everywhere and they were defined only in one line of the introduction.
+
+## 2026-11-09 - Why lr4 works in the cooking games and not in Connect Four (why_lr4.ipynb)
+
+**Question.** In cooking lr4 plays about like e1 for a fifth of the tokens; in Connect Four it plays like the other
+every-4 modes, far below e1. Read the reasonings of both games to see why, and classify them.
+
+**What was built.** `memory_analysis.py`: a parser of the textual-game logs (turns, reasonings, score before and
+after, commands the game did not understand), the same turn table for Connect Four from the solver's move table,
+`since` (turns since the last reasoning) and `visible` (reasonings in the context) for every turn, and a fixed
+blind sample of reasonings with what followed them. `why_lr4.ipynb`: four figures and a verdict. Test:
+`tests/test_memory_analysis.py`. The 4B cooking games are those of Experiments 7, 7e and 8 (logs in
+Code/Experiments); the 1.7B and 8B ones are the benchmark's.
+
+**1. The contrast is three effects, and it depends on the model** (cooking: matched levels and seeds, Wilcoxon).
+
+| | cooking 1.7B | cooking 4B | cooking 8B | Connect Four 4B |
+|---|---|---|---|---|
+| e1 / er4 / lr4 / r4 | 0.21 / 0.04 / 0.06 / 0.05 | 0.47 / 0.40 / 0.42 / 0.25 | 0.55 / 0.41 / 0.58 / 0.48 | 0.61 / 0.34 / 0.38 / 0.43 |
+| thinking less often (er4 - e1) | -83% | -16% (p=0.008) | -24% (p=0.011) | -44% (p<0.001) |
+| keeping the last (lr4 - er4) | +0.02 (p=0.20) | +0.02 (p=0.28) | +0.17 (p=0.008) | +0.03 (p=0.85) |
+| keeping all (r4 - lr4) | 0.00 | -0.17 (p<0.001) | -0.10 (p=0.11) | +0.05 (p=0.56) |
+
+So: thinking every fourth turn costs much more in Connect Four; the last reasoning helps only the 8B model; with
+the 4B, the model of Connect Four, lr4 = er4 in cooking too, and lr4 looks good there because r4 collapses.
+**The two games were not played with the same models**: the memory effect is an 8B result, untested in Connect Four.
+
+**2. What there is to remember.** Connect Four: about 8 moves per player per game, 1.3-1.6 reasonings in the
+every-4 modes, a reasoning in view on 24-30% of the moves, more than half of the moves before the first reasoning;
+"last" and "all" are the same thing. Cooking: 45-90 turns, 10-23 reasonings, 64-71% of lr4's turns with a reasoning
+in view. **Empty reasonings** (the thinking block opened and closed at once), found by reading the logs: in the
+every-4 modes 77-93% of the thinking turns with the 1.7B (e1: 8%), about 20% with the 4B (3% in the first five
+thinking turns, 25-30% later), 2-5% with the 8B, never in Connect Four. The every-4 modes of the 1.7B almost never
+reason: this is why only e1 plays. Likely cause (not tested): the turns without thinking fill the context with
+bare answers and the model continues the pattern.
+
+**3. The turns after a reasoning** (turns 1-3, reasoning visible against erased). Cooking 8B: a point on 16% of the
+turns with lr4, 12% with er4 (paired by game, p=0.03). Cooking 4B: 8% vs 6% (p=0.12). In cooking the turn right
+after a reasoning scores more than the fourth also when the reasoning is erased: the action it chose changed the
+game. Connect Four: the next moves replay the column of the reasoning 42% of the time when it is visible (lr4 and
+r4), 20% when erased (p<0.001; lr4 alone 35%, p=0.04); blunders 32% vs 36% (p=0.45). A first version of this
+analysis used "the command is announced in the last reasoning": pooled over turns it separated lr4 from er4
+(82% vs 73%), paired by game it did not (p=0.48), so it was dropped.
+
+**4. 180 reasonings classified** (40 lr4 + 20 er4 for each of cooking 4B, cooking 8B, Connect Four 4B; the reader
+does not see the mode; rubric in memory_analysis.RUBRIC; labels by Claude, six readers of 30 items; 30 items read
+twice: kappa 0.85 type, 0.72 future steps, 0.90 fallbacks, 1.00 durable facts, 0.70 state error, 0.80 carried,
+0.73 validity).
+
+| | cooking 8B | cooking 4B | Connect Four 4B |
+|---|---|---|---|
+| type: PLAN / TRACK / REPAIR / EVALUATE / LOST | 10 / 12 / 52 / 0 / 27 % | 13 / 7 / 47 / 0 / 33 % | 0 / 0 / 0 / 60 / 40 % |
+| states durable facts | 100% | 100% | 0% |
+| names a later step of its own | 47% | 28% | 17% |
+| names fallbacks | 33% | 28% | 0% |
+| misreads the state (checkable) | 10% | 25% | 53% |
+| conclusion VALID / STALE / WRONG | 40 / 0 / 60 % | 33 / 0 / 67 % | 28 / 13 / 58 % |
+| next turns FOLLOWED it, visible vs erased | 78% vs 60% | 52% vs 50% | 15% vs 10% |
+| next turns REPEATED its action, visible vs erased | 10% vs 10% | 32% vs 30% | 38% vs 15% |
+
+In cooking a VALID reasoning is followed by a point 62% of the time (8B) and 30% (4B), a WRONG one 6% and 2%; in
+Connect Four what follows does not depend on the validity. The visible-vs-erased differences of the labels are not
+significant on 40 vs 20 items (p 0.08-1): part 3 is the test.
+
+**Verdict.** (1) Connect Four needs a fresh look at every move, cooking does not: most of the gap is the frequency.
+(2) This Connect Four design gives the memory one or two reasonings per game: a limit of the experiment. (3) A
+cooking reasoning is a note on a task that does not move (what is done, what failed, what else to try); a Connect
+Four reasoning evaluates one position, misreading it half of the time, and says nothing to a later turn: the only
+thing the next move takes from it is the column. (4) The benefit of the last reasoning in cooking is the 8B's.
+
+**Open.** Games and models are confounded. The labels are a judge's: a human check on a subset is to do
+(labels/memory_sample.jsonl). **Next tests that would settle it:** Connect Four with the 8B (e1 / er4 / lr4 / r4);
+a longer two-player game or a larger board (ten reasonings per game); a prompt asking the Connect Four reasoning to
+end with a note for the next moves; a minimum of thinking tokens to forbid the empty reasonings, then the every-4
+modes of cooking again with the 1.7B and 4B.
+
+## 2026-11-09 - Three grids for the open questions of why_lr4.ipynb
+
+Of the four tests proposed, three are grids now; the fourth (a longer game or a larger board) needs a game of its
+own, without the solver, and is not done. Not run yet (GPU).
+
+**1. `grids/duel_c4_8b.yaml`: Connect Four with Qwen3-8B.** e1, er4, lr4, r4, and er2 / lr2, plain prompt, against
+self-e1, seeds 1-20 (120 games). *Why:* the benefit of the last reasoning in cooking is an 8B result (+0.17) and
+Connect Four was only played with the 4B: games and models were confounded. *Why every 2 too:* at every 4 a game
+has 1-2 reasonings and one in view on a quarter of the moves; at every 2 about four. Read lr against er at the same
+frequency, and er4 against e1 (the cost of thinking less often).
+
+**2. `grids/duel_c4_note.yaml`: a reasoning written to be read again.** New prompt `note` (duel_prompts.py, both
+games): plain, plus on the thinking turns "end your thinking with a short note to yourself for your next moves,
+starting with NOTE FOR MY NEXT MOVES". lr4 / lr2 keep it, er4 / er2 erase it (the control); prompts note and plain,
+Qwen3-4B, self-e1, seeds 1-20 (160 games, 140 to play). *Why:* the plain reasonings say nothing to a later move
+(0 of 60 with a durable fact); the only thing the next move took from them was the column. Read (lr - er) with
+note against (lr - er) with plain, and the share of reasonings that actually contain the note. The note is inside
+the reasoning, so the modes that drop the reasoning drop it too.
+
+**3. `grids/cooking_nonempty.yaml`: the every-4 modes without the empty reasonings.** er4, lr4, r4 with the prompt
+`CoT+nonempty`, Qwen3-1.7B and 4B, cooking levels 1, 3, 5, 7, 9, seeds 1-10 (300 games); baseline: the CoT games
+already played. *What changed in agent.py:* a thinking turn is empty when the thinking closes within 4 tokens; it
+is now counted in every mode (`empty_reasonings` in the token statistics of the record); with the prompt option
+`+nonempty` it is generated again, up to 2 times, with the thinking block opened and its first words written
+("Okay, let's see."). `nonempty_retries` counts the generations spent. As for the board, the option is part of the
+prompt name, so of the record path: these games are never taken for the CoT ones. *Why a retry with a prefill and
+not a minimum of tokens:* a minimum of tokens only forbids the end of the answer, not the end of the thinking; the
+model would close the thinking and then be forced to write after its command. *Limit:* the nudge puts words in the
+model's mouth; the reasonings that needed it can be told apart (they start with the nudge) and read separately.
+
+Tests: `tests/test_gate.py` (test_nonempty, test_note_prompt). All suites pass.

@@ -19,6 +19,13 @@ from prompts import PROMPTS, SAMPLING
 
 THINK_MAX_TOKENS = 10000 # a self-evaluation can be long
 NORMAL_MAX_TOKENS = 100 # a normal turn is only a command
+# A reasoning is empty when the model closes its thinking within this many tokens ("<think>\n\n</think>"): in the
+# every-4 modes of the textual games it happens on ~90% of the thinking turns of Qwen3-1.7B and ~20% of Qwen3-4B
+# (THESIS_LOG.md, 2026-11-09). With the prompt option "+nonempty" the turn is generated again, up to
+# NONEMPTY_RETRIES times, with the first words of the reasoning already written (the way the reasonings start).
+NONEMPTY_MIN_TOKENS = 4
+NONEMPTY_RETRIES = 2
+NONEMPTY_NUDGE = "Okay, let's see."
 SUMMARY_MAX_TOKENS = 160 # the summary of a reasoning (the "s" modes): a few sentences
 SUMMARY_QUESTION = ("Above is what you thought before your last move. Summarize it in at most three sentences, in "
                     "the first person, as a note to yourself for the next moves: your plan, the dangers you saw, and "
@@ -77,7 +84,8 @@ class SelfEvalAgent:
     def __init__(self, profile, tokenizer, generate, mode, prompt="CoT", rng=None, log=None):
         """profile: a Profile of profiles.py; tokenizer: the model's tokenizer;
         generate(prompt_ids, max_tokens, sampling) -> (output_ids, hit_limit): the model;
-        mode: see parse_mode(); prompt: a key of prompts.PROMPTS;
+        mode: see parse_mode(); prompt: a key of prompts.PROMPTS, or "<key>+nonempty": the same prompt, and a
+        reasoning that comes out empty is asked again (see NONEMPTY_MIN_TOKENS); a prompt of its own in the records;
         rng: random.Random used for the intervals between self-evaluations and for the substitute commands;
         log: path of the log of the game (same format of the old agent), or None.
         """
@@ -95,6 +103,11 @@ class SelfEvalAgent:
         self.shadow = False # also answer every thinking turn without thinking first (the fast move), as a measure
         self.last_move_info = None # what happened at the last act(): see act()
         self.prompt = prompt
+        prompt, _, option = prompt.partition("+")
+        if option not in ("", "nonempty"):
+            raise ValueError(f"unknown prompt option {option!r}: nonempty")
+        self.nonempty = option == "nonempty" # an empty reasoning is asked again, with the first word written for it
+        self.empty_reasonings = self.nonempty_retries = 0 # thinking turns that came out empty / generations spent on them
         self.system_prompt = PROMPTS[prompt]["system"]
         self.selfeval_prompt = PROMPTS[prompt]["selfeval"]
         self.sampling = SAMPLING[prompt]
@@ -217,6 +230,16 @@ class SelfEvalAgent:
         self.pieces.append(self.profile.user(obs + self.selfeval_prompt, think=True) + self.profile.assistant_start)
 
         output_ids, capped = self._generate(think=True)
+        nudge = ""
+        if not capped and self._empty(output_ids):
+            self.empty_reasonings += 1 # counted in every mode: the model closed its thinking at once
+            for _ in range(NONEMPTY_RETRIES if self.nonempty else 0):
+                self.nonempty_retries += 1
+                # the thinking block is opened here also for the profiles that switch the thinking on in the prompt
+                nudge = (self.profile.think_prefill or "<think>\n") + NONEMPTY_NUDGE
+                output_ids, capped = self._generate(think=True, prompt=self.context + nudge)
+                if capped or not self._empty(output_ids):
+                    break
         if self.last_reasoning is not None: # "previous" mode: the previous reasoning was read, now it is replaced
             self.pieces[self.last_reasoning] = ""
             self.last_reasoning = None
@@ -226,8 +249,8 @@ class SelfEvalAgent:
             start = self._answer_start(output_ids)
             reasoning = self._decode(output_ids[:start]).replace("/no_think", "").strip("\n")
             command = self._clean(self._decode(output_ids[start:]))
-            if self.profile.think_prefill: # the start of the reasoning was in the prompt
-                reasoning = self.profile.think_prefill + reasoning
+            if nudge or self.profile.think_prefill: # the start of the reasoning was in the prompt
+                reasoning = (nudge or self.profile.think_prefill) + reasoning
         self._write_log(LOG_GAME + obs + self.selfeval_prompt + "\n" + LOG_SELFEVAL + reasoning + command)
         self.last_thought = reasoning
 
@@ -272,6 +295,10 @@ class SelfEvalAgent:
                                generated=len(output_ids), prompt=len(prompt_ids), capped=capped))
         return output_ids, capped
 
+    def _empty(self, output_ids):
+        """Whether the model closed its thinking at once: a </think> within the first NONEMPTY_MIN_TOKENS tokens."""
+        return self.close_think_id in output_ids[:NONEMPTY_MIN_TOKENS]
+
     def _answer_start(self, output_ids):
         """Index of the first token after the last </think> (0 if there is none)."""
         try:
@@ -310,6 +337,7 @@ class SelfEvalAgent:
                     gate_turns=len(by_kind["gate"]),
                     shadow_turns=len(by_kind["shadow"]),
                     summary_turns=len(by_kind["summary"]),
+                    empty_reasonings=self.empty_reasonings, nonempty_retries=self.nonempty_retries,
                     capped_think_turns=sum(turn["capped"] for turn in think),
                     capped_normal_turns=sum(turn["capped"] for turn in normal),
                     max_prompt=max((turn["prompt"] for turn in self.turns), default=0))

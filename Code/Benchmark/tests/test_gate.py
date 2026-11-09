@@ -524,6 +524,66 @@ def test_board_prompts():
             os.unlink(f.name)
     print("board prompts ok")
 
+def test_nonempty():
+    """The prompt option "+nonempty": an empty reasoning is generated again with its first words written."""
+    calls = []
+
+    def model(prompt_ids, max_tokens, sampling):
+        text = TOKENIZER.decode(prompt_ids)
+        calls.append(text)
+        if text.endswith("<think>\n" + agent_module.NONEMPTY_NUDGE):
+            answer = " The kitchen is east, I have not been there.\n</think>\n\ngo east"
+        elif "/think<|im_end|>" in text[text.rindex("<|im_start|>user"):]:
+            answer = "<think>\n\n</think>\n\ngo north" # the thinking closed at once
+        else:
+            answer = "go north" # a normal turn
+        return TOKENIZER.encode(answer, add_special_tokens=False), False
+
+    agent = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "e1", "CoT+nonempty", rng=random.Random(0))
+    assert agent.prompt == "CoT+nonempty" and agent.nonempty
+    agent.reset()
+    command = None
+    for _ in range(5): # the first turns are played without thinking
+        command = agent.act("You are in a corridor.")
+        if agent.empty_reasonings:
+            break
+    assert command == "go east", command
+    assert agent.empty_reasonings == 1 and agent.nonempty_retries == 1
+    assert agent.last_thought.startswith("<think>\n" + agent_module.NONEMPTY_NUDGE + " The kitchen is east")
+    stats = agent.token_stats()
+    assert stats["empty_reasonings"] == 1 and stats["nonempty_retries"] == 1
+
+    calls.clear() # without the option: the empty reasoning is counted and played as it is
+    plain = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "e1", "CoT", rng=random.Random(0))
+    plain.reset()
+    for _ in range(5):
+        plain.act("You are in a corridor.")
+        if plain.empty_reasonings:
+            break
+    assert not plain.nonempty and plain.nonempty_retries == 0 and plain.pieces[-1].startswith("go north")
+    try:
+        agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "e1", "CoT+nope")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown prompt option must be refused")
+    print("ok nonempty: the retry, its counters, no change without the option")
+
+
+def test_note_prompt():
+    from duel_prompts import DUEL_PROMPTS, DUEL_SAMPLING
+    for game in ("connect_four", "chess"):
+        note, plain = DUEL_PROMPTS[game]["note"], DUEL_PROMPTS[game]["plain"]
+        assert note["system"] == plain["system"] and "NOTE FOR MY NEXT MOVES" in note["selfeval"]
+    assert "note" in DUEL_SAMPLING
+    agent = make_agent("lr4", Script([], []), prompt="note")
+    assert "NOTE FOR MY NEXT MOVES" in agent.selfeval_prompt
+    from run_duel import load_duel_grid
+    folder = os.path.join(os.path.dirname(__file__), "..", "grids")
+    assert load_duel_grid(os.path.join(folder, "duel_c4_note.yaml"))["prompts"] == ["note", "plain"]
+    assert load_duel_grid(os.path.join(folder, "duel_c4_8b.yaml"))["models"] == ["Qwen/Qwen3-8B-FP8"]
+    print("ok note prompt and the new grids")
+
 
 if __name__ == "__main__":
     test_parse()
@@ -539,3 +599,5 @@ if __name__ == "__main__":
     test_run_duel_grid_with_gates()
     test_board_formats()
     test_board_prompts()
+    test_nonempty()
+    test_note_prompt()

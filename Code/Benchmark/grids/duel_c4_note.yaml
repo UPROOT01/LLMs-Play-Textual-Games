@@ -1,0 +1,29 @@
+# Connect Four: does a reasoning written to be read again get used?
+# The reasonings of the plain prompt evaluate one position and say nothing to a later move: of 60 classified, none
+# states a fact that outlives the move, none names a fallback (why_lr4.ipynb). The only thing the next move takes
+# from a reasoning left in view is its column, replayed twice as often, with no fewer blunders. The prompt "note"
+# (duel_prompts.py) is plain plus one instruction on the thinking turns: end the reasoning with a
+# "NOTE FOR MY NEXT MOVES:" (what to watch, what it plans to play). The note is part of the reasoning.
+#   lr4 / lr2   keep the last reasoning, note included, for the moves played without thinking.
+#   er4 / er2   erase it: the same reasoning is written, nobody reads it. The control.
+# Every 2 as well as every 4, because at every 4 a game has 1-2 reasonings and a quarter of the moves can read one.
+# What to read, per frequency: (lr - er) with note against (lr - er) with plain, on the score and on the moves
+# played without thinking after a reasoning (blunders, same column as the reasoning). And whether the note is
+# written at all: the share of reasonings that contain "NOTE FOR MY NEXT MOVES".
+# In self-e1 the opponent has the same prompt; it thinks every move and keeps nothing, so its notes are never read.
+# 160 games: 4 modes x 2 prompts x 20 seeds, of which 20 plain lr4 / er4 games are already played: 140 to play.
+models:
+  - Qwen/Qwen3-4B
+modes: [lr4, er4, lr2, er2]
+prompts: [note, plain]
+games:
+  connect_four: [self-e1]
+seeds: 1-20
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}

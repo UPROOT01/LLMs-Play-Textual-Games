@@ -11,6 +11,11 @@ Black..."). So free says only which game is played and how to answer, and asks t
 "how to win", no user, and no opponent. Same sampling of CoT and neutral, so that only the prompt changes.
 "plain" is the model's own thinking: the system prompt of free, and nothing added to the observation on the turns
 where it thinks (only the switch that turns the thinking on). The baseline with no instruction about the reasoning.
+"note" is plain plus one instruction on the turns where it thinks: end the reasoning with a note for its next moves
+(what to watch, what it plans to play). The reasonings of the other prompts say nothing to a later turn (THESIS_LOG.md,
+2026-11-09: none of 60 Connect Four reasonings states a fact that outlives the move): does a reasoning written to be
+read again get used by the modes that keep it (lrN, lN, rN)? The note is part of the reasoning, so the modes that
+drop the reasoning drop it too.
 "predict" is free plus one instruction: after its move, the model says which move it expects from the other player
 ("4 (expecting 3)", see duel_games.split_prediction()). It is the prompt of the surprise gate (gate.py: gsurp thinks
 when the other player did not play the expected move) and it makes every mode's predictions measurable: the record
@@ -71,6 +76,15 @@ You are playing a game of chess.
 You are shown the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Only output the move, nothing else.
 """,
             "selfeval": "\n", # nothing: the observation, then the switch that turns the thinking on
+        },
+        "note": {
+            "system": """
+You are playing a game of chess.
+You are shown the position and you reply with your move in standard algebraic notation, like \"Nf3\" or \"e4\". Only output the move, nothing else.
+""",
+            "selfeval": """
+Think about your move. End your thinking with a short note to yourself for your next moves, starting with \"NOTE FOR MY NEXT MOVES:\": what you must keep an eye on, and what you plan to play next and why. Then say your move in standard algebraic notation. Only output the move, nothing else.
+""",
         },
         "predict": {
             "system": """
@@ -135,6 +149,15 @@ You are shown the board and you reply with the column where you drop your disc, 
 """,
             "selfeval": "\n", # nothing: the observation, then the switch that turns the thinking on
         },
+        "note": {
+            "system": """
+You are playing a game of Connect Four. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
+You are shown the board and you reply with the column where you drop your disc, like \"4\". Only output the column number, nothing else.
+""",
+            "selfeval": """
+Think about your move. End your thinking with a short note to yourself for your next moves, starting with \"NOTE FOR MY NEXT MOVES:\": the lines you must keep an eye on, and what you plan to play next and why. Then say your move as a column number. Only output the number, nothing else.
+""",
+        },
         "predict": {
             "system": """
 You are playing a game of Connect Four. You win by connecting four of your discs in a row, horizontally, vertically or diagonally.
@@ -149,4 +172,4 @@ Think about the game, then say your move as a column number and, in parentheses,
 
 # same sampling of the textual games, so that the only difference is the game
 DUEL_SAMPLING = {**SAMPLING, "neutral": SAMPLING["CoT"], "free": SAMPLING["CoT"], "plain": SAMPLING["CoT"],
-                 "predict": SAMPLING["CoT"]}
+                 "predict": SAMPLING["CoT"], "note": SAMPLING["CoT"]}

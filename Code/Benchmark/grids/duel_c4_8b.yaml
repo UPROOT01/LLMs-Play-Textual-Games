@@ -1,0 +1,28 @@
+# Connect Four with Qwen3-8B: is the memory effect of the cooking games a fact about the game or about the model?
+# In cooking, keeping the last reasoning (lr4 against er4) adds 0.17 to the score with Qwen3-8B (p = 0.008) and
+# nothing with Qwen3-4B; Connect Four was only played with the 4B, where it adds nothing either (why_lr4.ipynb).
+# So the two games were never compared on the model that uses its reasonings. Here the 8B plays the same modes:
+#   e1          thinks every move, keeps nothing: the reference.
+#   er4 / lr4 / r4   think about every 4 moves and keep none / the last / all of the reasonings.
+#   er2 / lr2   the same about every 2 moves: an every-4 mode writes 1-2 reasonings in a Connect Four game and has
+#               one in view on a quarter of its moves, too few for a memory to show; every 2 gives about 4.
+# What to read: lr against er at the same frequency (score, blunder rate of the moves played without thinking
+# after a reasoning, how often they replay the column of the reasoning: memory_analysis.connect_four_turns()),
+# and er4 against e1 (does thinking less often cost the 8B as much as the 4B, -44%?).
+# Opponent: the model itself thinking every move (self-e1), as in the 4B grids. The solver judges every move.
+# 120 games: 6 modes x 20 seeds. The e1 opponent thinks in every game: about 25-30k tokens per game for it alone.
+models:
+  - Qwen/Qwen3-8B-FP8
+modes: [e1, er4, lr4, r4, er2, lr2]
+prompts: [plain]
+games:
+  connect_four: [self-e1]
+seeds: 1-20
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}

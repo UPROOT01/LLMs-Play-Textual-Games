@@ -1,0 +1,31 @@
+id,type,future_steps,fallbacks,durable_facts,anticipates,state_error,carried,validity,helped,note
+m034,REPAIR,0,True,True,False,unclear,FOLLOWED,VALID,False,Diagnoses the door command as a phrasing problem and tries another wording; the diagnosis stays right but no variant played drops 'north'.
+m145,REPAIR,0,True,True,False,true,FOLLOWED,WRONG,False,"Switches from oven to stove for roasting, but the game cannot see any red bell pepper, so the plan could not work."
+m016,LOST,0,False,True,False,unclear,FOLLOWED,WRONG,False,Circles over the rejected verb 'fry' and decides to send it again although the game does not recognise it.
+m065,LOST,0,False,False,False,true,REPEATED,WRONG,True,Decides on the false ground that only columns 6 and 7 are playable because the bottom row of the others is occupied.
+m030,LOST,0,False,False,False,true,DIVERGED,WRONG,False,"Believes X at columns 1,3,5,7 already make four in a row and picks column 1 with no argument."
+m126,LOST,0,False,True,False,unclear,FOLLOWED,WRONG,False,Goes in circles about the unrecognised 'roast' and ends by sending a roast command again.
+m115,LOST,0,False,False,False,true,DIVERGED,WRONG,True,Places O's second disc in column 5 instead of 4 and picks column 5 on that misread without a real argument.
+m120,REPAIR,0,False,True,False,false,FOLLOWED,VALID,True,"Works out that the cookbook is on the counter, not the table, which is correct and lets the recipe be read."
+m166,REPAIR,0,False,True,False,false,DIVERGED,WRONG,False,"Tries to break the room loop by going south hoping for the kitchen, but south is the bathroom and the loop resumes."
+m097,LOST,0,False,False,False,true,DIVERGED,WRONG,True,Concludes every column is full because the bottom row is occupied and picks column 4 without a usable argument.
+m053,EVALUATE,0,False,False,False,true,DIVERGED,STALE,False,Weighs wins and threats for this turn and picks 2; 'no threat' held then but X's next move in column 7 created one that was ignored.
+m024,LOST,0,False,True,False,false,FOLLOWED,WRONG,False,"Decides to treat the red bell pepper as the red onion, a substitution the game had already rejected."
+m124,PLAN,2,False,True,False,false,FOLLOWED,VALID,False,"Lays out the recipe steps in order (dice, grill, dice, fry, prepare); plan stays valid but the dice commands lack the knife."
+m007,PLAN,2,False,True,False,false,DIVERGED,VALID,False,"Plans take cookbook, then gather ingredients, then use the stove; the plan fits but the next action opens the oven instead."
+m099,LOST,0,False,True,False,unclear,REPEATED,WRONG,False,Decides to repeat 'eat meal' hoping it works although no meal exists and it has failed repeatedly.
+m110,REPAIR,0,True,True,False,unclear,FOLLOWED,VALID,False,Reasons about where the missing ingredients could be and picks unexplored stove/oven; still plausible but the commands were not understood.
+m155,REPAIR,0,True,True,False,unclear,FOLLOWED,WRONG,False,Blames phrasing for the failed chop and replays a wording already rejected; the game seems not to see a red apple at all.
+m000,EVALUATE,0,False,False,False,true,DIVERGED,WRONG,False,"Scans every column for a line this turn and settles on 6 with no real reason, missing the winning columns and misplacing discs in columns 1 and 3."
+m114,EVALUATE,0,False,False,False,false,REPEATED,STALE,False,"Correctly spots X's three in row 5 and blocks at column 7; once blocked the reason was spent, yet 7 was replayed into a blunder."
+m068,LOST,1,False,True,False,false,FOLLOWED,WRONG,False,"Circles over how to roast and decides closing the oven starts the roasting, which it does not."
+m058,REPAIR,0,True,True,False,unclear,FOLLOWED,WRONG,False,"Treats 'You still miss something' as a wrong-verb problem and tries 'serve', while the real issue is a missing step."
+m151,EVALUATE,0,False,False,False,true,DIVERGED,STALE,True,Weighs columns and blocks O's stack in column 2 (after wrongly calling columns 1 and 2 full); O then built in column 4 instead.
+m026,EVALUATE,0,False,False,False,false,FOLLOWED,VALID,True,"Checks lines for this turn and, hesitantly, picks column 2 to start a vertical line, which the next moves complete."
+m081,EVALUATE,0,False,False,False,false,REPEATED,WRONG,False,"Weighs columns for this turn and picks 7 as 'the only empty bottom spot', a move that was a blunder from the start."
+m171,LOST,0,False,True,False,true,REPEATED,WRONG,False,"Insists the knife is on the counter though the game cannot see it, and resends the same failing command."
+m005,PLAN,2,False,True,False,true,DIVERGED,VALID,False,"Recaps progress and plans return to kitchen, open fridge, take peppers, slice, roast; still valid but the moves keep bouncing bathroom-corridor."
+m006,LOST,0,False,False,False,true,REPEATED,WRONG,True,Decides on the false belief that column 7 is the only legal column because the others have a disc in the bottom row.
+m138,LOST,0,False,True,False,unclear,REPEATED,WRONG,False,Decides to repeat 'prepare meal' although the game keeps saying something is still missing.
+m002,LOST,0,False,False,False,true,DIVERGED,WRONG,False,"Misplaces several discs, flips the board orientation and picks column 5 on a false non-consecutive vertical count."
+m170,REPAIR,0,True,True,False,true,FOLLOWED,VALID,False,"Replaces the unrecognised 'fry' with 'cook', which the game accepts; the following tool phrasings were wrong though."
