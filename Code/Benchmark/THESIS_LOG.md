@@ -1024,7 +1024,8 @@ is now counted in every mode (`empty_reasonings` in the token statistics of the 
 prompt name, so of the record path: these games are never taken for the CoT ones. *Why a retry with a prefill and
 not a minimum of tokens:* a minimum of tokens only forbids the end of the answer, not the end of the thinking; the
 model would close the thinking and then be forced to write after its command. *Limit:* the nudge puts words in the
-model's mouth; the reasonings that needed it can be told apart (they start with the nudge) and read separately.
+model's mouth; the reasonings that needed it are counted per game (`nonempty_retries`), but they cannot be told apart by
+their text: the model's own reasonings often start with the same words (corrected 2026-11-10).
 
 Tests: `tests/test_gate.py` (test_nonempty, test_note_prompt). All suites pass.
 
@@ -1036,3 +1037,59 @@ two-player games (those of `duel_prompts.DUEL_PROMPTS`) go to `run_duel_grid`, t
 that mixes the two kinds is refused. *Why here and not in the loader:* the two runners save different records and
 take different options, so the choice belongs to the script that launches them. Same folders as before
 (`results`, read `results`), so the games already played are still skipped. Checked on all 17 grids of `grids/`.
+
+### Results of the three grids and of the board format (2026-11-10)
+
+Read from `results/` after the runs of 2026-11-09. The Connect Four grid with the 8B model (`duel_c4_8b.yaml`) is
+not played yet.
+
+**Cooking without empty reasonings (`cooking_nonempty.yaml`, 300 games).** The retry works: every empty reasoning
+was replaced at the first retry (`nonempty_retries` = `empty_reasonings` in all games), and the reasonings written
+have the usual length (1.7B: median 1500 characters, 1941 with e1).
+- *1.7B* (baseline: the same benchmark, same levels and seeds). Thinking turns with a reasoning: 7% -> 99% (er4),
+  8% -> 99% (lr4). Score: er4 0.035 -> 0.120 (p=0.003, Wilcoxon paired by game), lr4 0.056 -> 0.165 (p=0.002),
+  r4 0.053 -> 0.054 (p=0.89). lr4 is then not distinguishable from e1 (0.207, p=0.25) with a quarter of the thinking
+  tokens (10.6k against 42.9k per game). So "only e1 works with the 1.7B" was for a large part an artefact: in the
+  every-4 modes the model did not reason at all.
+- *4B* (baseline: the legacy experiments 7, 7e and 8, another pipeline: a weaker comparison). er4 0.346 -> 0.403
+  (p=0.12), lr4 0.425 -> 0.426 (p=0.93), r4 0.237 -> 0.339 (p=0.054).
+- *Memory.* lr4 - er4: +0.045 (1.7B, p=0.06), +0.023 (4B, p=0.61), +0.034 pooled (p=0.13, 100 pairs): a small
+  effect, not established. r4 is the worst: r4 - er4 = -0.065 (p=0.015), r4 - lr4 = -0.099 (p<0.001). Keeping every
+  reasoning hurts, at both sizes.
+- *A new failure of r4 at 1.7B.* In 18% of its thinking turns the model writes a reasoning and stops without closing
+  it and without a command; the text of the reasoning goes to the game as the command. Under 0.2% in er4 and lr4.
+
+**The note prompt (`duel_c4_note.yaml`, 160 games): the test did not test what it was written for.** Two flaws,
+found in the logs:
+1. The model writes the note after closing its thinking, in the answer (62% of the thinking turns; inside the
+   thinking only 5%; no note 33%). The answer stays in the context in every mode, so the erased modes keep the note
+   too. lr against er is no longer "note kept against note erased".
+2. The opponent (self-e1) plays with the note prompt too, so note against plain also changes the opponent.
+What the numbers say, with 20 games per cell: lr - er with the note -0.05 (p=0.62), without +0.15 (p=0.23); no
+difference is established. The blunder rate of the erased modes is lower with the note (0.31 against 0.43, Fisher
+p=0.003), but the moves played before any note is in the context are already lower (0.34 against 0.45), so it is
+not the note being read. One result repeats: with the plain prompt the model replays the column of its last
+reasoning more often when the reasoning is visible (36% against 16%, p=0.002; 42% against 20% in why_lr4.ipynb).
+*To do before running it again:* move the note from the answer into the reasoning (so that er erases it and lr
+keeps it), and leave the opponent on the plain prompt.
+
+**Board format (`duel_c4_board.yaml`, complete, 180 games): no effect.** Score: no difference in any mode
+(all p > 0.1). e1 and r4: blunder rates unchanged. goracle with the columns: blunder rate 0.20 against 0.28 (p=0.03
+paired by game, p=0.11 on the moves), gate fired on 38% against 47% of the moves (p=0.07), but the score does not
+follow (0.33 against 0.40), "both" (which contains the columns) shows nothing, and the fast moves of e1 go the other
+way (36% against 33% blunders). One p=0.03 among about ten comparisons: taken as chance. The repair rate of the
+thinking is the same in the three formats (about 50%). The way the board is written is not what limits the model.
+
+### NO_FP8_KV_CACHE: the 8B without FlashInfer, for the remote 4090 (2026-11-10)
+
+On the remote machine (RTX 4090, driver 535 = CUDA 12.2, no root, no nvcc) Qwen3-8B-FP8 does not start. Its
+`kv_cache_dtype="fp8"` makes vLLM use FlashInfer for the attention; FlashInfer compiles its kernels at the first use
+(no nvcc: "Could not find nvcc"), and its precompiled kernels (`flashinfer-jit-cache`, built with CUDA 12.9) are
+refused by the old driver ("device kernel image is invalid"). The 1.7B and 4B use vLLM's own kernels and run.
+*Change:* `NO_FP8_KV_CACHE=1` in the environment makes `profiles.model_settings` drop `kv_cache_dtype`, so the
+cache stays in bf16 and FlashInfer is not used. *Cost:* half the context fits; on 24 GB the 8B still holds tens of
+thousands of tokens, enough for Connect Four (prompts of ~3k tokens), tight for cooking. *Traceability:* the record
+saves the vLLM settings, so these games have no `kv_cache_dtype` and can be told apart from the fp8 ones (the 8B
+cooking games). An fp8 cache rounds the stored keys and values: the two settings are not bit-identical, but the
+grid `duel_c4_8b.yaml` compares its modes with each other, all played the same way.
+Test: `tests/test_profiles.py` (test_no_fp8_kv_cache).

@@ -11,6 +11,7 @@ Two ways of turning thinking on and off:
 - "prefill": the start of the answer is written in the prompt: an empty "<think>\n\n</think>\n\n" for a normal turn,
   so the model cannot think, and "<think>\n" for a self-evaluation, so it has to.
 """
+import os
 
 
 class Profile:
@@ -102,6 +103,13 @@ MODELS = {
                                                      quantization="fp8", kv_cache_dtype="fp8"),
 }
 
+# NO_FP8_KV_CACHE=1 in the environment: the KV cache stays in bf16 also for the models above that ask for fp8.
+# With an fp8 cache vLLM uses FlashInfer for the attention, which needs kernels compiled for the CUDA of the driver:
+# on a machine with an old driver (535, CUDA 12.2) and no nvcc they cannot be built nor loaded. The bf16 cache uses
+# vLLM's own kernels. It halves the context that fits (Qwen3-8B-FP8 on 24 GB: enough for Connect Four, tight for
+# cooking); the record keeps the settings, so the games played this way can be told apart (no kv_cache_dtype).
+NO_FP8_KV_CACHE = "NO_FP8_KV_CACHE"
+
 
 def model_settings(model):
     """(profile, vLLM settings) of a model. A model that is not in MODELS can be used if it is a Qwen3."""
@@ -111,4 +119,6 @@ def model_settings(model):
             raise KeyError(f"{model} is not in profiles.MODELS: add it with its profile")
         settings = dict(profile="qwen3", max_model_len=40960)
     profile = PROFILES[settings.pop("profile")]()
+    if os.environ.get(NO_FP8_KV_CACHE) == "1": # see NO_FP8_KV_CACHE
+        settings.pop("kv_cache_dtype", None)
     return profile, settings

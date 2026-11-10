@@ -114,6 +114,26 @@ def test_reasonings_in_the_context():
         print(f"ok {name}: reasonings kept by r4 (all), lr4 and l1 (last), e1/er4/0 (none)")
 
 
+def test_no_fp8_kv_cache():
+    """NO_FP8_KV_CACHE=1 drops kv_cache_dtype from the settings, and only that."""
+    import os
+    from profiles import NO_FP8_KV_CACHE, model_settings
+    before = os.environ.pop(NO_FP8_KV_CACHE, None)
+    try:
+        _, fp8 = model_settings("Qwen/Qwen3-8B-FP8")
+        assert fp8["kv_cache_dtype"] == "fp8"
+        os.environ[NO_FP8_KV_CACHE] = "1"
+        _, bf16 = model_settings("Qwen/Qwen3-8B-FP8")
+        assert "kv_cache_dtype" not in bf16 and bf16 == {k: v for k, v in fp8.items() if k != "kv_cache_dtype"}
+        assert model_settings("Qwen/Qwen3-4B")[1] == {"max_model_len": 40960}
+    finally:
+        os.environ.pop(NO_FP8_KV_CACHE, None)
+        if before is not None:
+            os.environ[NO_FP8_KV_CACHE] = before
+    print("ok NO_FP8_KV_CACHE: kv_cache_dtype dropped, the rest unchanged")
+
+
 if __name__ == "__main__":
     test_profiles_write_the_official_templates()
     test_reasonings_in_the_context()
+    test_no_fp8_kv_cache()
