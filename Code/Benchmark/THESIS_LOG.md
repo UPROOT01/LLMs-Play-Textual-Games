@@ -1093,3 +1093,39 @@ saves the vLLM settings, so these games have no `kv_cache_dtype` and can be told
 cooking games). An fp8 cache rounds the stored keys and values: the two settings are not bit-identical, but the
 grid `duel_c4_8b.yaml` compares its modes with each other, all played the same way.
 Test: `tests/test_profiles.py` (test_no_fp8_kv_cache).
+
+### Connect Four with the 8B (`duel_c4_8b.yaml`, 120 games): results (2026-11-10)
+
+Played on the remote 4090 with `NO_FP8_KV_CACHE=1` (bf16 cache; the records have no `kv_cache_dtype`). Against
+self-e1, seeds 1-20, plain prompt; compared with the same modes and seeds of the 4B.
+
+| mode | 8B score | 8B blunder rate | 4B score | 4B blunder rate |
+|---|---|---|---|---|
+| e1 | 0.50 | 0.17 | 0.65 | 0.32 |
+| er4 | 0.40 | 0.09 | 0.25 | 0.46 |
+| lr4 | 0.45 | 0.09 | 0.35 | 0.39 |
+| r4 | 0.35 | 0.10 | 0.20 | 0.42 |
+| er2 | 0.45 | 0.09 | 0.20 | 0.42 |
+| lr2 | 0.40 | 0.15 | 0.40 | 0.34 |
+
+- *No memory effect with the 8B.* lr - er: +0.05 (every 4), -0.05 (every 2), 0.00 over both (p=1.0, Wilcoxon paired
+  by seed); blunder rate +0.03 (p=0.43). On the moves after a reasoning: 31% blunders with the reasoning visible, 29%
+  erased (p=0.83). The model that gains +0.17 from lr4 in cooking gains nothing in Connect Four: the difference
+  between the two games is not the size of the model. Limit: 20 games per cell, and 0.6-0.75 reasonings per game in
+  the every-4 modes (the games last 12 plies).
+- *Thinking does not help the 8B here.* On the 384 thinking moves, the fast move (shadow) is a blunder 91 times, the
+  move played after thinking 88 times: 27 repaired, 24 spoiled (McNemar p=0.78). With the 4B: 137 -> 117, 39 repaired,
+  19 spoiled (p=0.012). So with the 8B there is no benefit of the reasoning for the memory to carry.
+- *The modes that think less are not worse than e1 with the 8B* (0.35-0.45 against 0.50, all p > 0.4), while with
+  the 4B they are (er4 - e1 = -0.40, p=0.02). The 8B plays its moves without thinking well: 7% blunders on the normal
+  moves before any reasoning, 49% for the 4B.
+- The 4B result "the model replays the column of its last reasoning when it sees it" (36% against 16%) is not there
+  with the 8B (60% against 52%, p=0.44): it replays the column in both cases.
+- Missing: mode 0 for the 8B, the direct test of "the 8B does not need to think in Connect Four".
+
+### Mode 0 added to `duel_c4_8b.yaml` (2026-11-10)
+
+The 8B games showed that thinking repairs as many moves as it spoils (27 against 24) and that the modes that think
+rarely are not worse than e1. Mode `0` (never thinking) against the same self-e1 opponent is the direct test of
+"the 8B does not need to think in Connect Four". Added to the existing grid and not to a new one: same opponent,
+seeds and settings, and the 120 games already played are skipped. 20 games to play.

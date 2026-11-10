@@ -10,10 +10,10 @@
 # after a reasoning, how often they replay the column of the reasoning: memory_analysis.connect_four_turns()),
 # and er4 against e1 (does thinking less often cost the 8B as much as the 4B, -44%?).
 # Opponent: the model itself thinking every move (self-e1), as in the 4B grids. The solver judges every move.
-# 120 games: 6 modes x 20 seeds. The e1 opponent thinks in every game: about 25-30k tokens per game for it alone.
+# 140 games: 7 modes x 20 seeds (120 before mode 0 was added). The e1 opponent thinks in every game: about 25-30k tokens per game for it alone.
 models:
   - Qwen/Qwen3-8B-FP8
-modes: [e1, er4, lr4, r4, er2, lr2]
+modes: [e1, er4, lr4, r4, er2, lr2, 0] # 0 added on 2026-11-10: does the 8B need to think at all here?
 prompts: [plain]
 games:
   connect_four: [self-e1]
