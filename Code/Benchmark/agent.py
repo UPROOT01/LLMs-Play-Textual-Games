@@ -81,6 +81,19 @@ def parse_mode(mode):
                 gate=None, summarize=kind in ("s", "sr", "ls", "lsr"))
 
 
+def kv_occupancy(turns):
+    """peak and mean tokens in the KV cache of a list of turns (see SelfEvalAgent.kv_occupancy), or None."""
+    turns = [turn for turn in turns if "prompt" in turn]
+    if not turns:
+        return None
+    steps = sum(turn["generated"] for turn in turns)
+    peak = max(turn["prompt"] + turn["generated"] for turn in turns)
+    if steps == 0:
+        return dict(peak=peak, mean=peak)
+    mean = sum(turn["generated"] * (turn["prompt"] + turn["generated"] / 2) for turn in turns) / steps
+    return dict(peak=peak, mean=mean)
+
+
 class SelfEvalAgent:
     def __init__(self, profile, tokenizer, generate, mode, prompt="CoT", rng=None, log=None):
         """profile: a Profile of profiles.py; tokenizer: the model's tokenizer;
@@ -327,6 +340,13 @@ class SelfEvalAgent:
     def context_tokens(self):
         """Tokens in the context after the last answer (0 before the first one)."""
         return self.turns[-1]["prompt"] + self.turns[-1]["generated"] if self.turns else 0
+
+    def kv_occupancy(self):
+        """What the agent holds in vLLM's KV cache while one of its answers is generated (engine.ContextBudget):
+        peak: the largest request (prompt + answer); mean: the average size of its requests over the time spent
+        generating them (a request of g tokens lasts g steps and grows from its prompt p to p + g: average p + g/2).
+        None before the first answer."""
+        return kv_occupancy(self.turns)
 
     def token_stats(self):
         """Generated and read tokens of the turns played so far. generated: what playing cost (the thinking, normal,

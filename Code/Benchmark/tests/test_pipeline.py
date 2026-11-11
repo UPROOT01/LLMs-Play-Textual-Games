@@ -143,7 +143,7 @@ def test_context_budget():
     for tokens in (8000, 9000, 10000, 3000):
         budget.ended(FakeAgent(tokens), "0")
     assert budget.expected("0") == 9250 # 75th percentile of its games
-    assert budget.expected("e1") == 20000 # still the prior
+    assert budget.expected("e1") == 9250 # fewer than 3 of its own: the games of every group
     assert budget.choose(["0"], [(FakeAgent(0), "0")] * 5, now=0) == 0
     assert budget.choose(["0"], [(FakeAgent(0), "0")] * 6, now=0) is None # max_parallel
 
@@ -151,6 +151,8 @@ def test_context_budget():
     budget = engine.ContextBudget(capacity=100000, prior=20000, max_wait=300)
     for tokens in (9000, 9000, 9000):
         budget.ended(FakeAgent(tokens), "0")
+    for tokens in (20000, 20000, 20000): # e1 has its own estimate (otherwise the 0 games would be its estimate)
+        budget.ended(FakeAgent(tokens), "e1")
     playing = [e1()] * 4
     assert budget.choose(["e1", "e1", "0", "0"], playing, now=1000) == 2
     assert budget.choose(["e1", "e1", "0"], playing + [(FakeAgent(0), "0")], now=1100) is None # no room left
@@ -161,7 +163,43 @@ def test_context_budget():
     # when it finally fits, it starts, and the waiting time is reset
     assert budget.choose(["e1", "0"], [e1()] * 3, now=1400) == 0
     assert budget.first_waiting_since is None
-    print("ok ContextBudget: expected contexts, backfill, max_wait")
+
+    # before 3 games of a group end, the games of the other groups that ended are the estimate
+    budget = engine.ContextBudget(capacity=100000, prior=20000)
+    for tokens in (4000, 5000, 6000):
+        budget.ended(FakeAgent(tokens), "0")
+    assert budget.expected("e1") == 5500 and budget.expected("0") == 5500
+    budget.ended(FakeAgent(9000), "e1")
+    assert budget.expected("e1") == 6750 # all four games, until e1 has 3 of its own
+
+    # what an agent holds: the average over the time spent generating, not its final context
+    from agent import kv_occupancy
+    turns = [dict(prompt=1000, generated=10), dict(prompt=2000, generated=4000), dict(prompt=6000, generated=10)]
+    occupancy = kv_occupancy(turns)
+    assert occupancy["peak"] == 6010 and abs(occupancy["mean"] - (10 * 1005 + 4000 * 4000 + 10 * 6005) / 4020) < 1e-6
+    assert kv_occupancy([]) is None
+
+    class Measured(FakeAgent):
+        def kv_occupancy(self):
+            return dict(peak=self.tokens, mean=self.tokens / 2)
+    budget = engine.ContextBudget(capacity=100000, prior=20000)
+    for tokens in (8000, 8000, 8000):
+        budget.ended(Measured(tokens), "e1")
+    assert budget.expected("e1") == 4000
+
+    # a two-player game: one request at a time, so the larger of the two players, not their sum
+    import duel
+
+    class Player:
+        def __init__(self, turns, last):
+            self.turns, self.last = turns, last
+
+        def context_tokens(self):
+            return self.last
+    pair = duel.Contestants(Player([dict(prompt=3000, generated=4000)], 7000), Player([dict(prompt=1000, generated=10)], 1010))
+    assert pair.context_tokens() == 7000 and pair.kv_occupancy()["peak"] == 7000
+    assert duel.Contestants(Player([], 0)).kv_occupancy() is None
+    print("ok ContextBudget: expected occupancy, backfill, max_wait, pooled estimates, two-player games")
 
 
 class ConcurrentGames:
@@ -206,7 +244,7 @@ def test_auto_parallel():
     most = run_counting(results)
     assert len(load_table(results)) == 40
     assert 8 < most <= 32, most
-    FakeEngine.kv_capacity = 2000 # too small for 2 contexts: still at least 2 games at a time
+    FakeEngine.kv_capacity = 300 # too small for 2 games: still at least 2 games at a time
     assert run_counting(tempfile.mkdtemp()) == 2
     FakeEngine.kv_capacity = None
     print(f"ok auto n_parallel: {most} games at a time with a KV cache of 50000 tokens, at least 2")

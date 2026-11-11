@@ -90,6 +90,22 @@ def token_samples(grid, folders, per_mode=30):
     return tokens
 
 
+def played_by_folder(grid, folders, models=None):
+    """Prints where the games of the grid already played are: for each folder (e.g. Drive and the git clone), how many
+    of them it holds and how many only it holds. A game is skipped when any folder has it."""
+    found = {folder: set() for folder in folders}
+    games = list(grid_games(grid, models))
+    for game_id in games:
+        for folder in folders:
+            if os.path.exists(record_path(folder, *game_id)):
+                found[folder].add(game_id)
+    for folder in folders:
+        others = set().union(*(found[other] for other in folders if other != folder))
+        exists = "" if os.path.isdir(folder) else " (the folder does not exist yet)"
+        print(f"{folder}: {len(found[folder])} games of the grid, {len(found[folder] - others)} only here{exists}")
+    print(f"played in at least one folder: {len(set().union(*found.values()))} of {len(games)}")
+
+
 def summary(grid, results, read, models=None):
     """Prints, for every model and mode, how many games are played and how many are left."""
     folders = [results, *read]

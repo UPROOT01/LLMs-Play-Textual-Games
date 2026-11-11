@@ -174,8 +174,14 @@ class Contestants:
         return [agent for agent in (self.agent, self.opponent) if agent is not None]
 
     def context_tokens(self):
-        """Both contexts are in the KV cache at the same time."""
-        return sum(agent.context_tokens() for agent in self.agents())
+        """The larger of the two players' last requests: they answer one at a time, so only one request of the game
+        is in the KV cache at once (engine.ContextBudget)."""
+        return max((agent.context_tokens() for agent in self.agents()), default=0)
+
+    def kv_occupancy(self):
+        """The two players' requests together: one at a time, so the average over the time of the game."""
+        from agent import kv_occupancy
+        return kv_occupancy([turn for agent in self.agents() for turn in getattr(agent, "turns", [])])
 
 
 def _agent_move(agent, game, side, last_move, note, counts, max_illegal, illegal_policy, rng, reasonings,

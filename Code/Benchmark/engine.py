@@ -236,8 +236,8 @@ class Engine:
                         text += f"; last {recent / 60:.0f} min {(ended - history[0][1]) / recent * 3600:.1f} games/hour, " \
                               + f"{(generated - history[0][2]) / recent * 60:.0f} tokens/min"
                     if budget:
-                        text += f"; contexts {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}" \
-                              + " of the KV cache at their expected end"
+                        text += f"; expected {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}" \
+                              + " of the KV cache in use"
                     display_handle = _show(text, display_handle)
         finally:
             if in_vllm:
@@ -253,36 +253,51 @@ RECENT = 600 # seconds of the recent rates in the status line
 
 
 class ContextBudget:
-    """Decides when to start another game, so that the contexts of the games being played fit together in the KV cache.
+    """Decides when to start another game, so that the games being played fit together in the KV cache.
 
-    The context of a game grows at every turn, so a game counts for the size its context is expected to reach by the
-    end of the game: the 75th percentile of the final contexts of the games of its group (e.g. its mode) that already
-    ended, or `prior` tokens until 3 of them have ended. A game whose context is already larger counts for its size.
-    A game can start if all of them, plus the new one, take at most `fraction` of the KV cache (and there are fewer
-    than max_parallel games); at least min_parallel games are always played.
+    vLLM holds in the KV cache only the requests being generated: a game counts for the tokens it holds while one of
+    its answers is generated (prompt + answer), not for its whole history. Between two answers its blocks are free
+    (prefix caching may keep them, but they can be evicted), and in a two-player game only one player answers at a
+    time. A game counts for the tokens it is expected to hold on average over the time it spends in vLLM: the
+    `percentile` of the averages of the games of its group (e.g. its mode) that already ended (agent.kv_occupancy()),
+    of all the games that ended while fewer than 3 of its group have, or `prior` tokens before 3 games have ended.
+    A game whose last request was larger counts for that size. A game can start if all of them, plus the new one,
+    take at most `fraction` of the KV cache (and there are fewer than max_parallel games); at least min_parallel
+    games are always played. The sizes fluctuate around the averages: when the cache is full for a moment, vLLM
+    preempts a request and computes it again later (slower, never wrong).
 
     The first waiting game starts as soon as it fits. While it does not fit, the first smaller game after it that fits
     starts instead (backfill): small games add little to the generation time of each step and keep the GPU busy.
     So that the small games do not keep the big one waiting forever, after max_wait seconds of waiting the backfill
     stops until the big one starts: the small games end quickly and make room for it.
+    (Until 2026-11-11 a game counted for its whole final context, and a two-player game for both players' contexts
+    added: about 2-4 times more than vLLM holds, and 3 Connect Four games at a time on an L4.)
     """
 
-    def __init__(self, capacity, fraction=0.9, prior=20000, min_parallel=2, max_parallel=32, max_wait=300):
+    def __init__(self, capacity, fraction=0.9, prior=12000, min_parallel=2, max_parallel=32, max_wait=300,
+                 percentile=75):
         self.capacity = capacity
         self.fraction = fraction
         self.prior = prior
         self.min_parallel = min_parallel
         self.max_parallel = max_parallel
         self.max_wait = max_wait
-        self.final_contexts = {} # group -> final context tokens of its games that ended
-        self.expected_context = {} # group -> expected final context, once 3 of its games ended
+        self.percentile = percentile
+        self.occupancy = {} # group -> average tokens held in the KV cache by its games that ended
         self.first_waiting_since = None # when the first waiting game started to wait (None: it is not waiting)
 
+    def _estimate(self, values):
+        return float(np.percentile(values, self.percentile))
+
     def expected(self, group):
-        return self.expected_context.get(group, self.prior)
+        own = self.occupancy.get(group, [])
+        if len(own) >= 3:
+            return self._estimate(own)
+        every = [value for values in self.occupancy.values() for value in values]
+        return self._estimate(every) if len(every) >= 3 else self.prior
 
     def planned(self, playing):
-        """Tokens of the contexts of the games being played (list of (agent, group)) at their expected end."""
+        """Tokens the games being played (list of (agent, group)) are expected to hold in the KV cache."""
         return sum(max(agent.context_tokens(), self.expected(group)) for agent, group in playing)
 
     def choose(self, waiting, playing, now=None):
@@ -302,10 +317,9 @@ class ContextBudget:
         return next((index for index, group in enumerate(waiting) if self.expected(group) <= room), None)
 
     def ended(self, agent, group):
-        finals = self.final_contexts.setdefault(group, [])
-        finals.append(agent.context_tokens())
-        if len(finals) >= 3:
-            self.expected_context[group] = float(np.percentile(finals, 75))
+        occupancy = agent.kv_occupancy() if hasattr(agent, "kv_occupancy") else None
+        value = occupancy["mean"] if occupancy else agent.context_tokens()
+        self.occupancy.setdefault(group, []).append(value)
 
 
 class _State:
