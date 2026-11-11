@@ -113,6 +113,14 @@ class Engine:
         self.description = dict(backend=f"vllm {vllm.__version__}", gpu_memory_utilization=gpu_memory_utilization,
                                 **llm_settings)
 
+    def kv_usage(self):
+        """Fraction of the KV cache held right now by the requests being generated (blocks that are free but still
+        hold a cached prefix do not count), or None if this vLLM version does not let us read it."""
+        try:
+            return float(self.backend.engine_core.engine_core.scheduler.kv_cache_manager.usage)
+        except Exception:
+            return None
+
     def close(self):
         """Frees the GPU memory, to load another model. If it is not enough (out of memory when loading the next
         model), restart the runtime: the games already played are not played again."""
@@ -159,7 +167,10 @@ class Engine:
         ended = 0
         last_display = 0
         display_handle = None
-        history = collections.deque() # (time, ended, generated) of the last RECENT seconds, for the recent rates
+        history = collections.deque() # (time, ended, generated, usage sum, usage samples) of the last RECENT seconds
+        peaks = collections.deque() # (time, highest KV usage seen between two displays) of the last RECENT seconds
+        usage_sum = usage_samples = 0 # actual KV usage, read at every step of vLLM
+        usage_peak = 0.0
 
         def run(key, agent, play_kwargs):
             try:
@@ -214,6 +225,11 @@ class Engine:
                         on_result(key, agent, outcome)
 
                 if in_vllm:
+                    usage = self.kv_usage() if verbose else None # before the step: the requests that are about to finish
+                    if usage is not None:
+                        usage_sum += usage
+                        usage_samples += 1
+                        usage_peak = max(usage_peak, usage)
                     for output in self.backend.step(): # one generation step of all the requests in the batch
                         if output.finished:
                             request = in_vllm.pop(output.request_id)
@@ -226,9 +242,13 @@ class Engine:
                 if verbose and time.perf_counter() - last_display > 2: # the loop runs at every generated token
                     last_display = time.perf_counter()
                     elapsed = last_display - start
-                    history.append((last_display, ended, generated))
+                    history.append((last_display, ended, generated, usage_sum, usage_samples))
+                    peaks.append((last_display, usage_peak))
+                    usage_peak = 0.0
                     while last_display - history[0][0] > RECENT:
                         history.popleft()
+                    while last_display - peaks[0][0] > RECENT:
+                        peaks.popleft()
                     recent = last_display - history[0][0]
                     text = f"{state.running} games running, {len(jobs)} waiting, {ended} ended; " \
                          + f"since the start {ended / elapsed * 3600:.1f} games/hour, {generated / elapsed * 60:.0f} tokens/min"
@@ -236,8 +256,14 @@ class Engine:
                         text += f"; last {recent / 60:.0f} min {(ended - history[0][1]) / recent * 3600:.1f} games/hour, " \
                               + f"{(generated - history[0][2]) / recent * 60:.0f} tokens/min"
                     if budget:
-                        text += f"; expected {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}" \
-                              + " of the KV cache in use"
+                        text += f"; KV cache: expected {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}"
+                    if usage_samples:
+                        text += f"{', ' if budget else '; KV cache: '}actual {usage_sum / usage_samples:.0%} on average since the start"
+                        if usage_samples > history[0][4]:
+                            text += f", {(usage_sum - history[0][3]) / (usage_samples - history[0][4]):.0%} in the last {recent / 60:.0f} min" \
+                                  + f" (peak {max(peak for _, peak in peaks):.0%})"
+                    elif budget:
+                        text += ", actual not readable in this vLLM"
                     display_handle = _show(text, display_handle)
         finally:
             if in_vllm:

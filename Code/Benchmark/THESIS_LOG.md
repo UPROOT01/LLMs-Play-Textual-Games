@@ -1237,3 +1237,17 @@ vLLM preempts a request and recomputes it later: slower, never a wrong result. T
 ones (the budget only decides when a game starts). The status line now says "expected X% of the KV cache in use".
 Tests: tests/test_pipeline.py (test_context_budget, test_auto_parallel). test_run_grid fails, before and after this
 change: it assumes the 1.7B cooking games of seeds 1-3 are not in results/, and they now are.
+
+### Status line: expected and actual KV cache usage (2026-11-11)
+
+*Why:* after the budget change (previous entry) the status line gave only the budget's own prediction ("expected X%"),
+which says nothing about whether the prediction is right. To tune the budget (fraction 0.9, percentile 75) on the GPU we
+need the real number next to it. *What:* `Engine.kv_usage()` reads the fraction of the KV cache held by the requests
+being generated from vLLM's scheduler (`backend.engine_core.engine_core.scheduler.kv_cache_manager.usage`; free blocks that
+still hold a cached prefix do not count, so it is what the requests hold). It is read before every vLLM step and the
+status line shows: `KV cache: expected 85%, actual 62% on average since the start, 70% in the last 10 min (peak 93%)`.
+If the vLLM version has no such attribute it returns None and the line says "actual not readable in this vLLM" (nothing
+else changes). Reading it costs nothing (a counter). *How to read it:* expected much above actual = the budget is still
+too cautious (raise `fraction`/lower the percentile, or the games are shorter than the prior); actual peaks near 100% =
+vLLM is preempting, lower the fraction. The attribute path was checked against the vLLM 0.31 source, not run on a GPU.
+Test: tests/test_pipeline.py::test_kv_usage_display.

@@ -250,6 +250,42 @@ def test_auto_parallel():
     print(f"ok auto n_parallel: {most} games at a time with a KV cache of 50000 tokens, at least 2")
 
 
+def test_kv_usage_display():
+    """The status line shows the expected and the actual KV cache usage (read from vLLM's scheduler)."""
+    engine.make_env = FakeEnv
+    engine.Engine = FakeEngine
+    texts = []
+    original_show = engine._show
+    engine._show = lambda text, handle: texts.append(text)
+    grid = dict(run.DEFAULTS, models=["Qwen/Qwen3-1.7B"], modes=["er4"], prompts=["CoT"],
+                games={"cooking": [1]}, seeds=[1, 2, 3], max_steps=10, loop_window=10)
+    try:
+        # vLLM that cannot be read: only the expected usage, said not to be readable
+        FakeEngine.kv_capacity = 50000
+        run.run_grid(grid, tempfile.mkdtemp(), read=[], verbose=True)
+        assert texts and "expected" in texts[-1] and "actual not readable" in texts[-1], texts[-1:]
+        assert FakeEngine.last.kv_usage() is None
+        # vLLM whose scheduler tells its usage
+        texts.clear()
+        scheduler = types.SimpleNamespace(kv_cache_manager=types.SimpleNamespace(usage=0.25))
+        original_init = FakeEngine.__init__
+
+        def init(self, *args, **kwargs):
+            original_init(self, *args, **kwargs)
+            self.backend.engine_core = types.SimpleNamespace(engine_core=types.SimpleNamespace(scheduler=scheduler))
+        FakeEngine.__init__ = init
+        try:
+            run.run_grid(grid, tempfile.mkdtemp(), read=[], verbose=True)
+        finally:
+            FakeEngine.__init__ = original_init
+        assert FakeEngine.last.kv_usage() == 0.25
+        assert "expected" in texts[-1] and "actual 25% on average since the start" in texts[-1], texts[-1]
+        print("ok kv usage display:", texts[-1][-120:])
+    finally:
+        engine._show = original_show
+        FakeEngine.kv_capacity = None
+
+
 def test_grid_files():
     folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "grids")
     from profiles import model_settings
@@ -270,4 +306,5 @@ if __name__ == "__main__":
     test_grid_files()
     test_context_budget()
     test_auto_parallel()
+    test_kv_usage_display()
     test_run_grid()
