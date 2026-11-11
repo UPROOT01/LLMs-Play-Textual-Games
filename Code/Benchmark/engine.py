@@ -11,6 +11,8 @@ which is almost all the time, its whole context is in vLLM's KV cache. A new gam
 all the games, at the size they are expected to reach by their end, fit in the KV cache; when the next game is too big,
 a smaller one after it can start instead. Too many games would not fit:
 vLLM would pause some answers and compute their contexts again (preemption), and the tokens per minute would drop.
+Once vLLM's own usage of the KV cache has been read for a minute, new games start on that measure (target 92%,
+lowered when vLLM pauses too many requests); see ContextBudget.measure().
 """
 import collections
 import gc
@@ -108,6 +110,18 @@ class Engine:
         self.kv_capacity = None # tokens that fit in the KV cache (None: unknown)
         if cache_config.num_gpu_blocks:
             self.kv_capacity = cache_config.num_gpu_blocks * cache_config.block_size
+        self.preemptions = None # requests vLLM paused for lack of KV cache (None: cannot be counted in this vLLM)
+        try:
+            scheduler = self.backend.engine_core.engine_core.scheduler
+            preempt = scheduler._preempt_request
+
+            def counted_preempt(*args, **kwargs):
+                self.preemptions += 1
+                return preempt(*args, **kwargs)
+            scheduler._preempt_request = counted_preempt
+            self.preemptions = 0
+        except Exception:
+            pass
         print(f"{model}: KV cache of {self.kv_capacity} tokens" if self.kv_capacity else
               f"{model}: unknown KV cache size, n_parallel='auto' plays {FALLBACK_PARALLEL} games at a time")
         self.description = dict(backend=f"vllm {vllm.__version__}", gpu_memory_utilization=gpu_memory_utilization,
@@ -141,7 +155,7 @@ class Engine:
         params.update(sampling or {})
         return SamplingParams(max_tokens=max_tokens, stop_token_ids=self.stop_token_ids, **params)
 
-    def play(self, jobs, n_parallel="auto", on_result=None, verbose=True, group=None, max_parallel=32,
+    def play(self, jobs, n_parallel="auto", on_result=None, verbose=True, group=None, max_parallel=64,
              play_function=None):
         """Plays the jobs, n_parallel games at a time ("auto": as many as fit in the KV cache, see ContextBudget).
         jobs: list of (key, make_agent, play_kwargs): make_agent(generate) returns a new agent that uses generate()
@@ -171,6 +185,7 @@ class Engine:
         peaks = collections.deque() # (time, highest KV usage seen between two displays) of the last RECENT seconds
         usage_sum = usage_samples = 0 # actual KV usage, read at every step of vLLM
         usage_peak = 0.0
+        history_preemptions = collections.deque() # (time, preemptions so far)
 
         def run(key, agent, play_kwargs):
             try:
@@ -225,7 +240,9 @@ class Engine:
                         on_result(key, agent, outcome)
 
                 if in_vllm:
-                    usage = self.kv_usage() if verbose else None # before the step: the requests that are about to finish
+                    usage = self.kv_usage() if verbose or budget else None # before the step
+                    if usage is not None and budget:
+                        budget.measure(usage, getattr(self, "preemptions", None))
                     if usage is not None:
                         usage_sum += usage
                         usage_samples += 1
@@ -255,7 +272,9 @@ class Engine:
                     if recent > 0:
                         text += f"; last {recent / 60:.0f} min {(ended - history[0][1]) / recent * 3600:.1f} games/hour, " \
                               + f"{(generated - history[0][2]) / recent * 60:.0f} tokens/min"
-                    if budget:
+                    if budget and budget.measuring():
+                        text += f"; KV cache: target {budget.target:.0%} (games started on the measured usage)"
+                    elif budget:
                         text += f"; KV cache: expected {budget.planned([(agent, group(key)) for key, agent in playing.items()]) / budget.capacity:.0%}"
                     if usage_samples:
                         text += f"{', ' if budget else '; KV cache: '}actual {usage_sum / usage_samples:.0%} on average since the start"
@@ -264,6 +283,12 @@ class Engine:
                                   + f" (peak {max(peak for _, peak in peaks):.0%})"
                     elif budget:
                         text += ", actual not readable in this vLLM"
+                    if getattr(self, "preemptions", None) is not None:
+                        history_preemptions.append((last_display, self.preemptions))
+                        while last_display - history_preemptions[0][0] > RECENT:
+                            history_preemptions.popleft()
+                        text += f"; {self.preemptions - history_preemptions[0][1]} requests paused (preempted) in the last {recent / 60:.0f} min" \
+                              + f", {self.preemptions} since the start"
                     display_handle = _show(text, display_handle)
         finally:
             if in_vllm:
@@ -296,12 +321,17 @@ class ContextBudget:
     starts instead (backfill): small games add little to the generation time of each step and keep the GPU busy.
     So that the small games do not keep the big one waiting forever, after max_wait seconds of waiting the backfill
     stops until the big one starts: the small games end quickly and make room for it.
+    Measured mode (from 2026-11-11, see measure()): once vLLM's own KV cache usage has been read for `window` seconds,
+    the room for new games comes from it instead of from the estimates above: the estimates were still about 1.6 times
+    the real usage (games between two turns hold nothing, the 75th percentile is not the mean). A full cache does not
+    slow the generation down, pausing requests does: the target goes down when vLLM pauses too many.
+
     (Until 2026-11-11 a game counted for its whole final context, and a two-player game for both players' contexts
     added: about 2-4 times more than vLLM holds, and 3 Connect Four games at a time on an L4.)
     """
 
-    def __init__(self, capacity, fraction=0.9, prior=12000, min_parallel=2, max_parallel=32, max_wait=300,
-                 percentile=75):
+    def __init__(self, capacity, fraction=0.9, prior=12000, min_parallel=2, max_parallel=64, max_wait=300,
+                 percentile=75, target=0.92, window=60, min_target=0.6, max_preemptions=5):
         self.capacity = capacity
         self.fraction = fraction
         self.prior = prior
@@ -311,6 +341,16 @@ class ContextBudget:
         self.percentile = percentile
         self.occupancy = {} # group -> average tokens held in the KV cache by its games that ended
         self.first_waiting_since = None # when the first waiting game started to wait (None: it is not waiting)
+        # measured mode (see measure())
+        self.target = self.max_target = target
+        self.window = window
+        self.min_target = min_target
+        self.max_preemptions = max_preemptions
+        self.samples = collections.deque() # (time, usage, preemptions so far) of the last `window` seconds
+        self.usage_sum = 0.0
+        self.first_sample = None
+        self.starts = collections.deque() # (time, expected tokens) of the games started in the last `window` seconds
+        self.last_target_change = None
 
     def _estimate(self, values):
         return float(np.percentile(values, self.percentile))
@@ -326,21 +366,71 @@ class ContextBudget:
         """Tokens the games being played (list of (agent, group)) are expected to hold in the KV cache."""
         return sum(max(agent.context_tokens(), self.expected(group)) for agent, group in playing)
 
+    def measure(self, usage, preemptions=None, now=None):
+        """Records the KV cache usage vLLM reports (fraction held by the requests being generated) and the number of
+        requests it paused so far (None: unknown). Once `window` seconds are measured, the budget uses them (measured
+        mode): a game can start if the mean usage of the last `window` seconds, plus the expected size of the games
+        started within it (not yet fully in the mean) and of the new one, stays under `target`. The target goes down
+        by 0.05 (at least min_target) when more than max_preemptions requests are paused within a window, and back up
+        by 0.02 (at most its start value) after a window without pauses; at most one change per window."""
+        now = time.perf_counter() if now is None else now
+        if self.first_sample is None:
+            self.first_sample = now
+        self.samples.append((now, usage, preemptions))
+        self.usage_sum += usage
+        self._prune(now)
+        if preemptions is None or self.samples[0][2] is None:
+            return
+        if now - self.first_sample < self.window:
+            return
+        if self.last_target_change is not None and now - self.last_target_change < self.window:
+            return
+        paused = preemptions - self.samples[0][2]
+        if paused > self.max_preemptions and self.target > self.min_target:
+            self.target = max(self.min_target, self.target - 0.05)
+            self.last_target_change = now
+        elif paused == 0 and self.target < self.max_target:
+            self.target = min(self.max_target, self.target + 0.02)
+            self.last_target_change = now
+
+    def _prune(self, now):
+        while self.samples and now - self.samples[0][0] > self.window:
+            self.usage_sum -= self.samples.popleft()[1]
+        while self.starts and now - self.starts[0][0] > self.window:
+            self.starts.popleft()
+
+    def measuring(self, now=None):
+        """True if the budget uses the measured usage (a full window measured, and samples in the last window)."""
+        now = time.perf_counter() if now is None else now
+        self._prune(now)
+        return self.first_sample is not None and now - self.first_sample >= self.window and bool(self.samples)
+
+    def room(self, playing, now=None):
+        """Tokens of the KV cache still free for new games."""
+        if self.measuring(now):
+            used = self.usage_sum / len(self.samples) * self.capacity + sum(tokens for _, tokens in self.starts)
+            return self.target * self.capacity - used
+        return self.fraction * self.capacity - self.planned(playing)
+
     def choose(self, waiting, playing, now=None):
         """Index in `waiting` (the groups of the waiting games, in order) of the game to start now, or None.
         playing: list of (agent, group) of the games being played."""
         if not waiting or len(playing) >= self.max_parallel:
             return None
-        room = self.fraction * self.capacity - self.planned(playing)
+        now = time.perf_counter() if now is None else now
+        room = self.room(playing, now)
         if len(playing) < self.min_parallel or self.expected(waiting[0]) <= room:
             self.first_waiting_since = None
+            self.starts.append((now, self.expected(waiting[0])))
             return 0
-        now = time.perf_counter() if now is None else now
         if self.first_waiting_since is None:
             self.first_waiting_since = now
         if now - self.first_waiting_since > self.max_wait: # stop the backfill, to make room for the first game
             return None
-        return next((index for index, group in enumerate(waiting) if self.expected(group) <= room), None)
+        index = next((index for index, group in enumerate(waiting) if self.expected(group) <= room), None)
+        if index is not None:
+            self.starts.append((now, self.expected(waiting[index])))
+        return index
 
     def ended(self, agent, group):
         occupancy = agent.kv_occupancy() if hasattr(agent, "kv_occupancy") else None

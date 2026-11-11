@@ -1251,3 +1251,26 @@ else changes). Reading it costs nothing (a counter). *How to read it:* expected 
 too cautious (raise `fraction`/lower the percentile, or the games are shorter than the prior); actual peaks near 100% =
 vLLM is preempting, lower the fraction. The attribute path was checked against the vLLM 0.31 source, not run on a GPU.
 Test: tests/test_pipeline.py::test_kv_usage_display.
+
+### Parallel games started on the measured KV cache usage (2026-11-11)
+
+*Why:* the first run with the status line of the previous entry (4B or 8B, 12 games) read `expected 101%, actual 52% on
+average since the start, 62% in the last 10 min (peak 86%)`: the estimates are still about 1.6 times what vLLM holds
+(a game between two turns holds nothing; the 75th percentile is not the mean), so the GPU was used at about 60%.
+A full KV cache does not slow the generation down: every step makes one token for every running request, and the cost
+of reading the weights is shared by all of them, so tokens/min grows with the batch until the GPU's compute is the
+limit. What wastes time is preemption: vLLM V1 (checked in the 0.31 source, scheduler.py) pauses the most recently
+started request when a running one needs a block and none is free, frees its blocks and recomputes its prompt later
+(the result does not change); while it pauses, it admits no new request. A few pauses cost a prefill each; many
+mean the GPU recomputes instead of generating.
+*What:* `ContextBudget.measure()` gets vLLM's usage before every step and the number of paused requests (the engine
+wraps the scheduler's `_preempt_request` with a counter; None if this vLLM has no such method). After 60 s of
+measures (`window`) the room for new games is `target × capacity − (mean usage of the last 60 s × capacity + the
+expected sizes of the games started in the last 60 s)`; before that, and when nothing was measured in the last
+window, the estimates of the previous entries. `target` starts at 0.92, goes down by 0.05 (not below 0.6) when more
+than 5 requests are paused within a window, and back up by 0.02 after a window without pauses (one change per window).
+max_parallel default 32 → 64. Status line: `KV cache: target 92% (games started on the measured usage), actual ...;
+N requests paused (preempted) in the last 10 min, M since the start`. The games are the same; only when they start
+changes. *To check on the GPU:* tokens/min should go up compared with the previous run and the pauses stay few; if
+tokens/min stops growing while more games run, the GPU's compute is the limit. Not run on a GPU yet.
+Test: tests/test_pipeline.py::test_measured_budget (and test_kv_usage_display for the pause counter in the line).

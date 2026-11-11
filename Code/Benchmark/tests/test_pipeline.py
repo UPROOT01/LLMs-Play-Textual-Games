@@ -238,16 +238,57 @@ def test_auto_parallel():
     # unknown KV cache size: FALLBACK_PARALLEL games at a time
     assert run_counting(tempfile.mkdtemp()) == engine.FALLBACK_PARALLEL
     # KV cache of 50000 tokens: 2 games of the 20000-token prior at first, then many more once the first games
-    # show that the contexts stay small (~1000 tokens), up to max_parallel (32), 40 games in total
+    # show that the contexts stay small (~1000 tokens), up to max_parallel (64), 40 games in total
     FakeEngine.kv_capacity = 50000
     results = tempfile.mkdtemp()
     most = run_counting(results)
     assert len(load_table(results)) == 40
-    assert 8 < most <= 32, most
+    assert 8 < most <= 40, most
     FakeEngine.kv_capacity = 300 # too small for 2 games: still at least 2 games at a time
     assert run_counting(tempfile.mkdtemp()) == 2
     FakeEngine.kv_capacity = None
     print(f"ok auto n_parallel: {most} games at a time with a KV cache of 50000 tokens, at least 2")
+
+
+def test_measured_budget():
+    """With vLLM's usage measured for a window, the room comes from it; the target follows the pauses."""
+    class FakeAgent:
+        def context_tokens(self):
+            return 5000
+    budget = engine.ContextBudget(capacity=100000, prior=20000, window=60, target=0.92, max_preemptions=5)
+    playing = [(FakeAgent(), "e1")] * 4
+    # before a full window: the estimates (4 x 20000 + 20000 > 90000)
+    budget.measure(0.40, 0, now=0)
+    assert not budget.measuring(now=30)
+    assert budget.choose(["e1"], playing, now=30) is None
+    # a window measured at 40%: room = 92000 - 40000 = 52000, two games of 20000 fit, the third does not
+    for t in range(1, 61):
+        budget.measure(0.40, 0, now=t)
+    assert budget.measuring(now=60)
+    assert abs(budget.room(playing, now=60) - 52000) < 1e-6
+    assert budget.choose(["e1"], playing, now=60) == 0
+    assert budget.choose(["e1"], playing, now=60) == 0
+    assert budget.choose(["e1"], playing, now=60) is None # the two just started count until the window passes
+    # the started games leave the room estimate after the window (by then they are in the measured mean)
+    for t in range(61, 122):
+        budget.measure(0.40, 0, now=t)
+    assert budget.choose(["e1"], playing, now=121) == 0
+    # many pauses in a window: the target goes down by 0.05, once per window
+    for t in range(122, 190):
+        budget.measure(0.95, (t - 121) // 5, now=t) # 13 pauses in the window
+    assert abs(budget.target - 0.87) < 1e-9, budget.target
+    # a window without pauses: back up by 0.02, never above the start value
+    for t in range(190, 700): # the pauses leave the window first (one more lowering), then +0.02 per window
+        budget.measure(0.80, 13, now=t)
+    assert abs(budget.target - 0.92) < 1e-9, budget.target
+    # no samples in the last window (nothing generated): back to the estimates
+    assert not budget.measuring(now=1000)
+    # unknown pauses (vLLM where they cannot be counted): the target never changes
+    budget = engine.ContextBudget(capacity=100000, window=60)
+    for t in range(0, 200):
+        budget.measure(0.99, None, now=t)
+    assert budget.target == 0.92 and budget.measuring(now=199)
+    print("ok measured budget: room from the measured usage, target lowered by pauses and raised back")
 
 
 def test_kv_usage_display():
@@ -273,6 +314,7 @@ def test_kv_usage_display():
         def init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self.backend.engine_core = types.SimpleNamespace(engine_core=types.SimpleNamespace(scheduler=scheduler))
+            self.preemptions = 2
         FakeEngine.__init__ = init
         try:
             run.run_grid(grid, tempfile.mkdtemp(), read=[], verbose=True)
@@ -280,6 +322,7 @@ def test_kv_usage_display():
             FakeEngine.__init__ = original_init
         assert FakeEngine.last.kv_usage() == 0.25
         assert "expected" in texts[-1] and "actual 25% on average since the start" in texts[-1], texts[-1]
+        assert "0 requests paused (preempted) in the last" in texts[-1] and "2 since the start" in texts[-1], texts[-1]
         print("ok kv usage display:", texts[-1][-120:])
     finally:
         engine._show = original_show
@@ -306,5 +349,6 @@ if __name__ == "__main__":
     test_grid_files()
     test_context_budget()
     test_auto_parallel()
+    test_measured_budget()
     test_kv_usage_display()
     test_run_grid()
