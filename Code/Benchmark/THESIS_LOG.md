@@ -1219,3 +1219,21 @@ holds, so the check is visible. *The 8B notebook* sets `NO_FP8_KV_CACHE=1`: the 
 (e1, 0) used the bf16 cache on the remote machine, and the new modes are compared with them. The cooking notebook
 keeps the fp8 cache, as the 8B cooking games already played. Checked locally on the cells that need no GPU (with an
 empty folder in place of Drive): 40 of 250 games found in git for each Connect Four notebook, 0 of 600 for cooking.
+
+### Parallel games: the budget counted 2-4 times what vLLM holds (2026-11-11)
+
+Seen on the first runs of the event gates: Connect Four 3 games at a time (4B on an L4, 8B on the 4090), cooking
+1.7B 10 at a time, the status line at 76-86% "of the KV cache". *Cause* (engine.ContextBudget): a game counted for
+its whole final context, a two-player game for both players' contexts added, and every group (mode, opponent)
+started from a prior of 20000 tokens until 3 of its own games ended (5 groups in duel_c4_tactic.yaml: hours of
+warm-up at 5-15 games/hour). But vLLM holds in the KV cache only the requests being generated: between two answers a
+game's blocks are free, and in a duel the two players answer one at a time.
+*Change:* a game counts for the average size of its requests over the time spent generating them
+(`agent.kv_occupancy()`: a request of g tokens on a prompt of p lasts g steps and holds p + g/2 on average; the
+long reasonings dominate), or for its last request if larger; a duel for the larger of its two players
+(`duel.Contestants`); a group with fewer than 3 ended games uses the games of all the groups; prior 12000. Still 75th
+percentile and 90% of the cache. *Risk:* the sizes fluctuate around the averages; when the cache is full for a moment
+vLLM preempts a request and recomputes it later: slower, never a wrong result. The new games are identical to the old
+ones (the budget only decides when a game starts). The status line now says "expected X% of the KV cache in use".
+Tests: tests/test_pipeline.py (test_context_budget, test_auto_parallel). test_run_grid fails, before and after this
+change: it assumes the 1.7B cooking games of seeds 1-3 are not in results/, and they now are.
