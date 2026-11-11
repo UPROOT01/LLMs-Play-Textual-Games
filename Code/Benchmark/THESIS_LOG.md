@@ -1207,3 +1207,15 @@ no real use has. The measures of this week show where the need is, with a signal
   which failed); gfail's rate is high for the weak models, so for them it may just be e1 with some turns skipped;
   the 8B gates in cooking use CoT+nonempty and its baselines CoT (2-5% empty reasonings).
 Tests: `tests/test_gate.py` (test_tactic_gate, test_fail_gate). All suites pass.
+
+### Three Colab notebooks for the event gates (2026-11-11)
+
+`colab_c4_tactic_4b.ipynb`, `colab_c4_tactic_8b.ipynb`, `colab_cooking_fail.ipynb`: one per run, in the order to
+run them, built from colab_duel.ipynb / colab.ipynb with the grid and the models fixed. *Skipping:* a game is skipped
+when its record is on Drive or in the git clone's `results/` (`read = [LEGACY_RESULTS]`, as the old notebooks
+already did; the setup cell pulls first, so the clone has every result pushed from the remote machine). New:
+`run.played_by_folder` prints, before running, how many games of the grid each folder holds and how many only it
+holds, so the check is visible. *The 8B notebook* sets `NO_FP8_KV_CACHE=1`: the 8B Connect Four games already played
+(e1, 0) used the bf16 cache on the remote machine, and the new modes are compared with them. The cooking notebook
+keeps the fp8 cache, as the 8B cooking games already played. Checked locally on the cells that need no GPU (with an
+empty folder in place of Drive): 40 of 250 games found in git for each Connect Four notebook, 0 of 600 for cooking.
