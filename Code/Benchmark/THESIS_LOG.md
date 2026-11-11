@@ -1129,3 +1129,81 @@ The 8B games showed that thinking repairs as many moves as it spoils (27 against
 rarely are not worse than e1. Mode `0` (never thinking) against the same self-e1 opponent is the direct test of
 "the 8B does not need to think in Connect Four". Added to the existing grid and not to a new one: same opponent,
 seeds and settings, and the 120 games already played are skipped. 20 games to play.
+
+### Mode 0 of the 8B in Connect Four, and a correction: the blunder measure misses the one-move tactics (2026-11-11)
+
+**Mode 0 (20 games against self-e1).** 5 wins, 15 losses: 0.25 (95% interval 0.09-0.49; against 50%, p=0.041).
+The games are degenerate. As second player the agent loses 8 games of 10 in 7 plies: the opponent stacks four discs
+in column 4 while the agent plays 1, 1, 1. As first player it stacks column 4 itself and wins 5 games of 10 in
+7 plies because the thinking opponent does not block. Its blunder rate is low (0.10 per game) only because of how
+a blunder is defined (below). All six modes that think less than e1 together win 46 games of 120 against e1
+(0.38, p=0.013), so "thinking less costs the 8B nothing" (entry of 2026-11-10) was wrong: no single mode was
+significant with 20 games, the six together are.
+
+**The correction.** A blunder is a move that changes the solver's class of the position (win/draw/loss). A position
+that is already lost for a perfect opponent cannot be blundered, and the second player is lost from the first move.
+Of the single four-in-a-row threats left unblocked, the solver counted as blunders 32 of 139 (8B) and 41 of 115 (4B):
+the others were in positions already lost. So the blunder rate does not see most of what decides these games.
+New measure, from the moves alone (no solver): when the player has a win in one, does it play it; when the other
+side has exactly one win in one (and the player has none), does it block it.
+
+| | thought | not thought | same position: fast move -> move after thinking |
+|---|---|---|---|
+| 8B, threat blocked | 51/127 = 0.40 | 2/65 = 0.03 | 11/127 -> 51/127 (40 fixed, 0 lost, McNemar p<0.0001) |
+| 8B, win taken | 114/139 = 0.82 | 26/42 = 0.62 | 91/138 -> 113/138 (34 fixed, 12 lost, p=0.002) |
+| 4B, threat blocked | 40/103 = 0.39 | 3/55 = 0.05 | 13/94 -> 36/94 (28 fixed, 5 lost, p=0.0001) |
+| 4B, win taken | 99/125 = 0.79 | 13/21 = 0.62 | 63/104 -> 83/104 (27 fixed, 7 lost, p=0.0008) |
+
+(All players of the plain games against self-e1, seeds 1-20, all modes; the last column uses the shadow fast move.)
+- *Thinking does help the 8B*, exactly as much as the 4B, on the moves that decide the game. The entry of
+  2026-11-10 ("27 repaired, 24 spoiled: thinking does not help the 8B") measured the wrong thing and is withdrawn.
+- *Without thinking a threat is almost never blocked* (3-5%), at both sizes. With thinking, 40%: still a majority
+  missed, also for three discs stacked in a column (8B: 32 of 88 blocked).
+- *Memory.* On the normal moves of the every-N modes the threats blocked are 2 of 65 (8B) and 3 of 55 (4B),
+  whatever the mode keeps: a reasoning in view does not make the next move see a threat. The "no memory effect in
+  Connect Four" stands, with this measure too.
+- *Board format, rechecked with this measure:* threats blocked when thinking 44% (grid), 39% (columns), 35% (both),
+  all p > 0.3. Still no effect.
+- *What it touches.* The solver-based numbers of when_to_think.ipynb and why_lr4.ipynb (blunders, repaired/spoiled,
+  the oracle gate, which fires only on a solver blunder) undercount the errors in lost positions. Not recomputed yet.
+- *An idea it opens.* The one-move tactics are 23% of the moves and can be detected by a few lines of code: a gate
+  that thinks exactly there ("gtactic") is a cheap and legitimate candidate, between the random gates and the oracle.
+
+### Two gates that think on an event, not on a clock: gtactic and gfail (2026-11-11)
+
+**Why.** The previous thesis (Dimaglie, "Don't Overthink It") motivates n-think with an uneven need for reasoning
+during a game, but never measures it, and leaves "adaptive n-think" and "ask-to-think" as future work. Our gates so
+far: the model cannot gate itself (gself, gsurp), and the gates that work read the solver (goracle, gcrit), which
+no real use has. The measures of this week show where the need is, with a signal that costs nothing:
+- Connect Four: a threat is blocked 3-5% of the time without thinking, 40% with it; these positions are 23% of the
+  moves.
+- Cooking (er4 + lr4 games, levels 1-9, seeds 1-10; new measure): after a command the game refused, a thinking turn
+  scores 16.1% of the time against 6.6% for a normal turn (8B), 6.3% against 2.0% (4B), 2.0% against 0.9% (1.7B),
+  all p <= 0.001; after an accepted command 9.9% against 7.5% (8B, p=0.054), 9.4% against 7.3% (4B, p=0.11),
+  4.8% against 1.7% (1.7B). Refused commands are 37% (8B), 63% (4B), 75% (1.7B) of the turns.
+  Other signals tried on the same games (the same command repeated, no point for 8 turns) do not separate the turns
+  where thinking helps more: thinking helps as much or more outside them. The refusal was kept.
+
+**What was added.**
+- `gate.TacticGate` (mode `gtactic` / `lgtactic`): thinks when `ConnectFour._winning_moves` finds a win in one
+  for either side. No solver, no tokens. It only switches the thinking on: the model is not told what the rule saw
+  (telling it would test the hint, not the timing).
+- `gate.FailGate` (mode `gfail` / `lgfail`): thinks when the reply of a textual game matches `REJECTED` (moved from
+  memory_analysis.py to gate.py: the gate and the analysis read the logs with the same pattern). Never on the first
+  turn. `SelfEvalAgent` now makes the gates that need no board (`gfail`, `grand<p>`), so the textual games have gate
+  modes; `run.check_modes` refuses the others before the model is loaded.
+- `tokens.selfevaluations` in every record: the thinking turns (think_turns also counts the retries of `+nonempty`).
+- `gate_analysis.one_move_tactics / tactics_summary` and the columns win_in_one, took_win, threat, blocked,
+  fast_took_win, fast_blocked of `move_table`: the measure of 2026-11-11 as part of the analysis (it reproduces the
+  numbers of that entry: 8B 51/127 blocked when thinking, 2/65 when not).
+- Grids: `duel_c4_tactic.yaml` (4B and 8B; gtactic, lgtactic, grand28, e1, 0 against self-e1; 50 seeds, 420 games to
+  play) and `cooking_fail.yaml` (1.7B, 4B, 8B; gfail, lgfail, grand25, grand50; CoT+nonempty; 600 games).
+  *Choices:* 50 seeds because gaps under 0.15 were noise at 20-30 games; only self-e1 because nobody beats the greedy
+  bot; random gates as the control for the thinking frequency; `CoT+nonempty` so that a thinking turn of a gate
+  always has a reasoning.
+- *What would count as a result:* gtactic above grand28 at about the same tokens, and near e1 at a fraction of them;
+  gfail above the line drawn by 0, er4, grand25, grand50 and e1 in score against thinking tokens.
+- *Limits known in advance:* both rules are specific to their game (the general gate would be the model itself,
+  which failed); gfail's rate is high for the weak models, so for them it may just be e1 with some turns skipped;
+  the 8B gates in cooking use CoT+nonempty and its baselines CoT (2-5% empty reasonings).
+Tests: `tests/test_gate.py` (test_tactic_gate, test_fail_gate). All suites pass.

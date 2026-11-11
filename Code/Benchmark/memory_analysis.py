@@ -19,17 +19,13 @@ import random
 import re
 import sys
 
+from gate import REJECTED # what the game answers when it did not understand or could not do the command
 from records import iter_records
 
 REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 LOG_MARK = re.compile(r"^(GAME \+{10,}|AGENT -{10,}|SELF-EVALUATION: [+-]{10,}|CONTEXT INITIALIZED [+-]{10,})\s*$", re.M)
 STATUS = re.compile(r">\s+-= (?P<room>[^=]+?) =-(?P<score>\d+)/(?P<moves>\d+)\s*$", re.M)
 THINK_PROMPT = re.compile(r"\n(THINK about how to win|Think about|THINK )", re.S) # the self-evaluation request
-# what the game answers when it did not understand or could not do the command
-REJECTED = re.compile(r"(?i)that's not a verb i recognise|i didn't understand|you can't see any such thing|"
-                      r"i only understood you as far as|you can't go that way|not something you can|"
-                      r"you need to take|you can't|can't see|i beg your pardon|that's not something|"
-                      r"is already|but you aren't|you haven't got|you seem to want|nothing happens|what do you want")
 STOPWORDS = set("the a an with from on in to of and at into up down using use it some".split())
 
 

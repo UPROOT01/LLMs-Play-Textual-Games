@@ -57,7 +57,8 @@ def parse_mode(mode):
         model without thinking in a context of its own (SUMMARY_QUESTION): all the summaries stay (compress instead
         of keep or drop); "lsN" / "lsrN": only the last summary stays, read during the next self-evaluation and then
         replaced (the "previous" memory of lN). The settings have summarize=True.
-    "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, gsurp, grand30...), never on
+    "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, gsurp, gtactic, grand30...
+        in the two-player games; gfail and grand30... in the textual games), never on
         a clock, and its reasonings never stay in the context; "lg<gate>": the same, keeping the last reasoning as lN.
         The settings have gate=<gate name> (None for the other modes); the agent needs a gate object (agent.gate).
     """
@@ -99,7 +100,11 @@ class SelfEvalAgent:
         self.keep = settings["keep"]
         self.summarize = settings["summarize"]
         self.gate_name = settings["gate"]
-        self.gate = None # a gate.Gate, set by the owner of the agent (duel.DuelAgent) for the gate modes
+        self.gate = None # a gate.Gate: made here for the gates of the textual games, by duel.DuelAgent for the others
+        if self.gate_name is not None:
+            from gate import TEXTUAL_GATES, make_gate, parse_gate
+            if parse_gate(self.gate_name)[0] in TEXTUAL_GATES:
+                self.gate = make_gate(self.gate_name)
         self.shadow = False # also answer every thinking turn without thinking first (the fast move), as a measure
         self.last_move_info = None # what happened at the last act(): see act()
         self.prompt = prompt
@@ -108,6 +113,7 @@ class SelfEvalAgent:
             raise ValueError(f"unknown prompt option {option!r}: nonempty")
         self.nonempty = option == "nonempty" # an empty reasoning is asked again, with the first word written for it
         self.empty_reasonings = self.nonempty_retries = 0 # thinking turns that came out empty / generations spent on them
+        self.selfevaluations = 0 # thinking turns of the game (a retry of an empty reasoning is not another one)
         self.system_prompt = PROMPTS[prompt]["system"]
         self.selfeval_prompt = PROMPTS[prompt]["selfeval"]
         self.sampling = SAMPLING[prompt]
@@ -164,7 +170,8 @@ class SelfEvalAgent:
         fast = None
         if self.gate_name is not None:
             if self.gate is None:
-                raise RuntimeError(f"mode {self.mode} needs a gate: only the two-player games have them")
+                raise RuntimeError(f"mode {self.mode} needs the position of a two-player game: the textual games "
+                                   "have gfail and grand<p>")
             decision = self.gate.decide(self, obs)
             info["gate"] = {key: value for key, value in decision.items() if key != "fast"}
             think, fast = decision["think"], decision.get("fast")
@@ -229,6 +236,7 @@ class SelfEvalAgent:
             self.last_reasoning = None
         self.pieces.append(self.profile.user(obs + self.selfeval_prompt, think=True) + self.profile.assistant_start)
 
+        self.selfevaluations += 1
         output_ids, capped = self._generate(think=True)
         nudge = ""
         if not capped and self._empty(output_ids):
@@ -337,6 +345,7 @@ class SelfEvalAgent:
                     gate_turns=len(by_kind["gate"]),
                     shadow_turns=len(by_kind["shadow"]),
                     summary_turns=len(by_kind["summary"]),
+                    selfevaluations=self.selfevaluations,
                     empty_reasonings=self.empty_reasonings, nonempty_retries=self.nonempty_retries,
                     capped_think_turns=sum(turn["capped"] for turn in think),
                     capped_normal_turns=sum(turn["capped"] for turn in normal),

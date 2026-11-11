@@ -37,6 +37,18 @@ def load_grid(path):
     return grid
 
 
+def check_modes(grid):
+    """An unknown mode, or a gate that needs the position of a two-player game, fails now and not after loading the
+    model (the textual games have the gates gfail and grand<p>: gate.TEXTUAL_GATES)."""
+    from agent import parse_mode
+    from gate import TEXTUAL_GATES, parse_gate
+    for mode in grid["modes"]:
+        gate = parse_mode(mode)["gate"]
+        if gate is not None and parse_gate(gate)[0] not in TEXTUAL_GATES:
+            raise ValueError(f"mode {mode} is for the two-player games (run_duel.py): the textual games have "
+                             f"g{' / g'.join(TEXTUAL_GATES)}")
+
+
 def grid_games(grid, models=None):
     """(model, game, prompt, mode, level, seed) of every game of the grid, model by model and seed by seed."""
     for model in grid["models"]:
@@ -110,6 +122,7 @@ def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_p
 
     if isinstance(grid, str):
         grid = load_grid(grid)
+    check_modes(grid)
     folders = [results, *read]
     for model in grid["models"]:
         if models and model not in models:

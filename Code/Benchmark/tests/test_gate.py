@@ -585,6 +585,102 @@ def test_note_prompt():
     print("ok note prompt and the new grids")
 
 
+def test_tactic_gate():
+    """gtactic: thinks when a win in one is on the board (its own or the other player's), with no solver."""
+    game = ConnectFour()
+    script = Script(fast=["4"], think=["1", "2", "4"])
+    agent = make_agent("gtactic", script)
+    assert isinstance(agent.gate, gate.TacticGate) and not gate.needs_solver("tactic")
+    agent.gate.bind(game)
+    assert agent.act(game.observation(0)) == "4" # an empty board: nothing to see
+    info = agent.last_move_info
+    assert not info["think"] and info["gate"]["reason"] == "no win in one on the board"
+    assert info["gate"]["wins"] == [] and info["gate"]["threats"] == []
+
+    for move in ["1", "2", "1", "2", "1", "2"]: # X has three in column 1, O three in column 2
+        game.play(move)
+    agent.gate.bind(game)
+    assert agent.act(game.observation(0)) == "1"
+    info = agent.last_move_info
+    assert info["think"] and info["gate"]["reason"] == "a win in one"
+    assert info["gate"]["wins"] == ["1"] and info["gate"]["threats"] == ["2"]
+
+    game = ConnectFour() # X: 4 4 4, O: 1 1: O has no win, X threatens column 4
+    for move in ["4", "1", "4", "1", "4"]:
+        game.play(move)
+    agent = make_agent("lgtactic", script)
+    agent.gate.bind(game)
+    assert agent.act(game.observation(1)) == "2"
+    info = agent.last_move_info
+    assert info["think"] and info["gate"] == dict(think=True, wins=[], threats=["4"], reason="a threat to block")
+    assert agent.keep == "previous" and agent.token_stats()["gate_turns"] == 0 # the rule costs no tokens
+    try:
+        duel.DuelAgent(PROFILE, TOKENIZER, script, "gtactic", "chess", "plain")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("gtactic must refuse chess")
+    try:
+        make_agent("gfail", script)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("gfail must refuse a two-player game")
+    # the same reading of the board, for the analysis of the games already played
+    import gate_analysis
+    tactics = gate_analysis.one_move_tactics(["4", "1", "4", "1", "4", "4", "1", "1"])
+    assert tactics[1] == dict(wins=[], threats=[]) and tactics[6] == dict(wins=[], threats=["4"])
+    assert tactics[8] == dict(wins=[], threats=[]) # blocked at ply 6: nothing left
+    columns = gate_analysis._tactic_columns(tactics[6], "4", "1")
+    assert columns["threat"] and columns["blocked"] and columns["fast_blocked"] is False and columns["took_win"] is None
+    assert gate_analysis._tactic_columns(dict(wins=["2"], threats=["5"]), "5", None) == dict(
+        win_in_one=True, threat=False, took_win=False, blocked=None, fast_took_win=None, fast_blocked=None)
+    print("ok tactic gate: quiet board, own win, threat to block, no tokens, Connect Four only")
+
+
+def test_fail_gate():
+    """gfail in a textual game: thinks when the game refused the last command, never on the first turn."""
+    def model(prompt_ids, max_tokens, sampling):
+        text = TOKENIZER.decode(prompt_ids)
+        thinking = "/think<|im_end|>" in text[text.rindex("<|im_start|>user"):]
+        answer = "<think>\nThe verb is wrong, I try another one.\n</think>\n\nslice carrot" if thinking else "dice carrot"
+        return TOKENIZER.encode(answer, add_special_tokens=False), False
+
+    agent = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "gfail", "CoT", rng=random.Random(0))
+    assert isinstance(agent.gate, gate.FailGate)
+    status = "\n\n>                -= Kitchen =-0/{}"
+    # the first observation is not a reply, whatever it says
+    assert agent.act("You can't see much here. Find the kitchen." + status.format(0)) == "dice carrot"
+    assert not agent.last_move_info["think"] and agent.last_move_info["gate"]["reason"] == "first turn of the game"
+    assert agent.act("That's not a verb I recognise." + status.format(1)) == "slice carrot"
+    info = agent.last_move_info
+    assert info["think"] and info["gate"]["refused"] == "that's not a verb i recognise"
+    assert agent.act("You slice the carrot.\n\nYour score has just gone up by one point." + status.format(2)) == "dice carrot"
+    assert not agent.last_move_info["think"] and agent.last_move_info["gate"]["reason"] == "the last command was accepted"
+    stats = agent.token_stats()
+    assert stats["selfevaluations"] == 1 and stats["think_turns"] == 1 and stats["normal_turns"] == 2
+    assert stats["gate_turns"] == 0 and "<think>" not in agent.context # ephemeral: the reasoning is gone
+    agent.act("", done=True) # a new game: the first turn is again not a reply
+    agent.act("You can't go that way." + status.format(0))
+    assert not agent.last_move_info["think"]
+
+    kept = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "lgfail", "CoT+nonempty", rng=random.Random(0))
+    kept.act("Find the kitchen."); kept.act("I beg your pardon?")
+    assert kept.last_move_info["think"] and "The verb is wrong" in kept.context # the last reasoning stays
+    random_gate = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, "grand100", "CoT", rng=random.Random(0))
+    random_gate.act("Find the kitchen.")
+    assert random_gate.last_move_info["think"] and isinstance(random_gate.gate, gate.RandomGate)
+    try: # a gate that reads a board cannot play a textual game
+        import run
+        run.check_modes(dict(modes=["e1", "gtactic"]))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("gtactic must be refused by the textual runner")
+    run.check_modes(dict(modes=["0", "e1", "lr4", "gfail", "lgfail", "grand25"]))
+    print("ok fail gate: first turn, refused command, accepted command, memory, the random gate in a textual game")
+
+
 if __name__ == "__main__":
     test_parse()
     test_predictions()
@@ -601,3 +697,5 @@ if __name__ == "__main__":
     test_board_prompts()
     test_nonempty()
     test_note_prompt()
+    test_tactic_gate()
+    test_fail_gate()

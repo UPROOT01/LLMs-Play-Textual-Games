@@ -1,0 +1,33 @@
+# Connect Four: a gate that thinks on the one-move tactics (gtactic), with no solver and no model.
+# The measure of 2026-11-11 (THESIS_LOG.md): when the other player has a win in one, the model blocks it 3-5% of the
+# time without thinking and 40% with thinking; its own win in one is taken 62% against 80%. These positions are 23%
+# of the moves and a few lines of code find them (ConnectFour._winning_moves). So: think exactly there.
+#   gtactic    thinks when a win in one is on the board, its own or the other player's; drops the reasoning (like e1)
+#   lgtactic   the same, keeping the last reasoning until the next one (like l1)
+#   grand28    thinks on 28% of the moves at random: the control for "how often", at about the same rate
+#   e1         thinks on every move: what the gate should approach, at about a quarter of the tokens
+#   0          never thinks: the floor
+# The gate only turns the thinking on: the model is not told what the rule saw.
+# What to read: the score against self-e1 and the thinking tokens per game (gtactic against grand28 at the same
+# cost, against e1 at the same score?); then the one-move tactics of each mode (threats blocked, wins taken), which
+# separate the modes with far fewer games than the score. The solver's blunders are recorded too, but they miss the
+# errors made in positions already lost (same log entry).
+# Only self-e1 as the opponent: nobody beats the greedy bot (0.07 over 600 games), so its score separates nothing.
+# 500 games: 2 models x 5 modes x 50 seeds; 80 are already played (4B: e1 and grand28; 8B: e1 and 0).
+# The 8B on the remote 4090 needs NO_FP8_KV_CACHE=1, as its other Connect Four games.
+models:
+  - Qwen/Qwen3-4B
+  - Qwen/Qwen3-8B-FP8
+modes: [gtactic, lgtactic, grand28, e1, 0]
+prompts: [plain]
+games:
+  connect_four: [self-e1]
+seeds: 1-50
+max_steps: 30
+max_illegal: 3
+illegal_policy: random
+colors: alternate
+shadow_fast_move: true
+solver: true
+game_options:
+  connect_four: {legal_moves: true}

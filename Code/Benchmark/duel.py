@@ -54,9 +54,12 @@ class DuelAgent(SelfEvalAgent):
         self.log = log
         self.shadow = shadow
         if self.gate_name is not None:
-            from gate import make_gate, needs_solver
-            if needs_solver(self.gate_name) and game != "connect_four":
-                raise ValueError(f"mode {mode} needs the Connect Four solver: it cannot play {game}")
+            from gate import make_gate, needs_solver, parse_gate
+            kind = parse_gate(self.gate_name)[0]
+            if (needs_solver(self.gate_name) or kind == "tactic") and game != "connect_four":
+                raise ValueError(f"mode {mode} reads a Connect Four position: it cannot play {game}")
+            if kind == "fail":
+                raise ValueError(f"mode {mode} reads the reply of a textual game: it cannot play {game}")
             self.gate = make_gate(self.gate_name, solver)
         if log:
             open(log, "w").close()

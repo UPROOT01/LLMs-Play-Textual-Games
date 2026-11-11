@@ -19,6 +19,14 @@ The fixed modes think on a clock (e1 every move, r4 about every 4). A gate mode 
               first move of a game is never a surprise (there is nothing to compare).
               Any game: no solver. The regex reading of the answer ("4 (expecting 3)") is recorded too, to measure
               how often the extractor and the answer agree.
+    gtactic   a rule on the board, no solver and no model: the agent thinks when a win in one move is on the board, its
+              own (to take) or the other player's (to block). Written after the 2026-11-11 measure: without thinking
+              a threat is blocked 3-5% of the time, with thinking 40%, and these positions are 23% of the moves.
+              Connect Four only (ConnectFour._winning_moves). Between the random gates and the solver's gates.
+    gfail     the same idea for the textual games: the agent thinks when the game refused its last command (REJECTED:
+              "That's not a verb I recognise", "You can't see any such thing"...). In the cooking games played so far
+              thinking raises the share of turns that score 2.4 times after a refused command and 1.3 times after an
+              accepted one (THESIS_LOG.md, 2026-11-11). Textual games only: it reads the game's reply.
 A gate mode never thinks on a clock; "lg<gate>" also keeps the last reasoning in the context until the next one
 (the "previous" memory of l1), "g<gate>" drops every reasoning (ephemeral, like e1).
 
@@ -29,7 +37,17 @@ import re
 
 from c4solver import analyze_scores, move_quality
 
-GATE_PATTERN = re.compile(r"^(?P<kind>oracle|crit|self|rand|surp)(?P<n>\d*)$")
+GATE_PATTERN = re.compile(r"^(?P<kind>oracle|crit|self|rand|surp|tactic|fail)(?P<n>\d*)$")
+TEXTUAL_GATES = ("fail", "rand") # the gates of the textual games: they need no board (agent.SelfEvalAgent makes them)
+DUEL_ONLY_GATES = ("oracle", "crit", "self", "surp", "tactic") # they read the position of a two-player game
+# what a textual game answers when it did not understand or could not do the command (memory_analysis.py reads the
+# logs with the same pattern)
+REJECTED = re.compile(r"(?i)that's not a verb i recognise|i didn't understand|you can't see any such thing|"
+                      r"i only understood you as far as|you can't go that way|not something you can|"
+                      r"you need to take|you can't|can't see|i beg your pardon|that's not something|"
+                      r"is already|but you aren't|you haven't got|you seem to want|nothing happens|what do you want")
+REJECTED_HEAD = 300 # characters of the reply read: the refusal is its first sentence
+STATUS_BAR = re.compile(r">\s+-=.*") # "> -= Kitchen =-0/38": the room, the score and the moves, after the reply
 EXTRACT_MAX_TOKENS = 12 # the extractor answers with a move or NONE
 EXTRACT_TAIL = 8000 # characters of the end of a reasoning read by the extractor (the expectation is usually at the end)
 EXTRACT_QUESTION = {
@@ -47,10 +65,11 @@ SELF_GATE_QUESTION = ("Before choosing a move: does this position need careful t
 
 
 def parse_gate(name):
-    """(kind, parameter) of a gate name: "oracle", "crit" (k), "self", "rand" (percentage), "surp"."""
+    """(kind, parameter) of a gate name: "oracle", "crit" (k), "self", "rand" (percentage), "surp", "tactic",
+    "fail"."""
     match = GATE_PATTERN.match(name)
     if match is None:
-        raise ValueError(f"unknown gate {name!r}: oracle, crit<k>, self, surp or rand<p>")
+        raise ValueError(f"unknown gate {name!r}: oracle, crit<k>, self, surp, tactic, fail or rand<p>")
     kind, n = match["kind"], match["n"]
     if kind == "rand":
         if not n:
@@ -231,9 +250,49 @@ class SurpriseGate(Gate):
         return dict(expected=expected, raw=raw, regex=regex, gate_tokens=len(output_ids))
 
 
+class TacticGate(Gate):
+    """Thinks when a win in one move is on the board: the agent's own, or the other player's (see the module
+    docstring). The rule reads the board only: it does not tell the agent what it saw, it only turns the thinking on."""
+    name = "tactic"
+
+    def decide(self, agent, obs):
+        if self.game is None:
+            raise RuntimeError("the gate is not bound to a game")
+        if self.game.name != "connect_four":
+            raise ValueError(f"the tactic gate reads a Connect Four board: {self.game.name} has no rule")
+        side = self.game.turn
+        wins, threats = self.game._winning_moves(side), self.game._winning_moves(1 - side)
+        reason = "a win in one" if wins else ("a threat to block" if threats else "no win in one on the board")
+        return dict(think=bool(wins or threats), fast=None, wins=wins, threats=threats, reason=reason)
+
+
+class FailGate(Gate):
+    """Thinks when the game refused the agent's last command (see the module docstring). Never on the first turn of
+    a game: there is no command yet, and the first observation (the description of the game) is not a reply."""
+    name = "fail"
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self.played = False # a command was played: the observation is the reply to it
+
+    def decide(self, agent, obs):
+        reply = STATUS_BAR.sub("", obs).strip()[:REJECTED_HEAD]
+        refused = REJECTED.search(reply) if self.played else None
+        return dict(think=bool(refused), fast=None, refused=refused.group(0).lower() if refused else None,
+                    reason="the game refused the last command" if refused else
+                           ("the last command was accepted" if self.played else "first turn of the game"))
+
+    def after(self, agent, command):
+        self.played = True
+        return None
+
+
 def make_gate(name, solver=None):
-    """The gate of a gate name ("oracle", "crit2", "self", "rand30", "surp"). solver: a c4solver.Solver for oracle /
-    crit."""
+    """The gate of a gate name ("oracle", "crit2", "self", "rand30", "surp", "tactic", "fail"). solver: a
+    c4solver.Solver for oracle / crit."""
     kind, n = parse_gate(name)
     if kind in ("oracle", "crit"):
         if solver is None:
@@ -244,4 +303,8 @@ def make_gate(name, solver=None):
         return SelfGate()
     if kind == "surp":
         return SurpriseGate()
+    if kind == "tactic":
+        return TacticGate()
+    if kind == "fail":
+        return FailGate()
     return RandomGate(n)

@@ -17,6 +17,12 @@ Tables:
     surprise_quality() per mode: how often the answers predicted the reply, how often the prediction came true, and
                        for the surprise gate the blunder rate on the moves where it was / was not surprised
     strength_table()   per mode and opponent: score, blunders per game, tokens per game (for strength_vs_tokens())
+    tactics_summary()  per mode: the one-move tactics, read from the moves alone (no solver). A blunder is a change of
+                       the solver's class of the position, so it cannot happen in a position already lost, and the
+                       second player is lost from the first move: most unblocked four-in-a-row threats are not
+                       blunders (THESIS_LOG.md, 2026-11-11). Here: when the player has a win in one, is it played
+                       (took_win); when the other side has exactly one win in one and the player none, is it blocked
+                       (blocked). move_table() has the columns; the fast move is judged the same way.
 Graphs (graphs/): strength_vs_tokens, blunders_by_mode.
 
     python gate_analysis.py results results_new      # prints the tables of the Connect Four games in the folders
@@ -86,6 +92,32 @@ def rebuild_moves(record, base, solver):
     return moves
 
 
+def one_move_tactics(history):
+    """The wins in one before every move of a Connect Four game: {ply (1 = the first move): dict(wins: the columns
+    where the player to move wins at once, threats: the columns where the other player would)}."""
+    from duel_games import ConnectFour
+    game, tactics = ConnectFour(), {}
+    for ply, move in enumerate(history, 1):
+        side = game.turn
+        tactics[ply] = dict(wins=game._winning_moves(side), threats=game._winning_moves(1 - side))
+        game.play(str(move))
+    return tactics
+
+
+def _tactic_columns(tactic, move, fast_move):
+    """win_in_one / took_win: the player could win at once / did; threat / blocked: the other side had exactly one
+    win in one and the player none / the player played there (two threats cannot be blocked: not counted).
+    fast_*: the same for the fast move. None where the question does not apply."""
+    wins, threats = (tactic["wins"], tactic["threats"]) if tactic else ([], [])
+    threat = bool(tactic) and not wins and len(threats) == 1
+    known = tactic is not None
+    return dict(win_in_one=bool(wins) if known else None, threat=threat if known else None,
+                took_win=(str(move) in wins) if wins else None,
+                blocked=(str(move) in threats) if threat else None,
+                fast_took_win=(str(fast_move) in wins) if wins and fast_move else None,
+                fast_blocked=(str(fast_move) in threats) if threat and fast_move else None)
+
+
 def move_table(*folders, rebuild=True):
     """A pandas DataFrame with one row per judged move of an agent of the model. rebuild: judge the old games with
     the solver (it must be compiled)."""
@@ -101,6 +133,7 @@ def move_table(*folders, rebuild=True):
                 solver = shared_solver()
             moves = rebuild_moves(record, base, solver)
         players = _players(record)
+        tactics = one_move_tactics(record["history"])
         for move in moves:
             position, quality, fast_quality = move["position"], move["quality"], move.get("fast_quality")
             gate = move.get("gate")
@@ -127,6 +160,8 @@ def move_table(*folders, rebuild=True):
                              prediction=move.get("prediction"), prediction_regex=move.get("prediction_regex"),
                              reply=record["history"][move["ply"]] if move["ply"] < len(record["history"]) else None,
                              surprised=gate.get("surprised") if gate else None,
+                             **_tactic_columns(tactics.get(move["ply"]) if record["history"][move["ply"] - 1:move["ply"]]
+                                               == [move["move"]] else None, move["move"], move.get("fast_move")),
                              player_result=player_result(record, move["player"])))
     table = pd.DataFrame(rows)
     if not table.empty: # hit: the predicted reply was played (None where there is no prediction or no reply)
@@ -163,6 +198,31 @@ def mode_summary(table, by=("player_mode",)):
                          blunder_fast_pct=_rate(group[~group.think].blunder),
                          think_on_critical_pct=_rate(group[group.critical == True].think),
                          think_on_quiet_pct=_rate(group[group.critical == False].think)))
+    return pd.DataFrame(rows).set_index(_keys(by))
+
+
+def tactics_summary(table, by=("player_mode",)):
+    """Per group, the one-move tactics (see the module docstring): how many wins in one were on the board and how
+    many were taken, how many single threats and how many were blocked, each for all the moves, the moves that were
+    thought and those that were not; and on the thinking moves with a fast move, what the fast move did."""
+    import pandas as pd
+
+    def count(series):
+        series = series.dropna().astype(bool)
+        return f"{int(series.sum())}/{len(series)}"
+    rows = []
+    for key, group in table.groupby(_keys(by)):
+        key = key if isinstance(key, tuple) else (key,)
+        thought, fast = group[group.think], group[~group.think]
+        shadow = group[group.think & group.fast_move.notna()]
+        rows.append(dict(zip(_keys(by), key), moves=len(group), think_pct=_rate(group.think),
+                         tactic_pct=_rate(group.win_in_one.fillna(False).astype(bool) | group.threat.fillna(False).astype(bool)),
+                         took_win=count(group.took_win), took_win_pct=_rate(group.took_win),
+                         blocked=count(group.blocked), blocked_pct=_rate(group.blocked),
+                         blocked_thought=count(thought.blocked), blocked_not_thought=count(fast.blocked),
+                         took_win_thought=count(thought.took_win), took_win_not_thought=count(fast.took_win),
+                         fast_blocked=count(shadow.fast_blocked), then_blocked=count(shadow[shadow.fast_blocked.notna()].blocked),
+                         fast_took_win=count(shadow.fast_took_win), then_took_win=count(shadow[shadow.fast_took_win.notna()].took_win)))
     return pd.DataFrame(rows).set_index(_keys(by))
 
 
@@ -336,6 +396,8 @@ def main(folders):
     if not value.empty:
         print("What thinking changed (moves with a fast move):")
         print(value, "\n")
+    print("One-move tactics (no solver): wins in one taken, single threats blocked:")
+    print(tactics_summary(table), "\n")
     quality = gate_quality(table)
     if not quality.empty:
         print("The gates against the solver:")
