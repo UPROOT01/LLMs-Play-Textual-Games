@@ -1,0 +1,155 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You find yourself in a kitchen. A typical one. You begin looking for stuff.
+
+You can see a fridge. The fridge contains a red onion and a raw red tuna. You see a closed oven in the room. You see a table. Unfortunately, there isn't a thing on it. You see a counter. On the counter you can see a raw yellow potato, a yellow apple, a raw red potato, a cookbook and a knife. Look out! It's a- oh, never mind, it's just a stove. But there isn't a thing on it.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't go that way.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen and needs to cook a meal. The cookbook is present, so the first step is to check the cookbook. The next step is to take the cookbook. Then, use the ingredients from the counter to make a meal. The user's previous action was "go north," which didn't work. So, they need to try a different action, maybe "take cookbook" instead. Then, use the ingredients to cook.
+</think>take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+look at cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+yellow potato
+
+Directions:
+dice the yellow potato
+  fry the yellow potato
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen trying to cook a meal. They found a cookbook and opened it. The recipe requires a yellow potato. The current step is to take the cookbook, then look at it. Now, the next step should be to gather the ingredients. The cookbook's directions say to dice the yellow potato, fry it, and prepare the meal. But the user hasn't picked up the yellow potato yet. So the next action should be to take the yellow potato from the counter. Then, follow the recipe steps. But the user's last action was looking at the cookbook, so the next step is to take the ingredient. Wait, the counter has a raw yellow potato. So the correct next action is to take the yellow potato. Then, proceed with the recipe.
+</think>take yellow potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/5
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me try to figure out the best next step here. So, the user is in a kitchen trying to cook a meal. They found a cookbook and took it. Then they took a yellow potato from the counter. The cookbook's recipe says to dice the yellow potato, then fry it, and prepare the meal.
+
+So the current step is to follow the recipe. The user has taken the cookbook and the yellow potato. The next step should be to process the potato as instructed. The recipe says to dice the potato, so the next action would be to dice the yellow potato. Then, after dicing, they need to fry it. But since the user is at the point where they have the ingredients, the next logical step is to dice the potato. Once that's done, they can proceed to fry it and then prepare the meal. So the next command should be "dice yellow potato" to follow the recipe steps.
+</think>dice yellow potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to dice the yellow potato with?
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+slice yellow potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to slice the yellow potato with?
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+slice yellow potato with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the knife first.
+
+
+>                                                                                                                                -= Kitchen =-1/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is trying to cook a meal in the kitchen. They have the cookbook and a yellow potato, but they need a knife to slice the potato. So the previous steps were taking the cookbook and the yellow potato, then trying to dice it but got stuck because they didn't have the knife.
+
+The next step should be to get the knife. The user already took the cookbook and the yellow potato, so the next action is to take the knife from the counter. Once they have the knife, they can slice the potato. Then they follow the recipe steps: dice the potato, fry it, and prepare the meal. The goal is to complete the recipe and enjoy the meal. So the correct command here is to take the knife.
+</think>take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/7
+AGENT -------------------------------------------------
+slice yellow potato with knife
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
