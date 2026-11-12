@@ -1274,3 +1274,11 @@ N requests paused (preempted) in the last 10 min, M since the start`. The games 
 changes. *To check on the GPU:* tokens/min should go up compared with the previous run and the pauses stay few; if
 tokens/min stops growing while more games run, the GPU's compute is the limit. Not run on a GPU yet.
 Test: tests/test_pipeline.py::test_measured_budget (and test_kv_usage_display for the pause counter in the line).
+
+## 2026-11-12 — Merging the Colab results with the git ones
+
+Games were run on both Colab (results on Drive) and the remote server (results in git), so I checked the two copies against each other.
+- 17 cooking games of the 4B (CoT+nonempty, gfail/lgfail/grand25/grand50, seeds 1-4) had their finished `.log` replaced in commit c0abe8f4 by a Colab copy that stopped mid-game. Each record (`.json`) was still correct. I restored the full logs from c0abe8f4~1.
+- In ca1269f5, 19 finished 4B Connect Four records (modes 0, gtactic, lgtactic, seeds 5-16) were replaced by a second finished run of the same game. Both runs are valid. The current ones are kept, and the earlier ones are still in git at ca1269f5~1. Nothing is lost, but those seeds were played twice; only the second play is counted.
+- I copied 84 finished 8B cooking games (gfail/lgfail/grand25/grand50) from Colab, together with their logs. I did not copy 10 unfinished Colab games, which have no record and will be played again.
+- Every game that exists in both copies has an identical record.

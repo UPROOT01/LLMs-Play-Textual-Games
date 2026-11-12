@@ -1,0 +1,649 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+If you're wondering why everything seems so ordinary all of a sudden, it's because you've just sauntered into the kitchen.
+
+You can make out an opened fridge. The fridge contains a white onion, a raw pork chop, a red bell pepper and an orange bell pepper. You see a closed oven here. You make out a table. The table is massive. On the table you can make out a knife. You can't wait to tell the folks at home about this! You make out a counter. The counter is vast. On the counter you make out a yellow apple, a red apple, a raw yellow potato, a raw red potato, a green apple, a red onion, a yellow bell pepper, a yellow onion, a raw purple potato, a tomato and a cookbook. You can make out a stove. But oh no! there's nothing on this piece of garbage. Oh! Why couldn't there just be stuff on it?
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen and needs to cook a meal. The goal is to use the cookbook to get a recipe and then prepare the meal. The first step is to find the cookbook. The user mentioned the cookbook is on the counter. So, the first action should be to check the counter. Wait, the user already listed the counter as having the cookbook. So maybe the next step is to take the cookbook. But the user hasn't interacted with it yet. So the next action would be to take the cookbook from the counter. Then, once they have the recipe, they can gather ingredients from the fridge and other locations. The user might need to check the fridge for ingredients like onions, potatoes, etc. But the immediate next step is to obtain the cookbook. So the command should be "take cookbook from counter" or something similar. But the game might require specific verbs. Maybe "take cookbook" if it's on the counter. Wait, the description says "on the counter you make out a cookbook." So the correct action is to take the cookbook. That's the first step. Then, once they have the recipe, they can proceed to gather ingredients and cook.
+</think>take cookbook from counter
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+red apple
+  yellow apple
+  yellow potato
+
+Directions:
+chop the red apple
+  fry the red apple
+  chop the yellow apple
+  fry the yellow apple
+  dice the yellow potato
+  roast the yellow potato
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen text adventure game where they need to cook a meal. The goal is to follow the recipe from the cookbook. So first, I need to restate the goal step by step. The recipe requires gathering specific ingredients and performing certain actions in order.
+
+Looking at the previous steps, the user took the cookbook from the counter and read it. The recipe listed requires red apple, yellow apple, and yellow potato. The next logical step is to collect those ingredients. The user has already taken the cookbook, so now they need to gather the ingredients mentioned in the recipe.
+
+Wait, the user hasn't picked up any ingredients yet. The fridge has a white onion, raw pork chop, red bell pepper, orange bell pepper. The counter has a yellow apple, red apple, raw yellow potato, raw red potato, green apple, red onion, yellow bell pepper, yellow onion, raw purple potato, tomato. The recipe needs red apple, yellow apple, and yellow potato. So the user needs to take those specific items.
+
+The next action should be to take the red apple, yellow apple, and yellow potato. But the user can only take one item at a time. So the first step is to take the red apple. Then the yellow apple, then the yellow potato. But maybe the game allows taking multiple items? Wait, the initial description says "take cookbook from counter" which was successful. So maybe the user can take multiple items. But the command might need to be separate for each.
+
+Wait, the user's next action after reading the cookbook would be to gather the ingredients. The recipe's ingredients are red apple, yellow apple, yellow potato. So the next step is to take those. Let me check the current state. The user is in the kitchen, and the counter has those items. So the next action should be to take the red apple, then the yellow apple, then the yellow potato. But the user can only take one at a time. So first, take red apple. Then yellow apple. Then yellow potato. But maybe the game allows taking multiple in one command? The previous action was "take cookbook from counter", which was a single item. So probably, each item needs to be taken individually.
+
+But the user might need to check if those items are available. The counter has a red apple, yellow apple, and raw yellow potato. So the next steps are to take those. So the next action is to take the red apple. Then the yellow apple. Then the yellow potato. Once those are taken, the user can proceed to follow the directions in the recipe. The directions are to chop the red apple, fry it, chop the yellow apple, fry it, dice the yellow potato, roast it, then prepare the meal. So after gathering the ingredients, the user needs to perform those actions in order. But first, gathering the ingredients is the next step. So the next action is to take the red apple.
+</think>take red apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red apple from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/4
+AGENT -------------------------------------------------
+take yellow apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow apple from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/5
+AGENT -------------------------------------------------
+take yellow potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/6
+AGENT -------------------------------------------------
+chop red apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to chop the red apple with?
+
+>                                                                                                                                -= Kitchen =-3/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is trying to cook a meal based on the recipe from the cookbook. So far, they've taken the red apple, yellow apple, and yellow potato. The next step in the recipe is to chop the red apple. But when they tried to chop it, the game asked what they want to chop it with. That means they need a tool.
+
+Looking at the kitchen items, there's a knife on the table. The user hasn't used that yet. Since chopping requires a knife, the next logical step is to take the knife from the table. Once they have the knife, they can then chop the red apple as per the recipe. 
+
+Wait, the user already tried to chop the red apple but didn't have the knife. So the previous action was attempting to chop without the necessary tool. The correct approach is to first obtain the knife. After getting the knife, they can proceed to chop the red apple. Then follow the recipe steps for frying, chopping the yellow apple, frying it, dicing the yellow potato, roasting it, and preparing the meal. 
+
+So the next action should be to take the knife from the table. That's the missing piece needed to progress further in the recipe. No loops here because each step is moving towards completing the recipe. The user is making progress by gathering ingredients and tools. The key is to ensure they have the right tools before attempting to cook.
+</think>take knife from table
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-3/7
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me try to figure out what to do next. The user is playing a text-based game where the goal is to cook a meal using a recipe from a cookbook. So far, they've taken the cookbook, read the recipe, and gathered the ingredients: red apple, yellow apple, and yellow potato. They also picked up the knife from the table.
+
+The current step is that the user tried to chop the red apple but was asked which tool to use. They then took the knife, which makes sense. Now, the next logical step would be to actually chop the red apple using the knife. Since the recipe's first direction is to "chop the red apple," and they have the knife, the next action should be to chop the red apple with the knife. 
+
+Wait, but in the previous interaction, after taking the knife, the user needs to use it. So the command would be to chop the red apple with the knife. However, the game might expect the syntax to be "chop red apple with knife" or something similar. Since the user previously just said "chop red apple" and was prompted for the tool, now that they have the knife, they need to specify using it. 
+
+But looking at the history, when they first tried "chop red apple," the game asked for the tool. Then they took the knife, and now the next step is to actually perform the chopping action with the knife. So the correct command would be "chop red apple with knife." However, the user might need to just "chop red apple" again, but since the knife is now in hand, maybe the game will accept it. Alternatively, maybe the user needs to use the knife first. But since the user already took the knife, the next step is to chop the apple. 
+
+Wait, the user's last action was taking the knife. The next step should be to chop the red apple using the knife. So the command would be "chop red apple with knife." But maybe the game expects just "chop red apple" now that the knife is available. However, in the previous attempt, the user had to specify the tool. So perhaps the correct action is to use the knife on the apple. Alternatively, maybe the user needs to "cut red apple with knife." 
+
+But the recipe says "chop the red apple," so the exact command might need to match that. Since the user has the knife, they can now chop the apple. So the next action is to chop the red apple. But the game might require specifying the tool. Let me check the previous steps. When the user first tried "chop red apple," the game asked for the tool. Then the user took the knife, so now they should be able to chop the apple with the knife. So the command would be "chop red apple with knife." 
+
+Alternatively, maybe the game allows using the knife without specifying it again. But since the user had to specify the tool before, it's safer to include it. Therefore, the next action is "chop red apple with knife."
+</think>chop red apple with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You chop the red apple.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-4/8
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is playing a text-based game where the goal is to cook a meal using a recipe from a cookbook. So far, they've taken the cookbook, read the recipe, gathered the ingredients (red apple, yellow apple, yellow potato), chopped the red apple. Now, the next step in the recipe is to fry the red apple. But to fry it, they need a cooking appliance like a stove or oven. 
+
+Looking at the kitchen description, there's a stove, but it's empty. The oven is closed. Maybe they need to use the stove. But the user tried to fry the red apple directly without specifying the tool. The previous action was chopping, so the next logical step is frying. However, the user might need to use the stove. Wait, in the recipe directions, it says "fry the red apple" after chopping. So the correct action is to fry it using the stove. But the user hasn't interacted with the stove yet. So the next step should be to fry the red apple on the stove. But the system might require specifying the stove. Alternatively, maybe the user can just fry it directly. Let me check previous steps. The user took the knife, chopped the apple. Now, the next direction is to fry it. So the command should be to fry the red apple. But the stove is mentioned as being empty. Maybe the user needs to use the stove. However, the recipe might assume the stove is usable. So the next action is to fry the red apple as per the recipe. If that doesn't work, maybe using the stove. But the user has to follow the recipe steps. So the next command is "fry red apple".
+</think>fry red apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is trying to cook a meal based on the recipe from the cookbook. So far, they've gathered the ingredients: red apple, yellow apple, and yellow potato. They chopped the red apple using the knife. The next step in the recipe is to fry the red apple. But when they tried "fry red apple," the game didn't recognize the verb. 
+
+Hmm, maybe the game expects a specific phrasing. Instead of "fry red apple," perhaps they need to specify the tool or the method. Wait, the user has the stove in the kitchen. Maybe they need to use the stove to fry it. Or maybe the correct command is to "fry the red apple in the pan" or something similar. But the game might not have a pan mentioned. Alternatively, maybe the oven is the right place, but the recipe says "fry," which usually implies a pan on the stove.
+
+Wait, the user previously tried to fry the red apple directly, and the game didn't recognize it. So maybe the correct action is to use the stove. Let me check the environment again. The user mentioned a stove, but nothing is on it. So maybe they need to put the red apple on the stove first. Or perhaps the command should be "fry red apple on stove." Alternatively, maybe the game expects "cook" instead of "fry," but the recipe says "fry." 
+
+Alternatively, maybe the user needs to use the knife again, but that doesn't make sense. Wait, the previous step was chopping the red apple, and now they need to fry it. The problem is that the game doesn't recognize "fry red apple" as a valid action. So perhaps the correct command is to "fry the red apple with the stove" or "use the stove to fry the red apple." But since the stove is empty, maybe they need to put the apple on the stove first. 
+
+Wait, the user hasn't placed the apple on the stove yet. Maybe the correct sequence is to put the red apple on the stove, then fry it. But the recipe says "fry the red apple," so maybe the game expects the user to specify the stove. Alternatively, maybe the correct verb is "cook" instead of "fry," but the recipe says "fry." 
+
+Alternatively, maybe the user needs to use the oven, but the recipe says "fry," which is different from roasting. The oven is closed, so maybe they need to open it first. But the recipe's direction for the yellow potato is to roast it, which would use the oven. However, the red apple is supposed to be fried. 
+
+Wait, the user is stuck because "fry red apple" isn't recognized. The possible issue is that the game requires a more specific command. Maybe the correct action is to "fry the red apple in the pan," but there's no pan mentioned. Alternatively, maybe the user needs to use the stove's surface. 
+
+Alternatively, maybe the user should try using the oven for frying, but that's not typical. Alternatively, the game might have a typo, but the user has to work within the given commands. 
+
+Given that the user tried "fry red apple" and it didn't work, the next step is to try a different phrasing. Maybe "cook red apple" or "fry the red apple on the stove." Since the stove is present, perhaps specifying the stove is necessary. So the next action should be to fry the red apple on the stove. Let me check the previous steps again. The user took the knife, chopped the apple, and now needs to fry it. The game might require the stove to be used. So the correct command might be "fry red apple on stove" or "use stove to fry red apple." 
+
+Alternatively, maybe the user needs to put the apple on the stove first. So first, put the red apple on the stove, then fry it. But the recipe says "fry the red apple," so maybe the command is to fry it directly. However, since the game didn't recognize "fry red apple," the user needs to adjust the command. 
+
+Another possibility is that the user needs to use the oven for frying, but that's not standard. Alternatively, the game might have a different verb, like "heat" or "sear." But the recipe says "fry," so that's the key. 
+
+Given the previous failure, the user should try a different phrasing. Maybe "fry the red apple" with the stove. So the next action is to fry the red apple on the stove. Let me check if that's a valid command. If not, maybe the user needs to use the oven, but that's conflicting. 
+
+Alternatively, maybe the user needs to use the knife again, but that's not logical. The correct path is to fry the apple, so the next step is to try a different command structure. The answer is likely "fry the red apple on the stove."
+</think>fry red apple on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+AGENT -------------------------------------------------
+fry red apple in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+AGENT -------------------------------------------------
+fry red apple with stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+AGENT -------------------------------------------------
+fry red apple on stove with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+AGENT -------------------------------------------------
+fry red apple in oven with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/8
+AGENT -------------------------------------------------
+help
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Available commands:
+  look:                describe the current room
+  goal:                print the goal of this game
+  inventory:           print player's inventory
+  go <dir>:            move the player north, east, south or west
+  examine ...:         examine something more closely
+  eat ...:             eat edible food
+  open ...:            open a door or a container
+  close ...:           close a door or a container
+  drop ...:            drop an object on the floor
+  take ...:            take an object that is on the floor
+  put ... on ...:      place an object on a supporter
+  take ... from ...:   take an object from a container or a supporter
+  insert ... into ...: place an object into a container
+  lock ... with ...:   lock a door or a container with a key
+  unlock ... with ...: unlock a door or a container with a key
+
+
+
+>                                                                                                                                -= Kitchen =-4/9
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's try to figure out what to do next. The user is trying to follow a recipe from the cookbook. The recipe says to "fry the red apple" after chopping it. But every time they try to fry the red apple, the game doesn't recognize the command. Maybe the problem is that the stove isn't functional, or they need to use the oven instead. Wait, the oven is closed. Maybe they need to open the oven first. Alternatively, maybe the correct verb is "cook" instead of "fry"? Or perhaps they need to use the stove's functionality properly. Let me check the previous steps.
+
+The user has the red apple, yellow apple, and yellow potato. They chopped the red apple. The next step in the recipe is to fry the red apple. Since the stove isn't working, maybe the oven is the right place. But the oven is closed. So maybe they need to open the oven first. Let me check the inventory. They have the knife, and the oven is closed. So the next logical step would be to open the oven, then use it to fry or roast the apple. Wait, the recipe says "fry" but maybe the oven is for roasting. Alternatively, maybe the user needs to use the stove's burner. But the stove is empty. Hmm. Alternatively, maybe the correct command is to "cook" the apple. But the user tried "fry" and it didn't work. Maybe they need to use the oven. Let me try opening the oven first. If the oven is closed, opening it might allow using it. So the next action should be to open the oven. Then, maybe roast the apple in the oven. Let me check the recipe again. The directions for the yellow potato say "roast the yellow potato," so maybe the red apple should be roasted as well. So maybe the user should open the oven, then roast the red apple. That might be the correct approach. Let me try that.
+</think>open oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the oven.
+
+
+>                                                                                                                                -= Kitchen =-4/10
+AGENT -------------------------------------------------
+put red apple in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You put the red apple into the oven.
+
+
+>                                                                                                                                -= Kitchen =-4/11
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The goal is to cook a meal using the recipe from the cookbook. The recipe requires chopping and frying the apples and potato. So far, I've taken the red and yellow apples and the yellow potato. I chopped the red apple with the knife. Now, the next step in the recipe is to fry the red apple. But earlier attempts to fry it didn't work because the game didn't recognize the command. Maybe I need to use the oven instead of the stove since the oven is available.
+
+Wait, the user tried putting the red apple in the oven. That's a good step. Now, after frying, the next steps are chopping the yellow apple, frying it, dicing the yellow potato, and roasting it. But the oven is open now. Maybe I should fry the red apple in the oven? Or perhaps the stove is needed for frying. But the stove was mentioned as having nothing on it. Maybe I need to use the oven for roasting. Let me check the recipe again. The directions say fry the red and yellow apples, dice the potato, and roast the potato. So frying and roasting are different. The oven can be used for roasting, but frying might require the stove. However, the user tried using the oven for frying and it didn't work. Maybe the correct approach is to use the stove for frying. But earlier attempts to fry on the stove didn't work. Maybe I need to heat the stove first? Or maybe the correct command is to use the oven for frying. Alternatively, maybe the user needs to use the oven for roasting the potato. Let me check the inventory. The user has the red and yellow apples, yellow potato, and the knife. The oven is open. The next step after frying the red apple would be to chop the yellow apple. But the user hasn't done that yet. Wait, the recipe says chop both apples, then fry them. So after chopping the red apple, the next is to fry it. But the user tried frying and got an error. Maybe the correct command is to use the oven for roasting, but the recipe says fry. Alternatively, maybe the user needs to use the stove. But the stove was empty. Maybe the user needs to put something on the stove first. Alternatively, maybe the correct command is to "cook" the apple in the oven. But the game's verbs are specific. Since the user tried "fry red apple in oven" and it didn't work, maybe the correct action is to "roast" the potato in the oven. Let me check the recipe again. The directions are: chop the red apple, fry the red apple, chop the yellow apple, fry the yellow apple, dice the yellow potato, roast the yellow potato. So the red apple is fried, and the potato is roasted. So the oven is for roasting the potato. The user has the yellow potato. So after frying the red apple, the next step is to chop the yellow apple. But the user hasn't done that yet. Wait, the user chopped the red apple, but the yellow apple is still whole. So the next step should be to chop the yellow apple. But the user hasn't taken it yet. Wait, the user took the yellow apple earlier. Let me check the history. The user took the red apple, yellow apple, and yellow potato. So the yellow apple is in inventory. So the next step after frying the red apple would be to chop the yellow apple. But the user hasn't done that yet. So maybe the user should chop the yellow apple next. But the previous attempt to fry the red apple failed. So perhaps the user needs to first chop the yellow apple, then fry it. But the recipe says to chop and fry both apples. So the order is: chop red, fry red; chop yellow, fry yellow. So after chopping the red apple, the next is to fry it. But the user couldn't fry it. So maybe the correct action is to use the oven for frying? Or maybe the user needs to use the stove. Alternatively, maybe the user needs to "cook" the apple in the oven. But the game's verbs are specific. Since the user tried "fry red apple in oven" and it didn't work, perhaps the correct command is to "roast" the red apple, but the recipe says fry. This is confusing. Alternatively, maybe the user should use the stove for frying. But the stove was empty. Maybe the user needs to put something on the stove first. But the recipe says to fry, so maybe the correct action is to use the stove. However, the user tried "fry red apple on stove" and it didn't work. Maybe the correct command is to "heat" the stove first. But the game doesn't have a "heat" command. Alternatively, maybe the user needs to use the oven for frying. But the game didn't recognize that. Maybe the user should try "cook red apple in oven". Alternatively, maybe the user needs to use the stove with the knife. But the knife is already taken. This is tricky. Given the previous steps, the user has the red apple in the oven. Maybe the next step is to roast the yellow potato. Wait, the recipe says to roast the yellow potato, not the red. So after frying the red apple, the user should chop the yellow apple, fry it, then dice the yellow potato and roast it. So the user needs to proceed step by step. Since the user is stuck on frying the red apple, maybe the next step is to chop the yellow apple. But the user hasn't done that yet. So the correct next action would be to chop the yellow apple with the knife. But the user already has the knife. So the command would be "chop yellow apple with knife". That's the next logical step after chopping the red apple. But the user tried to fry the red apple and failed. So perhaps the user should proceed to the next step in the recipe, which is chopping the yellow apple. Therefore, the next action should be to chop the yellow apple.
+</think>chop yellow apple with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You chop the yellow apple.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-5/12
+AGENT -------------------------------------------------
+fry yellow apple in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-5/12
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is trying to follow a recipe from the cookbook. The current step is frying the yellow apple, but the previous attempts to fry it in the oven didn't work. The user tried "fry yellow apple in oven" and got an error. 
+
+Wait, maybe the oven isn't the right place here. The recipe says "fry" which usually implies using a stove, not an oven. Earlier, the user tried using the stove but got errors. Maybe the correct approach is to use the stove instead of the oven. But the user tried "fry red apple on stove" and it didn't work. Hmm.
+
+Looking at the available commands, maybe the user needs to first heat the stove. But the game doesn't mention turning on the stove. Alternatively, perhaps the correct verb is "cook" instead of "fry"? Or maybe "fry" requires a specific tool. The user has a knife, but that's for chopping. 
+
+Wait, the user already put the red apple in the oven. Maybe the yellow apple should go in the oven too. But the error persists. Alternatively, maybe the user needs to use the stove with a pan. But the game doesn't mention a pan. 
+
+Wait, the user tried "fry yellow apple in oven" and it didn't work. The oven was opened earlier. Maybe the correct command is to put the yellow apple in the oven first, then turn it on? But the game doesn't have a "turn on" command. 
+
+Alternatively, maybe the user should use the stove. Let me check previous steps. The user tried "fry red apple on stove" and it didn't work. Maybe the correct command is "cook" instead of "fry"? Or maybe "fry" requires the stove to be on. 
+
+Wait, the user has the yellow apple chopped. The next step in the recipe is to fry the yellow apple. Since the oven isn't working, maybe the correct action is to put it on the stove. But the user tried that. Maybe the correct command is "fry yellow apple on stove" again, but the game doesn't recognize it. 
+
+Alternatively, maybe the user needs to use the knife again, but that's for chopping. Wait, the user already chopped the yellow apple. The next step is frying. Maybe the user needs to use the stove, but the command is different. 
+
+Wait, the user tried "fry yellow apple in oven" and it didn't work. Maybe the correct command is "cook yellow apple in oven"? Or "roast"? The recipe says "fry", but maybe the game expects "roast" for the oven. Let me check the recipe again. 
+
+Recipe directions: "chop the red apple, fry the red apple, chop the yellow apple, fry the yellow apple, dice the yellow potato, roast the yellow potato, prepare meal." So fry for apple, roast for potato. So the yellow apple should be fried, which implies using the stove, not the oven. But the user tried the oven. 
+
+So maybe the user should try frying the yellow apple on the stove again. But the previous attempt failed. Maybe the correct command is "fry yellow apple on stove with knife"? But the knife is for chopping. 
+
+Alternatively, maybe the user needs to first heat the stove. But the game doesn't have a "heat" command. 
+
+Wait, the user has the yellow apple chopped. The next step is to fry it. Since the oven isn't working, maybe the correct action is to put it on the stove. But the game doesn't recognize "fry on stove". Maybe the correct command is "cook yellow apple on stove". 
+
+Alternatively, maybe the user needs to use the oven for frying, but the game doesn't accept that. 
+
+Hmm, this is tricky. The user is stuck because the commands aren't working. The next step should be to try a different approach, maybe using the oven for frying despite the error, or trying a different verb. But the user has to follow the recipe steps. 
+
+Wait, the user already put the red apple in the oven. Maybe the yellow apple should go in the oven too, even though the recipe says fry. But that's conflicting. 
+
+Alternatively, maybe the user should try "roast yellow apple in oven" since the potato is roasted. But the recipe says fry for apple. 
+
+I think the correct action here is to try putting the yellow apple in the oven, even though the recipe says fry. But the user already tried that with the red apple. 
+
+Wait, the user's last action was "fry yellow apple in oven" which didn't work. The next step should be to try a different method, like using the stove. But the user tried that before. 
+
+Alternatively, maybe the user needs to use the knife again, but that's for chopping. 
+
+Wait, the user has the yellow apple chopped. The next step is to fry it. Since the oven isn't working, maybe the correct command is "fry yellow apple on stove" again. But the game didn't recognize it before. 
+
+Alternatively, maybe the user needs to use the stove's heat. But the game doesn't have that command. 
+
+I think the user is stuck here. The next step should be to try a different command, like "cook yellow apple on stove" or "roast yellow apple in oven". But the recipe says fry. 
+
+Alternatively, maybe the user should proceed to the next step, which is dicing the yellow potato. But the user hasn't done that yet. 
+
+Wait, the recipe steps are: chop red apple, fry red apple, chop yellow apple, fry yellow apple, dice yellow potato, roast yellow potato, prepare meal. 
+
+So after frying the yellow apple, the next step is to dice the yellow potato. But the user hasn't done that yet. 
+
+But the user is stuck on frying the yellow apple. Maybe the user should try to dice the yellow potato next, but that's not the recipe's order. 
+
+Alternatively, maybe the user should try to roast the yellow potato instead of frying the apple. But that's not following the recipe. 
+
+Hmm. The user needs to follow the recipe steps. Since frying the yellow apple isn't working, maybe the user should try a different approach. 
+
+Wait, the user tried "fry yellow apple in oven" and it didn't work. Maybe the correct command is "roast yellow apple in oven" even though the recipe says fry. 
+
+But that's not following the recipe. 
+
+Alternatively, maybe the user should try to use the stove again with a different command. 
+
+I think the user needs to try a different command, like "cook yellow apple on stove" or "fry yellow apple on stove". 
+
+But the user has to follow the recipe. 
+
+So, the next step is to try "fry yellow apple on stove" again, even though it didn't work before. Or maybe "fry yellow apple with stove". 
+
+Alternatively, the user might need to use the knife again, but that's for chopping. 
+
+I think the correct action here is to try "fry yellow apple on stove" again, even though it didn't work before. Maybe the game expects that command. 
+
+So the next action would be "fry yellow apple on stove".
+</think>fry yellow apple on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-5/12
+AGENT -------------------------------------------------
+fry yellow apple in oven with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-5/12
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me try to figure out what's going on here. The user is trying to follow a recipe from the cookbook they found in the kitchen. The recipe requires them to chop and fry apples and a potato. So far, they've taken the red apple, yellow apple, and yellow potato. They chopped the red apple and the yellow apple, but when they tried to fry them, the game didn't recognize the verbs. Then they tried putting the red apple in the oven, which worked. Now they need to fry the yellow apple.
+
+Wait, the recipe says "fry the yellow apple" after chopping it. But the game doesn't accept "fry" as a valid command. Maybe the correct action is to use the stove instead of the oven? Earlier attempts to use the stove didn't work because the user tried to fry without specifying the stove. Also, the oven was opened, so maybe the apples need to be placed in the oven first. But the user already put the red apple in the oven. Maybe they need to use the stove for frying. Alternatively, maybe the correct command is to "cook" instead of "fry"? Or perhaps they need to use the oven for roasting, as the recipe mentions "roast the yellow potato" later. Wait, the user hasn't roasted the potato yet. Let me check the steps again.
+
+The user has chopped both apples, so the next step should be frying them. But the game doesn't recognize "fry". Maybe the correct command is to "cook" the apple on the stove. Or perhaps they need to use the oven for frying? Wait, the oven was opened, so maybe they can put the apple in the oven. But the user already put the red apple in the oven. Maybe they need to put the yellow apple in the oven as well. But the recipe says "fry", not "roast". Hmm. Alternatively, maybe the user needs to use the stove's heat. But the stove was mentioned as having nothing on it. Wait, the user tried to fry on the stove but got an error. Maybe the correct action is to "heat" the stove first? Or maybe the user needs to use the oven for frying. But the game doesn't recognize "fry in oven". 
+
+Alternatively, maybe the user should use the knife again. Wait, the user has the knife. Maybe they need to "slice" the apple instead of "chop"? But the recipe says "chop". Wait, the user already chopped the apples. The next step is frying. Since "fry" isn't working, maybe the correct command is to "cook" the apple in the oven. Let me check the available commands. The user can "put" the apple in the oven. So maybe after chopping, they need to put it in the oven. But the recipe says "fry", which might be a different action. Alternatively, maybe the user should use the stove. Wait, the user tried "fry on stove" and got an error. Maybe the correct command is to "use the stove to fry the apple". But the game doesn't recognize that. 
+
+Wait, looking back at the available commands, there's "fry ... on stove" and "fry ... in oven". The user tried both but got errors. Maybe the correct action is to "cook" the apple. Let me check the commands again. The available commands include "cook", but the user hasn't tried that. Maybe the user should try "cook the yellow apple on stove" or "cook in oven". Alternatively, maybe the user needs to use the oven for roasting, but the recipe says "fry". This is confusing. 
+
+Alternatively, maybe the user should proceed with the next step in the recipe, which is to "dice the yellow potato" and "roast the yellow potato". Wait, the recipe has two steps: fry the apples and dice/roast the potato. The user has chopped the apples, so maybe the next step is to roast the potato. But the user hasn't done that yet. Wait, the user has the yellow potato in their inventory. So maybe they should dice it first. But the recipe says "dice the yellow potato" and "roast the yellow potato". So after chopping the apples, the next step is to dice the potato. But the user hasn't done that yet. 
+
+Wait, the user's current step is after chopping the yellow apple. The recipe's directions are: chop the red apple, fry the red apple, chop the yellow apple, fry the yellow apple, dice the yellow potato, roast the yellow potato, prepare meal. So after chopping both apples, the next steps are frying them. Since frying isn't working, maybe the user needs to use the oven for roasting, but the recipe says fry. Alternatively, maybe the user should use the stove. But the game isn't recognizing "fry". Maybe the correct command is "roast" instead of "fry"? But the recipe says "fry". 
+
+Alternatively, maybe the user should proceed to the next step, which is dicing the potato. Let me check the inventory. The user has the yellow potato. So maybe they should dice it next. But the recipe says to fry the apples first. Hmm. This is tricky. The user is stuck on frying the apple. Since the game isn't recognizing "fry", maybe they need to use a different verb. Maybe "cook" instead of "fry". Let me try that. The user could try "cook the yellow apple on stove" or "cook in oven". Alternatively, maybe they need to use the oven for frying. But the user already put the red apple in the oven. Maybe they need to put the yellow apple in the oven as well. But the recipe says "fry", which might be a different action. 
+
+Alternatively, maybe the user should proceed to the next step in the recipe, which is dicing the yellow potato. Let me check the available actions. The user has the knife, so they can dice the potato. So maybe the next step is to dice the potato. But the recipe says to fry the apples first. However, the user is stuck on frying, so maybe they should try dicing the potato instead. But that might not be the correct order. 
+
+Wait, the user's score is at 5/12. The goal is to prepare the meal by following the recipe. The user has chopped both apples, so they need to fry them. Since frying isn't working, maybe they should try using the oven. But the user already put the red apple in the oven. Maybe they need to put the yellow apple in the oven as well. But the recipe says "fry", which might not be the same as roasting. 
+
+Alternatively, maybe the user should try using the stove. The user tried "fry on stove" but got an error. Maybe the correct command is "use stove to fry yellow apple". But the game doesn't recognize that. 
+
+At this point, the user might need to try a different approach. Since the game isn't recognizing "fry", maybe the correct action is to "cook" the apple. Let me try that. The user could say "cook yellow apple on stove" or "cook yellow apple in oven". Alternatively, maybe they need to "roast" the apple in the oven. But the recipe says "fry". 
+
+Alternatively, maybe the user should proceed to the next step, which is dicing the potato. Let me check the inventory. The user has the yellow potato. So they can dice it. But the recipe says to fry the apples first. However, the user is stuck on frying, so maybe they should try dicing the potato. 
+
+But according to the recipe, the order is: chop apples, fry apples, dice potato, roast potato. So the user should finish frying the apples first. Since "fry" isn't working, maybe the correct command is to "roast" the apple in the oven. Let me try that. The user could put the yellow apple in the oven and roast it. But the recipe says "fry". 
+
+This is confusing. The user might need to try a different command. Maybe "heat" the stove first. But the user hasn't tried that. Alternatively, maybe the user should use the oven for frying. 
+
+Alternatively, maybe the user should check the available commands again. The available commands include "put ... in oven" and "put ... on stove". So maybe the correct action is to put the yellow apple in the oven. But the recipe says "fry", which might be a different action. 
+
+Wait, the user has already put the red apple in the oven. Maybe they need to put the yellow apple in the oven as well. But the recipe says "fry", which might not be the same as roasting. 
+
+Alternatively, maybe the user should try to "fry" the apple using the stove. The user tried "fry on stove" and got an error. Maybe the correct command is "fry the yellow apple on the stove". But the game doesn't recognize it. 
+
+At this point, the user might need to try a different approach. Since the game isn't recognizing "fry", maybe the correct action is to "cook" the apple. Let me try that. The user could say "cook yellow apple on stove" or "cook yellow apple in oven". 
+
+Alternatively, maybe the user should proceed to the next step, which is dicing the potato. Let me check the inventory. The user has the yellow potato. So they can dice it. But the recipe says to fry the apples first. 
+
+This is a bit of a loop. The user is stuck on frying the apple, so maybe they should try a different command. Let me think. The user has the knife, so maybe they can "slice" the apple instead of "chop". But the recipe says "chop". 
+
+Alternatively, maybe the user should use the oven for frying. The user put the red apple in the oven, so maybe they need to put the yellow apple in the oven as well. But the recipe says "fry", which might not be the same as roasting. 
+
+Hmm. I think the user needs to try a different command. Since "fry" isn't working, maybe they should try "roast" the apple in the oven. Let me try that. The user could say "roast yellow apple in oven". But the recipe says "fry". 
+
+Alternatively, maybe the user should proceed to the next step, which is dicing the potato. Let me check the inventory. The user has the yellow potato. So they can dice it. But the recipe says to fry the apples first. 
+
+I'm stuck. The user needs to fry the yellow apple, but the game isn't recognizing the command. Maybe the correct action is to "cook" the apple in the oven. Let me try that. The user could say "cook yellow apple in oven". 
+
+Alternatively, maybe the user should use the stove. The user tried "fry on stove" and got an error. Maybe the correct command is "use stove to fry yellow apple". 
+
+But the game doesn't recognize that. So perhaps the user should try a different approach. Let me check the available commands again. The user can "put" the apple in the oven. So maybe they should put the yellow apple in the oven. But the recipe says "fry". 
+
+At this point, I think the user should try putting the yellow apple in the oven, even though the recipe says "fry". Maybe the game considers that as frying. So the next action would be to put the yellow apple in the oven. But the user already put the red apple in the oven. 
+
+Wait, the user has the yellow apple in their inventory. So they can put it in the oven. Let me try that. The command would be "put yellow apple in oven". But the recipe says "fry", which might not be the same as roasting. 
+
+Alternatively, maybe the user should try to "fry" the apple using the stove. But the game doesn't recognize that. 
+
+I think the user is stuck here. The correct action might be to put the yellow apple in the oven, even though the recipe says "fry". So the next command would be "put yellow apple in oven".
+</think>put yellow apple in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You put the yellow apple into the oven.
+
+
+>                                                                                                                                -= Kitchen =-5/13
+AGENT -------------------------------------------------
+dice yellow potato with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You dice the yellow potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-6/14
+AGENT -------------------------------------------------
+roast yellow potato in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-6/14
+AGENT -------------------------------------------------
+look
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-= Kitchen =-
+If you're wondering why everything seems so ordinary all of a sudden, it's because you've just sauntered into the kitchen.
+
+You can make out an opened fridge. The fridge contains a white onion, a raw pork chop, a red bell pepper and an orange bell pepper. You see an opened oven here. The oven contains a chopped yellow apple and a chopped red apple. You make out a table. The table is massive. Unfortunately, there isn't a thing on it. It would have been so cool if there was stuff on the table. You make out a counter. The counter is vast. On the counter you make out a raw red potato, a green apple, a red onion, a yellow bell pepper, a yellow onion, a raw purple potato and a tomato. You can make out a stove. But oh no! there's nothing on this piece of garbage. Oh! Why couldn't there just be stuff on it?
+
+
+
+
+
+>                                                                                                                                -= Kitchen =-6/15
+AGENT -------------------------------------------------
+roast yellow potato in oven with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-6/15
+AGENT -------------------------------------------------
+put yellow potato in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You put the yellow potato into the oven.
+
+
+>                                                                                                                                -= Kitchen =-6/16
+AGENT -------------------------------------------------
+help
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Available commands:
+  look:                describe the current room
+  goal:                print the goal of this game
+  inventory:           print player's inventory
+  go <dir>:            move the player north, east, south or west
+  examine ...:         examine something more closely
+  eat ...:             eat edible food
+  open ...:            open a door or a container
+  close ...:           close a door or a container
+  drop ...:            drop an object on the floor
+  take ...:            take an object that is on the floor
+  put ... on ...:      place an object on a supporter
+  take ... from ...:   take an object from a container or a supporter
+  insert ... into ...: place an object into a container
+  lock ... with ...:   lock a door or a container with a key
+  unlock ... with ...: unlock a door or a container with a key
+
+
+
+>                                                                                                                                -= Kitchen =-6/17
+AGENT -------------------------------------------------
+wait for oven to finish
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to wait.
+
+>                                                                                                                                -= Kitchen =-6/17
+AGENT -------------------------------------------------
+wait
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Time passes.
+
+
+>                                                                                                                                -= Kitchen =-6/18
+AGENT -------------------------------------------------
+take chopped red apple from oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red apple from the oven.
+
+
+
+>                                                                                                                                -= Kitchen =-6/19
+AGENT -------------------------------------------------
+take chopped yellow apple from oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow apple from the oven.
+
+
+
+>                                                                                                                                -= Kitchen =-6/20
+AGENT -------------------------------------------------
+take roasted yellow potato from oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't see any such thing.
+
+>                                                                                                                                -= Kitchen =-6/20
+AGENT -------------------------------------------------
+take yellow potato from oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow potato from the oven.
+
+
+
+>                                                                                                                                -= Kitchen =-6/21
+AGENT -------------------------------------------------
+eat red apple
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
