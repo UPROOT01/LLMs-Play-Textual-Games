@@ -38,7 +38,7 @@ LOG_SELFEVAL = "SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n"
 LOG_SUMMARY = "SUMMARY (kept in the context instead of the reasoning): +-+-+-+-+-\n"
 
 MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|s|sr|ls|lsr|)(?P<n>\d+)$")
-GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$")
+GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$") # gfail, grand30, gfailidle4
 
 
 def parse_mode(mode):
@@ -58,7 +58,7 @@ def parse_mode(mode):
         of keep or drop); "lsN" / "lsrN": only the last summary stays, read during the next self-evaluation and then
         replaced (the "previous" memory of lN). The settings have summarize=True.
     "g<gate>": it self-evaluates when its gate says so (gate.py: goracle, gcrit, gself, gsurp, gtactic, grand30...
-        in the two-player games; gfail and grand30... in the textual games), never on
+        in the two-player games; gfail, gfailidle4, gfailstuck4 and grand30... in the textual games), never on
         a clock, and its reasonings never stay in the context; "lg<gate>": the same, keeping the last reasoning as lN.
         The settings have gate=<gate name> (None for the other modes); the agent needs a gate object (agent.gate).
     """

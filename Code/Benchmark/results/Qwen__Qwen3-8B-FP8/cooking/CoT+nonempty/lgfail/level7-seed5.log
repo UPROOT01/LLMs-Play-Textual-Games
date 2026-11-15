@@ -1,0 +1,382 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Bathroom =-
+You've just walked into a bathroom.
+
+You make out a toilet. The toilet is white. Unfortunately, there isn't a thing on it. It would have been so cool if there was stuff on the toilet.
+
+There is an exit to the north. Don't worry, there is no door.
+
+>                                                                                                                                -= Bathroom =-0/1
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+I just think it's great that you've just entered a corridor.
+
+
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/2
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Kitchen =-
+Look around you. Take it all in. It's not every day someone gets to be in a kitchen.
+
+You see a closed fridge in the room. You can make out an oven. You smell an intriguing smell, and follow it to a table. You see a cookbook and a knife on the table. Oh wow! Is that what I think it is? It is! It's a counter. The counter is vast. On the counter you can make out a banana, a raw purple potato, a green apple and a green hot pepper. You see a stove. The stove is conventional. But there isn't a thing on it.
+
+There is a closed frosted-glass door leading east. You need an exit without a door? You should try going south. There is an exit to the west. Don't worry, there is no door.
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the fridge, revealing a yellow bell pepper, a lettuce, a yellow apple and an orange bell pepper.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+take yellow bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+take raw purple potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the purple potato from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/7
+AGENT -------------------------------------------------
+take green apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green apple from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/8
+AGENT -------------------------------------------------
+take green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green hot pepper from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/9
+AGENT -------------------------------------------------
+cook banana with green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the banana first.
+
+
+>                                                                                                                                -= Kitchen =-1/10
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is playing a text-based game where the goal is to cook a meal. The initial prompt mentioned checking the cookbook in the kitchen for a recipe. So the main objective is to cook a dish using the ingredients found in the kitchen.
+
+Looking at the current state: The user has taken the cookbook, a yellow bell pepper, a purple potato, a green apple, and a green hot pepper. They tried to cook the banana with the green hot pepper, but the game responded that they need to take the banana first. Wait, the banana was on the counter earlier. Let me check the previous steps. 
+
+In the kitchen, the user took the green apple, green hot pepper, and raw purple potato. The banana was on the counter, but the user hasn't taken it yet. Oh, right! The user tried to cook the banana but didn't take it first. So the next step should be to take the banana from the counter. Once they have all the ingredients, they can proceed to cook using the cookbook's recipe. The stove is available, so after gathering all items, they can use the stove to cook. The previous actions have already collected several ingredients, so the missing one is the banana. Taking that should allow them to proceed with cooking, which would complete the goal of making a meal.
+</think>take banana
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the banana from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/11
+AGENT -------------------------------------------------
+cook banana with green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Cooking requires a source of heat.
+
+
+>                                                                                                                                -= Kitchen =-2/12
+AGENT -------------------------------------------------
+use stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/12
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The goal is to cook a meal using the ingredients from the kitchen. The user has the cookbook, banana, green hot pepper, yellow bell pepper, purple potato, and green apple. They tried to cook the banana with the green hot pepper but needed heat. They tried using the stove, but the game didn't recognize that verb.
+
+Wait, maybe "use stove" isn't the right command. The stove is in the kitchen, so perhaps they need to interact with it differently. Maybe they need to turn it on first. Alternatively, the correct action might be to "cook" the ingredients on the stove. But the previous attempt to cook without heat failed. So the next step is to activate the stove. Maybe the correct command is "turn on stove" or "heat stove". Once the stove is on, they can then cook the banana with the green hot pepper as per the recipe. Let me check previous steps. The user has all the ingredients now, so the next action should be to use the stove properly. The error before was using "use stove" which wasn't recognized. Maybe the correct verb is "heat" or "ignite". Alternatively, maybe they need to "put" the ingredients on the stove. But the main issue is getting the stove to provide heat. So the next command should be to turn on the stove.
+</think>turn on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can switch.
+
+
+>                                                                                                                                -= Kitchen =-2/13
+AGENT -------------------------------------------------
+heat stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/13
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is trying to cook a meal. They have the cookbook, ingredients, and are in the kitchen. The previous attempts to use the stove didn't work. The game says "It isn't something you can switch." and "That's not a verb I recognise." So maybe "heat stove" isn't the right command. What else can they do? Maybe they need to find a way to get the stove to work. Since the stove is conventional, perhaps they need to "light" it or "ignite" it. Alternatively, maybe they need to "turn on" the stove, but that didn't work. Wait, the user already tried "use stove" and "heat stove". Maybe the correct action is to "cook" the ingredients directly on the stove. Or maybe they need to "open" the oven first? Wait, the oven is mentioned as being in the kitchen. Wait, the user has the cookbook, so maybe they need to follow a recipe. The initial goal was to check the cookbook for the recipe. They took the cookbook, but maybe they need to "read" it or "open" it to find the recipe. But the user already took the cookbook. Hmm. Alternatively, maybe the stove isn't the right place. The user has a counter with ingredients. Maybe they need to "prepare" the ingredients first. Wait, the user has the banana, green hot pepper, etc. The initial instruction was to cook a meal using the cookbook. So perhaps the correct sequence is to open the cookbook, find the recipe, then cook. But the user hasn't opened the cookbook yet. Wait, they took it from the table. Maybe they need to "open cookbook" to get the recipe. Then, use the stove. But the user tried to cook without heat. So maybe the steps are: open cookbook, find recipe, then cook the ingredients on the stove. But the user hasn't opened the cookbook. So the next action should be to open the cookbook. Let me check the previous steps. The user took the cookbook, but didn't open it. So the next step is to open it to get the recipe. Then, follow the recipe steps. But the user is stuck trying to cook without the right steps. So the correct next action is to open the cookbook.
+</think>open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-2/14
+AGENT -------------------------------------------------
+read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+banana
+  lettuce
+  yellow bell pepper
+
+Directions:
+dice the banana
+  fry the banana
+  dice the lettuce
+  roast the lettuce
+  chop the yellow bell pepper
+  roast the yellow bell pepper
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-2/15
+AGENT -------------------------------------------------
+dice banana
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to dice the banana with?
+
+>                                                                                                                                -= Kitchen =-2/15
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is trying to cook a meal using the cookbook. They've gathered ingredients like banana, lettuce, yellow bell pepper, and others. The recipe requires dicing the banana, frying it, dicing the lettuce, roasting it, chopping the pepper, and roasting it. The user tried to "dice banana" but the game asked what to dice it with. That suggests they need a tool, like a knife. Wait, the user already took the knife from the table in the kitchen. So maybe they need to use the knife to dice the banana. But the previous action was "dice banana" without specifying the tool. The game responded by asking for the tool. So the correct next step is to use the knife to dice the banana. Let me check the previous actions. The user took the knife from the table. So the next command should be "dice banana with knife". That should resolve the prompt.
+</think>dice banana with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the knife first.
+
+
+>                                                                                                                                -= Kitchen =-2/16
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is trying to cook a meal using the ingredients they've collected. The goal is to follow the recipe in the cookbook. So far, they've taken the cookbook, several ingredients like banana, lettuce, yellow bell pepper, and others. They tried to dice the banana but the game asked what to dice it with. The user then tried "dice banana with knife", but the response was that they need to take the knife first.
+
+Wait, the user already took the knife from the table earlier. Let me check the history. Yes, in the initial steps, the user took the knife from the table. So the knife should already be in their inventory. The game's response suggests that the knife isn't taken yet, but according to previous actions, the user did take it. Maybe there's a mistake in the game's state. But since the game says "You need to take the knife first," the user must not have it. Wait, looking back, the user took the knife in the beginning? Let me check again.
+
+Original steps: The user was in the kitchen, took the cookbook, then opened the fridge and took the yellow bell pepper, raw purple potato, green apple, green hot pepper. Then they tried to cook banana with green hot pepper, but needed to take the banana first. Then they took the banana. Then tried to cook again, but needed heat. Then tried using stove, which didn't work. Then tried opening cookbook, which didn't work. Then read the cookbook, which gave the recipe. Then tried to dice banana, which prompted the need for a tool. The user then tried "dice banana with knife," but the game said to take the knife first. Wait, but the knife was on the table initially. Did the user take it? Let me check the history again.
+
+Wait, in the initial kitchen description, the user saw a knife on the table. The user's actions included taking the cookbook, then taking items from the fridge and counter. But the knife wasn't mentioned as taken. Oh, right! The user didn't take the knife. They took the cookbook, yellow bell pepper, purple potato, green apple, green hot pepper, and banana. The knife was on the table but wasn't taken. So the game is correct in saying the knife isn't taken yet. So the next step is to take the knife first before dicing the banana.
+
+So the correct action is to take the knife from the table. Once that's done, then use it to dice the banana. So the next command should be "take knife".
+</think>take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-2/17
+AGENT -------------------------------------------------
+dice banana with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You dice the banana.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/18
+AGENT -------------------------------------------------
+dice lettuce with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the lettuce first.
+
+
+>                                                                                                                                -= Kitchen =-3/19
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me figure out what to do next. The user is trying to follow the recipe from the cookbook. The current step is dice the lettuce with a knife. But the game says "You need to take the lettuce first." Wait, did the user already take the lettuce?
+
+Looking back at the history: The user took the yellow bell pepper, raw purple potato, green apple, green hot pepper, and banana. The lettuce was in the fridge. When the user opened the fridge, they saw a yellow bell pepper, lettuce, yellow apple, and orange bell pepper. The user took the yellow bell pepper, but not the lettuce. So the lettuce is still in the fridge. Therefore, the user needs to take the lettuce before dicing it.
+
+So the next action should be to take the lettuce from the fridge. Once that's done, then they can proceed to dice it with the knife. The previous attempt to dice the lettuce failed because the lettuce wasn't taken yet. So the correct step is to take the lettuce first.
+</think>take lettuce from fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the lettuce from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-4/20
+AGENT -------------------------------------------------
+dice lettuce with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You dice the lettuce.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-5/21
+AGENT -------------------------------------------------
+chop yellow bell pepper with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You chop the yellow bell pepper.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-6/22
+AGENT -------------------------------------------------
+roast yellow bell pepper with stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-6/22
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is trying to follow the recipe from the cookbook. The current step is to roast the yellow bell pepper using the stove. But the game says "That's not a verb I recognise." So maybe "roast" isn't an accepted action here.
+
+Looking at the previous steps, the user has already diced the banana and lettuce, chopped the yellow bell pepper. The next step in the recipe is to roast the yellow bell pepper. But the stove isn't being recognized as a heat source. Earlier attempts to use the stove failed because it wasn't switchable. Wait, maybe the correct action is to place the pepper on the stove and then turn it on? But the user can't turn on the stove. Alternatively, maybe the correct verb is "cook" instead of "roast"? Or perhaps "heat" the pepper on the stove. Let me check the available actions. The user has the knife and the ingredients. Since the stove isn't working, maybe the correct action is to use the oven? Wait, the kitchen has an oven mentioned earlier. Oh, the user was in the kitchen and saw an oven. Maybe the user should use the oven instead of the stove. So the next step is to cook the yellow bell pepper in the oven. But the user hasn't interacted with the oven yet. So the correct action would be to use the oven to roast the pepper. Let me check the previous steps again. The user hasn't used the oven yet. So the next action should be to roast the yellow bell pepper using the oven. But the user's previous attempt was to roast with the stove, which didn't work. So changing the verb to "cook" or using the oven instead. The recipe says "roast the yellow bell pepper," but maybe the game expects "cook" instead. Alternatively, maybe the user needs to place the pepper on the stove and then use the stove. But earlier attempts to use the stove failed. Wait, the user might need to turn on the stove first. But the game said "It isn't something you can switch." So maybe the correct action is to use the oven. Let me try that. The user should go to the oven and roast the pepper there. But the user is currently in the kitchen. The oven is in the kitchen. So the next action is to roast the yellow bell pepper with the oven. But the user hasn't taken the oven yet. Wait, the oven is an object in the kitchen. So maybe the user needs to use the oven. But the user hasn't interacted with it yet. So the correct action is to roast the yellow bell pepper using the oven. Let me try that.
+</think>use oven to roast yellow bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-6/22
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me figure out the next step. The user is trying to cook according to the recipe in the cookbook. The current step is to roast the yellow bell pepper. Previous attempts to use the stove didn't work because the game didn't recognize "roast" with the stove. The user tried using the oven, but that also didn't work. Maybe the correct approach is to use the oven, but the verb needs to be different. The recipe says "roast," but maybe the game expects "cook" instead. Alternatively, maybe the user needs to place the pepper on the stove and then turn it on, but earlier attempts to turn on the stove failed. Wait, the user has the knife and the ingredients. Maybe the correct action is to cook the yellow bell pepper using the stove, but the verb needs to be "cook" instead of "roast." Let me check the previous steps again. The user has already diced the banana, lettuce, and chopped the yellow bell pepper. The next step in the recipe is to roast the yellow bell pepper. Since "roast" isn't working, maybe "cook" is the correct verb. So the next action should be to cook the yellow bell pepper with the stove or oven. But the user tried using the oven and it didn't work. Maybe the correct action is to use the stove with the verb "cook." Let me try that.
+</think>cook yellow bell pepper with stove
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

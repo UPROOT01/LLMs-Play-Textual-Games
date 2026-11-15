@@ -27,6 +27,15 @@ The fixed modes think on a clock (e1 every move, r4 about every 4). A gate mode 
               "That's not a verb I recognise", "You can't see any such thing"...). In the cooking games played so far
               thinking raises the share of turns that score 2.4 times after a refused command and 1.3 times after an
               accepted one (THESIS_LOG.md, 2026-11-11). Textual games only: it reads the game's reply.
+The two event gates (tactic, fail) can have a second trigger, written after the gate's name, for the turns where
+nothing visibly went wrong (written after the 2026-11-13 results: gfail never thinks after an accepted command, and
+half of the 1.7B's games end in a loop of accepted commands like "go east" / "go west"):
+    g<gate>idle<N>   also thinks when the agent has not thought in its last N turns (gfailidle4, gtacticidle3): a
+                     floor under the event, so a run of turns without thinking is at most N turns long.
+    gfailstuck<W>    also thinks when the agent is stuck: its last W commands are at most two different ones
+                     (gfailstuck4: "go east", "go west", "go east", "go west"). Textual games only. It keeps thinking
+                     on every turn until the last W commands are three different ones again.
+The decision records which trigger fired (event: the gate's own; second: the idle floor or the stuck check).
 A gate mode never thinks on a clock; "lg<gate>" also keeps the last reasoning in the context until the next one
 (the "previous" memory of l1), "g<gate>" drops every reasoning (ephemeral, like e1).
 
@@ -37,7 +46,9 @@ import re
 
 from c4solver import analyze_scores, move_quality
 
-GATE_PATTERN = re.compile(r"^(?P<kind>oracle|crit|self|rand|surp|tactic|fail)(?P<n>\d*)$")
+GATE_PATTERN = re.compile(r"^(?P<kind>oracle|crit|self|rand|surp|tactic|fail)(?P<second>idle|stuck)?(?P<n>\d*)$")
+SECOND_TRIGGERS = {"idle": ("tactic", "fail"), "stuck": ("fail",)} # second trigger -> the gates that can have it
+STUCK_MAX_DISTINCT = 2 # stuck: the last W commands are at most this many different ones (as the loop detector of run.py)
 TEXTUAL_GATES = ("fail", "rand") # the gates of the textual games: they need no board (agent.SelfEvalAgent makes them)
 DUEL_ONLY_GATES = ("oracle", "crit", "self", "surp", "tactic") # they read the position of a two-player game
 # what a textual game answers when it did not understand or could not do the command (memory_analysis.py reads the
@@ -66,11 +77,14 @@ SELF_GATE_QUESTION = ("Before choosing a move: does this position need careful t
 
 def parse_gate(name):
     """(kind, parameter) of a gate name: "oracle", "crit" (k), "self", "rand" (percentage), "surp", "tactic",
-    "fail"."""
+    "fail". A second trigger ("failidle4") does not change the kind: see parse_second()."""
     match = GATE_PATTERN.match(name)
     if match is None:
         raise ValueError(f"unknown gate {name!r}: oracle, crit<k>, self, surp, tactic, fail or rand<p>")
     kind, n = match["kind"], match["n"]
+    if match["second"]:
+        parse_second(name) # raises if the gate cannot have it
+        return kind, None
     if kind == "rand":
         if not n:
             raise ValueError("grand needs a percentage: e.g. grand30")
@@ -80,6 +94,21 @@ def parse_gate(name):
     if n:
         raise ValueError(f"gate {kind!r} takes no number")
     return kind, None
+
+
+def parse_second(name):
+    """(second trigger, its number) of a gate name, or None: "failidle4" -> ("idle", 4), "fail" -> None."""
+    match = GATE_PATTERN.match(name)
+    if match is None or not match["second"]:
+        return None
+    kind, second, n = match["kind"], match["second"], match["n"]
+    if kind not in SECOND_TRIGGERS[second]:
+        raise ValueError(f"gate {kind!r} cannot have the trigger {second!r}: "
+                         f"{second} goes with {' / '.join(SECOND_TRIGGERS[second])}")
+    minimum = 1 if second == "idle" else STUCK_MAX_DISTINCT + 1
+    if not n or int(n) < minimum:
+        raise ValueError(f"{kind}{second} needs a number of turns, at least {minimum}: e.g. {kind}{second}4")
+    return second, int(n)
 
 
 def needs_solver(name):
@@ -290,10 +319,88 @@ class FailGate(Gate):
         return None
 
 
+class SecondTrigger(Gate):
+    """An event gate (tactic, fail) with a second trigger for the quiet turns (see the module docstring). The
+    decision is the event gate's, plus event (the gate's own answer), second (the second trigger fired; False when
+    the event already did) and think = one of the two. The agent is not told which one fired."""
+
+    def __init__(self, base, n):
+        super().__init__()
+        self.base = base
+        self.n = n
+        self.reset_second()
+
+    def bind(self, game):
+        super().bind(game)
+        self.base.bind(game)
+
+    def reset(self):
+        self.base.reset()
+        self.reset_second()
+
+    def reset_second(self):
+        pass
+
+    def fires(self):
+        """(does the second trigger fire now, the reason to record)."""
+        raise NotImplementedError
+
+    def decide(self, agent, obs):
+        decision = self.base.decide(agent, obs)
+        event = bool(decision["think"])
+        second, reason = (False, None) if event else self.fires()
+        decision.update(event=event, second=second, think=event or second)
+        if second:
+            decision["reason"] = reason
+        self.decided(decision["think"])
+        return decision
+
+    def decided(self, think):
+        pass
+
+    def after(self, agent, command):
+        return self.base.after(agent, command)
+
+
+class IdleTrigger(SecondTrigger):
+    """idle<N>: also thinks when the last N decisions were all without thinking. A decision is a turn of the agent
+    (in a two-player game an illegal answer asked again is a decision too)."""
+    name = "idle"
+
+    def reset_second(self):
+        self.quiet = 0 # decisions without thinking since the last thinking one (or the start of the game)
+
+    def fires(self):
+        return self.quiet >= self.n, f"{self.n} turns without thinking"
+
+    def decided(self, think):
+        self.quiet = 0 if think else self.quiet + 1
+
+
+class StuckTrigger(SecondTrigger):
+    """stuck<W>: also thinks when the last W commands are at most STUCK_MAX_DISTINCT different ones."""
+    name = "stuck"
+
+    def reset_second(self):
+        self.commands = [] # the last W commands of the game, lower case and single spaces
+
+    def fires(self):
+        stuck = len(self.commands) == self.n and len(set(self.commands)) <= STUCK_MAX_DISTINCT
+        return stuck, f"stuck: the last {self.n} commands are {len(set(self.commands))} different ones"
+
+    def after(self, agent, command):
+        self.commands = (self.commands + [" ".join(command.lower().split())])[-self.n:]
+        return super().after(agent, command)
+
+
 def make_gate(name, solver=None):
-    """The gate of a gate name ("oracle", "crit2", "self", "rand30", "surp", "tactic", "fail"). solver: a
-    c4solver.Solver for oracle / crit."""
+    """The gate of a gate name ("oracle", "crit2", "self", "rand30", "surp", "tactic", "fail", "failidle4",
+    "failstuck4", "tacticidle3"). solver: a c4solver.Solver for oracle / crit."""
     kind, n = parse_gate(name)
+    second = parse_second(name)
+    if second is not None:
+        base = TacticGate() if kind == "tactic" else FailGate()
+        return (IdleTrigger if second[0] == "idle" else StuckTrigger)(base, second[1])
     if kind in ("oracle", "crit"):
         if solver is None:
             from c4solver import shared_solver

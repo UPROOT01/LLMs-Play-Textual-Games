@@ -681,6 +681,110 @@ def test_fail_gate():
     print("ok fail gate: first turn, refused command, accepted command, memory, the random gate in a textual game")
 
 
+def test_second_trigger():
+    """gfailidle<N> / gfailstuck<W> / gtacticidle<N>: an event gate that also thinks on the quiet turns."""
+    assert gate.parse_gate("failidle4") == ("fail", None) and gate.parse_second("failidle4") == ("idle", 4)
+    assert gate.parse_second("failstuck4") == ("stuck", 4) and gate.parse_second("fail") is None
+    assert gate.parse_second("rand30") is None and gate.parse_gate("tacticidle3") == ("tactic", None)
+    assert parse_mode("lgfailstuck4") == dict(selfeval_turns=0, random_turns=False, keep="previous",
+                                              gate="failstuck4", summarize=False)
+    for bad in ("gfailidle", "gfailidle0", "gfailstuck2", "gtacticstuck4", "grandidle4", "goracleidle3"):
+        try:
+            parse_mode(bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{bad} must be refused")
+
+    commands = []
+
+    def model(prompt_ids, max_tokens, sampling):
+        text = TOKENIZER.decode(prompt_ids)
+        thinking = "/think<|im_end|>" in text[text.rindex("<|im_start|>user"):]
+        answer = commands.pop(0)
+        return TOKENIZER.encode(f"<think>\nLet me see.\n</think>\n\n{answer}" if thinking else answer,
+                                add_special_tokens=False), False
+
+    status = "\n\n>                -= Kitchen =-0/{}"
+    ok, refused = "You walk." + status.format(1), "You can't go that way." + status.format(1)
+
+    def play(mode, script, replies):
+        """think and the gate's record of every turn: the first observation, then one reply per command."""
+        commands[:] = script
+        agent = agent_module.SelfEvalAgent(PROFILE, TOKENIZER, model, mode, "CoT", rng=random.Random(0))
+        turns = []
+        for obs in ["Find the kitchen." + status.format(0)] + replies:
+            agent.act(obs)
+            turns.append(agent.last_move_info)
+        return agent, turns
+
+    # idle3: three turns without thinking, then one with; a refusal thinks at once and restarts the count
+    agent, turns = play("gfailidle3", ["a", "b", "c", "d", "e", "f", "g", "h", "i"], [ok, ok, ok, ok, refused, ok, ok, ok])
+    assert isinstance(agent.gate, gate.IdleTrigger) and isinstance(agent.gate.base, gate.FailGate)
+    assert [turn["think"] for turn in turns] == [False, False, False, True, False, True, False, False, False]
+    assert turns[3]["gate"]["second"] and not turns[3]["gate"]["event"]
+    assert turns[3]["gate"]["reason"] == "3 turns without thinking"
+    assert turns[5]["gate"]["event"] and not turns[5]["gate"]["second"]
+    assert turns[5]["gate"]["reason"] == "the game refused the last command"
+    assert agent.token_stats()["selfevaluations"] == 2 and agent.token_stats()["gate_turns"] == 0
+    agent.act("", done=True) # a new game: the count starts again
+    commands[:] = ["a"]
+    agent.act("Find the kitchen.")
+    assert agent.gate.quiet == 1 and not agent.last_move_info["think"]
+
+    # stuck4: east, west, east, west -> thinks, and goes on thinking until the last four commands are three different
+    script = ["go east", "go west", "Go  East", "go west", "go east", "open door", "take key", "go north"]
+    agent, turns = play("gfailstuck4", script, [ok] * 7)
+    assert isinstance(agent.gate, gate.StuckTrigger)
+    assert [turn["think"] for turn in turns] == [False, False, False, False, True, True, False, False]
+    assert turns[4]["gate"]["reason"] == "stuck: the last 4 commands are 2 different ones" and turns[4]["gate"]["second"]
+    assert not turns[6]["gate"]["second"] and turns[6]["gate"]["reason"] == "the last command was accepted"
+    # four different commands are not stuck; a refusal is the event, not the second trigger
+    agent, turns = play("gfailstuck4", ["a", "b", "c", "d", "e", "e"], [ok, ok, ok, ok, refused])
+    assert [turn["think"] for turn in turns] == [False, False, False, False, False, True]
+    assert turns[5]["gate"]["event"] and not turns[5]["gate"]["second"]
+    agent.act("", done=True)
+    assert agent.gate.commands == []
+    kept, _ = play("lgfailidle1", ["a", "b"], [ok])
+    assert kept.last_move_info["think"] and kept.keep == "previous"
+
+    # Connect Four: the tactic gate with the floor
+    game = ConnectFour()
+    duel_agent = make_agent("gtacticidle2", Script(fast=["1", "2", "3"], think=["5", "6"]))
+    assert isinstance(duel_agent.gate, gate.IdleTrigger) and isinstance(duel_agent.gate.base, gate.TacticGate)
+    thinks = []
+    for _ in range(4): # an empty board every time: no tactic, so only the floor can fire
+        duel_agent.gate.bind(game)
+        duel_agent.act(game.observation(0))
+        thinks.append(duel_agent.last_move_info["think"])
+    assert thinks == [False, False, True, False]
+    assert duel_agent.gate.base.game is game
+    for move in ["4", "1", "4", "1", "4"]: # X threatens column 4: the event fires whatever the count
+        game.play(move)
+    duel_agent.gate.bind(game)
+    duel_agent.act(game.observation(1))
+    info = duel_agent.last_move_info["gate"]
+    assert info["event"] and not info["second"] and info["threats"] == ["4"] and info["reason"] == "a threat to block"
+    for mode, maker in (("gfailidle4", lambda: make_agent("gfailidle4", Script([], []))),
+                        ("gtacticidle3", lambda: duel.DuelAgent(PROFILE, TOKENIZER, model, "gtacticidle3", "chess", "plain"))):
+        try:
+            maker()
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"{mode} must be refused there")
+    import run
+    run.check_modes(dict(modes=["gfailidle4", "lgfailstuck4", "gfail"]))
+    try:
+        run.check_modes(dict(modes=["gtacticidle3"]))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("gtacticidle3 must be refused by the textual runner")
+    assert not gate.needs_solver("tacticidle3")
+    print("ok second trigger: idle floor, stuck check, which trigger fired, reset per game, Connect Four, refusals")
+
+
 if __name__ == "__main__":
     test_parse()
     test_predictions()
@@ -699,3 +803,4 @@ if __name__ == "__main__":
     test_note_prompt()
     test_tactic_gate()
     test_fail_gate()
+    test_second_trigger()

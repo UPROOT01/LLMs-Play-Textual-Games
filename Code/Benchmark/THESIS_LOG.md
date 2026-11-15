@@ -1282,3 +1282,164 @@ Games were run on both Colab (results on Drive) and the remote server (results i
 - In ca1269f5, 19 finished 4B Connect Four records (modes 0, gtactic, lgtactic, seeds 5-16) were replaced by a second finished run of the same game. Both runs are valid. The current ones are kept, and the earlier ones are still in git at ca1269f5~1. Nothing is lost, but those seeds were played twice; only the second play is counted.
 - I copied 84 finished 8B cooking games (gfail/lgfail/grand25/grand50) from Colab, together with their logs. I did not copy 10 unfinished Colab games, which have no record and will be played again.
 - Every game that exists in both copies has an identical record.
+- 2026-11-13: I merged a second Colab folder, which added the other 116 finished 8B cooking games. The 8B part of `cooking_fail.yaml` is now complete (50 games per mode). There were no conflicts: every game present in both folders has an identical record.
+
+## 2026-11-13 — Results of the two event gates (duel_c4_tactic.yaml, 500 games; cooking_fail.yaml, 600 games)
+
+Both grids are complete (50 games per cell). Short answer: each gate does its local job as well as thinking on
+every turn, and neither beats a random gate of the same cost in the final score. In the cooking games the gate is
+worse than the random gates for the 1.7B and the 4B. The reason is the same in both games and is measured below.
+
+### Connect Four (4B and 8B against self-e1, seeds 1-50, prompt plain)
+
+| model | mode | wins / 50 | thinking tokens per game | threats blocked | wins in one taken |
+|---|---|---|---|---|---|
+| 4B | 0 | 3 | 0 | 0/46 | 3/9 |
+| 4B | grand28 | 15 | 7.4k | 5/36 | 15/33 |
+| 4B | gtactic | 17 | 7.0k | 15/52 | 17/22 |
+| 4B | lgtactic | 11 | 5.9k | 14/53 | 11/16 |
+| 4B | e1 | 29 | 25.5k | 9/32 | 28/39 |
+| 8B | 0 | 12 | 0 | 1/32 | 12/20 |
+| 8B | grand28 | 21 | 8.7k | 2/22 | 21/35 |
+| 8B | gtactic | 23 | 6.6k | 20/44 | 23/26 |
+| 8B | lgtactic | 17 | 5.8k | 15/47 | 17/31 |
+| 8B | e1 | 24 | 26.8k | 8/27 | 24/27 |
+
+- *The gate fires where it should:* every position with a win in one was thought (and no other). It thinks on 22%
+  of the moves, 1.5 moves per game.
+- *One-move tactics:* gtactic against grand28, both models together: threats blocked 35/96 (36%) against 7/58 (12%),
+  Fisher p=0.001; wins taken 40/48 (83%) against 36/68 (53%), p<0.001. Against e1: 36% against 29% and 83% against
+  79%, no difference, with 26% of e1's thinking tokens. The same position with the fast move and then with the
+  reasoning: blocked 1/96 → 35/96. So the measure of 2026-11-11 holds on new games.
+- *Score:* gtactic − grand28 = +0.04 in both models (p=0.64 and 0.62; together 19 seeds up, 15 down, p=0.61).
+  gtactic − 0 = +0.28 (4B, p=0.002) and +0.22 (8B, p=0.012). gtactic − e1 = −0.24 (4B, p=0.019), −0.02 (8B, p=0.83).
+  For the 8B the gate has e1's score with a quarter of the tokens, but so has grand28 (0.42 against 0.48, p=0.44),
+  so this says nothing for the gate.
+- *Why the better tactics do not become a better score.* (1) Of the lost games, 80-90% end on one threat that was not
+  blocked, in every mode; the gate still loses 27 (4B) and 22 (8B) games this way, because a 4,400-token reasoning
+  blocks a threat only 29-45% of the time. A game where every threat was blocked scores 0.57-0.82; one where a threat
+  was missed, 0.02-0.10. (2) The game is a race for the first win in one: the player who has it first wins 75-95%
+  of the games, the other 0-17%. The agent has it first in 19/100 games with mode 0, 38/100 with gtactic, 44/100
+  with grand28, 48/100 with e1. Until a tactic is on the board gtactic plays as mode 0: it faces a threat in 41/50
+  games (4B; mode 0: 42, grand28: 30, e1: 26). The random gate thinks on quiet moves and sometimes gets the first
+  threat; the tactic gate only repairs. The two are worth about the same here.
+- *Keeping the last reasoning hurts (lgtactic):* score −0.12 in both models (together 10 up, 22 down, sign test
+  p=0.050). On the first thinking move of a game the two modes are equal (wins taken 14/16 against 20/23). On the
+  later ones, where lgtactic still shows the previous reasoning: wins taken 14/31 against 20/25 (p=0.013), threats
+  blocked 3/28 against 7/25, and the reasoning is 1,900 tokens (median) against 5,200. The old reasoning is about
+  another position; with it in view the model reasons less than half as long and finds the tactic less often.
+
+### Cooking (1.7B, 4B, 8B; levels 1-9, seeds 1-10; CoT+nonempty)
+
+Score (mean of 50 games) and thinking tokens per game:
+
+| mode | 1.7B | 4B | 8B |
+|---|---|---|---|
+| 0 | 0.015 / 0 | 0.073 / 0 | 0.275 / 0 |
+| grand25 | 0.179 / 9.9k | 0.328 / 12.5k | 0.485 / 11.7k |
+| er4 | 0.120 / 9.2k | 0.403 / 13.4k | 0.413 / 15.3k |
+| lr4 | 0.165 / 10.6k | 0.426 / 16.2k | 0.579 / 9.2k |
+| grand50 | 0.199 / 19.7k | 0.487 / 29.3k | 0.502 / 21.6k |
+| gfail | 0.109 / 14.4k | 0.289 / 28.1k | 0.405 / 8.0k |
+| lgfail | 0.067 / 8.5k | 0.241 / 9.7k | 0.493 / 3.3k |
+| e1 | 0.207 / 42.9k | 0.469 / 61.6k | 0.545 / 43.5k |
+
+Baselines as noted in the grid: 0 and e1 with CoT (4B: 0 with the default prompt, both from the old transformers
+runs, no token count for 0); er4 / lr4 with CoT for the 8B, played three weeks earlier.
+- *The gate fires as designed:* it thinks on every turn after a refused command and on no other. Its rate is 46%
+  (1.7B), 52% (4B), 18% (8B) of the turns.
+- *Score:* gfail − grand25 = −0.070 (1.7B, p=0.017), −0.039 (4B, p=0.37), −0.080 (8B, p=0.12); the three models
+  together −0.063, p=0.007. gfail − grand50 = −0.128 together, p<0.001. gfail − e1 = −0.139, p<0.001. The gate is
+  below the random gates, with more tokens than grand25 for the two small models.
+- *The local effect is there.* After a refused command a thinking turn of gfail scores as often as a thinking turn
+  of the random gates in the same situation: 8B 14.0% (grand25 13.3%, without thinking 6.0%); 1.7B 2.1% (2.2%, 0.8%);
+  4B 3.4% (6.5%, 1.9%). Runs of refused commands are shorter: 1.7B 5.4 turns on average against 14.1 with grand25.
+- *Why the score is lower: the turns after an accepted command.* There the gate never thinks, and the model walks
+  in circles. Games stopped by the loop detector: gfail 25/50 (1.7B), 14/50 (4B), 4/50 (8B); grand25 11, 10, 0;
+  grand50 3, 3, 0. The loops of the random gates are refused commands; all 25 loops of the 1.7B with gfail are
+  accepted commands (mostly "go east" / "go west"), with no thinking turn in the last 20. The same command within 6
+  turns, after an accepted command, without thinking: gfail 77% / 64% / 72% of the turns, grand25 52% / 54% / 45%.
+  A loop of accepted commands is a state the gate cannot leave, and it is what mode 0 does (24/50 loops, 1.7B).
+- *The measure of 2026-11-11 that chose this trigger was read too favourably.* With the random gates, thinking
+  after an accepted command adds as many scoring turns as after a refused one (8B grand25: 13.1% against 6.2%
+  after accepted, 13.3% against 6.0% after refused; 4B grand50: 12.3% against 6.9%, 5.0% against 1.5%). The ratio is
+  larger after a refusal, the difference is not. A gate that moves the thinking there gains nothing on average and
+  then loses the quiet turns.
+- *lgfail:* for the 1.7B and the 4B it loops even more (42/50 and 36/50 games stopped), now on refused commands
+  with a reasoning on every turn: with the previous reasoning in view the model writes a shorter one (4B: 390
+  tokens against 680) and repeats the command (same command within 6 turns after a refusal: 80% and 73%, gfail 54%
+  and 59%, grand25 30% and 37%). Example: 4B level 5 seed 10, "fry the diced yellow onion on the stove" refused
+  turn after turn with the same reasoning. For the 8B it goes the other way: lgfail − gfail = +0.088 (p=0.08),
+  16 games won against 9, and it is the cheapest thinking mode of the 8B: 0.493 with 3.3k thinking tokens, against
+  grand25 0.485 with 11.7k (difference in score +0.008, p=0.83) and e1 0.545 with 43.5k (−0.052, p=0.53).
+  One model, 50 games: to be repeated before it is claimed.
+- *Two results on the amount of thinking, outside the gate.* grand50 − e1 = −0.008, +0.017, −0.043 (together −0.011,
+  p=0.44) with half of e1's thinking tokens: thinking on a random half of the turns scores as thinking on all of
+  them, in three models. grand25 − er4 = +0.019 together (p=0.43): at the same rate, random turns or every fourth
+  turn make no difference. grand50 − grand25 = +0.159 for the 4B (p=0.001), +0.02 for the other two.
+
+### What the two grids say together
+
+- The need for reasoning is uneven at the level of the turn (a threat: blocked 1% without thinking, 36% with), and a
+  few lines of code find those turns. This part of the hypothesis holds.
+- Giving the thinking to those turns does not win more games than giving the same amount at random: equal in
+  Connect Four, worse in cooking. Thinking also does a second job on the turns where nothing is visibly wrong
+  (making the first threat, choosing the next step of the recipe, leaving a loop), and an event gate gives that up.
+  With the earlier gates (random, the model itself, the solver) the ladder now has its cheap-rule step, and the
+  step is not above the random one.
+- Keeping the previous reasoning under an event gate makes the next reasoning shorter and more repetitive in both
+  games (lgtactic, lgfail of the two small models); the 8B in cooking is the exception.
+- Not tried: a gate with both triggers (the event, and a turn with no progress or N turns without thinking).
+
+Analysis scripts were scratch files, not in the repo. Numbers come from the records and logs in `results/`,
+`gate_analysis.tactics_summary` for the tactics and `memory_analysis.iter_cooking` for the turns.
+
+## 2026-11-15 — A second trigger for the event gates: gfailidle<N>, gfailstuck<W> (grid cooking_fail2.yaml, to run)
+
+**Why.** The 2026-11-13 results: gfail does its job after a refused command and is still below the random gates,
+because it never thinks after an accepted command and the agent then loops on accepted commands (25 / 14 / 4 of 50
+games stopped by the loop detector). The question left open: is that the whole reason? A gate that keeps the event
+and also covers the quiet turns answers it.
+
+**What was added** (gate.py: `SecondTrigger`, `IdleTrigger`, `StuckTrigger`; `parse_second`):
+- `g<gate>idle<N>` (gfailidle4, gtacticidle3): the event gate, and it also thinks when its last N decisions were
+  all without thinking. A floor: a run of turns without thinking is at most N turns long.
+- `gfailstuck<W>` (textual games only): the event gate, and it also thinks when the last W commands are at most two
+  different ones ("go east", "go west", "go east", "go west"). It goes on thinking on every turn until the last W
+  commands are three different ones again. Two is `STUCK_MAX_DISTINCT`, the same number as the loop detector.
+- The second trigger is only for `fail` and `tactic` (the other names are refused). The decision records `event`
+  and `second`; the model is not told which one fired. `lg…` keeps the last reasoning as before.
+- The name stays inside the mode pattern (letters, then a number), so the record paths are `…/gfailidle4/…`.
+
+**The numbers 4 and 4**, chosen on the games of cooking_fail.yaml before building:
+- A turn that is stuck (last 4 commands at most 2 different) and not after a refusal is 16% / 6% / 18% of gfail's
+  turns (1.7B / 4B / 8B), and it scored 1 time in 1,233. With a window of 6 or 8 the trigger fires later and covers
+  fewer of these turns (13% / 5% / 16% and 12% / 4% / 14%). In the random gates' games, where the model is not
+  left alone, the same turns scored 20 times in 700 (grand25) and 11 in 617 (grand50): a few are not real loops.
+- Expected thinking rate, counted on the gfail games (the new games will differ): gfailidle4 54% / 58% / 31% of the
+  turns, gfailstuck4 63% / 58% / 37%; gfail was 46% / 52% / 18%. Both are around grand50's cost for the small
+  models and between grand25 and grand50 for the 8B.
+
+**The grid.** `grids/cooking_fail2.yaml`: gfailidle4 and gfailstuck4, the three models, CoT+nonempty, levels 1-9,
+seeds 1-10, same settings as cooking_fail.yaml: 300 games. Notebook `colab_cooking_fail2.ipynb` (a copy of
+colab_cooking_fail.ipynb with the grid changed). To read: score against thinking tokens with the modes already
+played. On the random gates' line: gfail was below only because of the quiet turns. Still below: thinking right
+after a refusal is itself a poor use of tokens. Above: the event is worth more than a random turn.
+
+**Not in the grid.** lgfailidle4 / lgfailstuck4 (lgfail was the best cheap mode of the 8B and the worst of the
+other two) and gtacticidle<N> for Connect Four (gtactic was not below the random gate there). The modes exist.
+
+**Checked.** tests/test_gate.py::test_second_trigger (the floor, the stuck check, which trigger fired, reset per
+game, the Connect Four floor, the refused names); test_gate, test_duel, test_profiles, test_legacy_equivalence and
+test_memory_analysis pass. tests/test_pipeline.py::test_run_grid fails (6 games in its table instead of 24), with
+and without this change: not from here, not looked into. As for gfail, the new gates were not played in a real
+TextWorld game here (textworld is not installed locally): the first games on the GPU are the real test.
+
+## 2026-11-15 — Grid to repeat the 8B lgfail result (cooking_lgfail_8b.yaml, to run)
+
+**Why.** The only result of the event gates that points up: the 8B with lgfail has grand25's score (0.493 against
+0.485) with 3.3k thinking tokens against 11.7k. It is one model on 50 games, so it is not claimed yet.
+**What.** `grids/cooking_lgfail_8b.yaml`: Qwen3-8B, lgfail / grand25 / lr4, CoT+nonempty, levels 1-9, seeds 11-30
+(new seeds: nothing is played twice): 300 games. With seeds 1-10, lgfail and grand25 will have 150 games each.
+lr4 is there as the best cheap mode of the 8B (0.579 with 9.2k tokens on seeds 1-10, played with the prompt CoT).
+e1 is left out for its cost (43.5k tokens per game). No code change.

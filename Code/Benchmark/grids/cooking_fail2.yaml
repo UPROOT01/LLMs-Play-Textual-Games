@@ -1,0 +1,34 @@
+# Cooking: the refusal gate (gfail) with a second trigger for the turns where nothing was refused.
+# Result of cooking_fail.yaml (THESIS_LOG.md 2026-11-13): gfail is below the random gates (-0.063 against grand25,
+# p=0.007). After a refused command its thinking turns score as often as those of the random gates; but it never
+# thinks after an accepted command, and there the agent walks in circles: 25 / 14 / 4 of 50 games (1.7B / 4B / 8B)
+# stopped by the loop detector, all on accepted commands ("go east" / "go west") for the 1.7B.
+#   gfailidle4    gfail, and it also thinks when it has not thought in its last 4 turns (a floor under the event)
+#   gfailstuck4   gfail, and it also thinks when its last 4 commands are at most 2 different ones (it is stuck)
+# Both drop the reasoning (as gfail). The model is not told which trigger fired.
+# Expected thinking rate, counted on the gfail games (an estimate: the games will be different):
+#   gfailidle4 54% / 58% / 31% of the turns (1.7B / 4B / 8B), gfailstuck4 63% / 58% / 37%; gfail was 46% / 52% / 18%.
+# On the gfail games a turn that is stuck and not after a refusal scored 1 time in 1,233: these turns are lost now.
+# What to read: score against thinking tokens per game, with the modes already played on the same levels and seeds
+# (0, grand25, grand50, gfail, e1, er4, lr4).
+#   - on the line of the random gates: gfail was below only because it gave up the quiet turns;
+#   - still below: thinking right after a refusal is itself a poor use of the tokens;
+#   - above: the event is worth more than a random turn once the quiet turns are covered.
+# Also: the games stopped by the loop detector (loop_stopped), which should fall to the level of grand25 / grand50.
+# Which trigger fired on a thinking turn is read from the log: after a refused command it is the event, otherwise
+# the second trigger.
+# 300 games: 3 models x 2 modes x 5 levels x 10 seeds. A textual-game grid: run.py / colab.ipynb / run_remote.py.
+# lgfailidle4 / lgfailstuck4 (keeping the last reasoning) exist too and are not here: lgfail was the best cheap mode
+# of the 8B and the worst of the other two.
+models:
+  - Qwen/Qwen3-1.7B
+  - Qwen/Qwen3-4B
+  - Qwen/Qwen3-8B-FP8
+modes: [gfailidle4, gfailstuck4]
+prompts: [CoT+nonempty]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
