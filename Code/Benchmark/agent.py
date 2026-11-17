@@ -30,7 +30,6 @@ SUMMARY_MAX_TOKENS = 160 # the summary of a reasoning (the "s" modes): a few sen
 SUMMARY_QUESTION = ("Above is what you thought before your last move. Summarize it in at most three sentences, in "
                     "the first person, as a note to yourself for the next moves: your plan, the dangers you saw, and "
                     "what you expect to happen next. Write only the note.")
-SUMMARY_WRAP = "<think>\n{}\n</think>\n\n" # how a summary stands in the context: in the place of the reasoning
 SUBSTITUTE_COMMANDS = ["help", "look"] # played when an answer reaches the token limit
 LOG_GAME = "GAME ++++++++++++++++++++++++++++++++++++++++++++++++++\n"
 LOG_AGENT = "AGENT -------------------------------------------------\n"
@@ -132,7 +131,7 @@ class SelfEvalAgent:
         self.sampling = SAMPLING[prompt]
         self.rng = rng if rng is not None else random.Random()
         self.log = log
-        self.close_think_id = tokenizer.convert_tokens_to_ids("</think>")
+        self.profile.bind(tokenizer) # the profile finds the reasoning and the answer in the model's tokens
         if log:
             open(log, "w").close()
         self.turns = [] # statistics of every answer of the model: see _generate()
@@ -232,7 +231,7 @@ class SelfEvalAgent:
             command = fast["command"]
         else:
             command = self._normal_answer()
-        self.pieces.append(command + self.profile.end_of_turn)
+        self.pieces.append(self.profile.answer(command))
         self._write_log(LOG_GAME + obs + "\n" + LOG_AGENT + command)
         self.counter += 1
         return command
@@ -268,18 +267,22 @@ class SelfEvalAgent:
             reasoning, command = "", self.rng.choice(SUBSTITUTE_COMMANDS)
         else:
             start = self._answer_start(output_ids)
-            reasoning = self._decode(output_ids[:start]).replace("/no_think", "").strip("\n")
+            reasoning = self._decode(output_ids[:self.profile.reasoning_end(output_ids)])
+            reasoning = reasoning.replace("/no_think", "").strip("\n")
             command = self._clean(self._decode(output_ids[start:]))
             if nudge or self.profile.think_prefill: # the start of the reasoning was in the prompt
                 reasoning = (nudge or self.profile.think_prefill) + reasoning
+        # kept: the reasoning as it stands in the context; reasoning: as it is logged and saved (between <think>
+        # and </think> for every profile, so that the logs of all the models are read in the same way)
+        kept, reasoning = self.profile.kept(reasoning), self.profile.readable(reasoning)
         self._write_log(LOG_GAME + obs + self.selfeval_prompt + "\n" + LOG_SELFEVAL + reasoning + command)
         self.last_thought = reasoning
 
         if self.keep != "none":
-            self.pieces.append(self._summarize(reasoning) if self.summarize else reasoning)
+            self.pieces.append(self._summarize(reasoning) if self.summarize else kept)
             if self.keep in ("last", "previous"):
                 self.last_reasoning = len(self.pieces) - 1
-        self.pieces.append(command + self.profile.end_of_turn)
+        self.pieces.append(self.profile.answer(command))
 
         if self.random_turns:
             self._draw_selfeval_turns()
@@ -297,7 +300,7 @@ class SelfEvalAgent:
         summary = self._clean(self._decode(output_ids[self._answer_start(output_ids):])).strip()
         self.last_summary = summary
         self._write_log(LOG_SUMMARY + summary)
-        return SUMMARY_WRAP.format(summary) if summary else ""
+        return self.profile.wrap_summary(summary) if summary else ""
 
     # ---------------------------------------------------------------- generation
 
@@ -312,28 +315,37 @@ class SelfEvalAgent:
         prompt_ids = self.tokenizer.encode(prompt, add_special_tokens=False)
         output_ids, hit_limit = self.generate(prompt_ids, max_tokens, self.sampling["think" if think else "normal"])
         capped = len(output_ids) >= 0.95 * max_tokens or hit_limit
+        generated = len(output_ids)
+        if think and self.profile.think_bridge and not capped:
+            # the profile's reasoning and answer are two messages (gpt-oss): the generation stopped at the end of
+            # the reasoning, and the answer is generated now, after the opening of its message. One turn in the
+            # statistics: its tokens are those of the two generations (the bridge is written, not generated).
+            output_ids = self.profile.without_stop(output_ids)
+            bridge = self.tokenizer.encode(self.profile.think_bridge, add_special_tokens=False)
+            answer, hit_limit = self.generate(prompt_ids + output_ids + bridge, NORMAL_MAX_TOKENS,
+                                              self.sampling["normal"])
+            capped = len(answer) >= 0.95 * NORMAL_MAX_TOKENS or hit_limit
+            generated += len(answer)
+            output_ids = output_ids + bridge + answer
         self.turns.append(dict(think=think, kind=kind or ("think" if think else "normal"),
-                               generated=len(output_ids), prompt=len(prompt_ids), capped=capped))
+                               generated=generated, prompt=len(prompt_ids), capped=capped))
         return output_ids, capped
 
     def _empty(self, output_ids):
-        """Whether the model closed its thinking at once: a </think> within the first NONEMPTY_MIN_TOKENS tokens."""
-        return self.close_think_id in output_ids[:NONEMPTY_MIN_TOKENS]
+        """Whether the model closed its thinking at once: within the first NONEMPTY_MIN_TOKENS tokens."""
+        return self.profile.closed_within(output_ids, NONEMPTY_MIN_TOKENS)
 
     def _answer_start(self, output_ids):
-        """Index of the first token after the last </think> (0 if there is none)."""
-        try:
-            return len(output_ids) - output_ids[::-1].index(self.close_think_id)
-        except ValueError:
-            return 0
+        """Index of the first token of the answer (for the profiles with <think>: after the last </think>, 0 if
+        there is none)."""
+        return self.profile.answer_start(output_ids)
 
     def _decode(self, ids):
         return self.tokenizer.decode(ids, skip_special_tokens=True)
 
-    @staticmethod
-    def _clean(text):
-        return text.replace("<think>", "").replace("</think>", "").replace("/think", "") \
-                   .replace("/no_think", "").strip("\n")
+    def _clean(self, text):
+        return self.profile.tidy(text.replace("<think>", "").replace("</think>", "").replace("/think", "")
+                                     .replace("/no_think", "").strip("\n"))
 
     # ---------------------------------------------------------------- statistics
 

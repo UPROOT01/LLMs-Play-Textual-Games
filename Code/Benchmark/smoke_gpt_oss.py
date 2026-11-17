@@ -15,7 +15,10 @@ What to read in the output: 1 and 3 must contain a reasoning, then "<|end|><|sta
 <|message|>" and a command; 2 must be a command alone. Generation stops at <|return|> or <|call|>, never at <|end|>,
 which only closes the reasoning.
 """
+import os
 import sys
+
+os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0") # as run_remote.py: FlashInfer's sampler needs nvcc to build
 
 MODEL = "openai/gpt-oss-20b"
 RETURN, CALL = 200002, 200012 # <|return|>, <|call|>: the two ends of an answer

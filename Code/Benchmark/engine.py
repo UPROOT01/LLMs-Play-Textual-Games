@@ -78,8 +78,10 @@ def play_game(agent, path, max_steps=100, loop_window=None, loop_max_distinct=2)
 class Engine:
     """A model loaded in vLLM, that plays games with play()."""
 
-    def __init__(self, model, gpu_memory_utilization=0.9, seed=46, **llm_settings):
-        """llm_settings: other arguments of vllm.LLM (e.g. max_model_len, kv_cache_dtype, quantization)."""
+    def __init__(self, model, gpu_memory_utilization=0.9, seed=46, stop_tokens=None, **llm_settings):
+        """llm_settings: other arguments of vllm.LLM (e.g. max_model_len, kv_cache_dtype, quantization).
+        stop_tokens: the tokens that end a generation, for the models whose format has more than one end
+        (profiles.GptOss); None: the tokenizer's end-of-sequence token."""
         os.environ.setdefault("VLLM_ENABLE_V1_MULTIPROCESSING", "0") # engine in this process: no subprocess to spawn from a notebook
         os.environ.setdefault("VLLM_LOGGING_LEVEL", "WARNING")
         from transformers import AutoTokenizer, GenerationConfig
@@ -95,6 +97,8 @@ class Engine:
         self.default_sampling = {name: getattr(config, name, None) for name in ("temperature", "top_p", "top_k", "min_p")}
         self.default_sampling = {name: value for name, value in self.default_sampling.items() if value is not None}
         self.stop_token_ids = [self.tokenizer.eos_token_id]
+        if stop_tokens:
+            self.stop_token_ids = self.tokenizer.convert_tokens_to_ids(list(stop_tokens))
         # vLLM silences some messages by redirecting the file descriptor of sys.stdout, which a notebook's output
         # does not have: during the start-up, use the real standard output of the process
         notebook_stdout = sys.stdout

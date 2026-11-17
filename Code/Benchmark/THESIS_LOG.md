@@ -1556,3 +1556,47 @@ cards and one says "any 16GB+ card"; neither card is named. `smoke_gpt_oss.py` a
 model and generates the three cases (thinking forced, thinking forbidden, an earlier reasoning in the history).
 Its prompts were checked here against the model's tokenizer and template (same text as the official template,
 every special token one id); the generation itself was not run (no GPU for it on this machine).
+
+**Run on the remote 4090 by the user (2026-11-17).** First run crashed at start-up: FlashInfer's sampler needs nvcc
+to build, as on this machine before; `smoke_gpt_oss.py` now sets `VLLM_USE_FLASHINFER_SAMPLER=0` like
+`run_remote.py`. Second run: vLLM 0.31.0 loads gpt-oss-20b, KV cache of 160,320 tokens (about four games of 40k
+tokens at a time). The three cases behave as the prefill intends: thinking forced gives a reasoning (157 tokens),
+then `<|end|><|start|>assistant<|channel|>final<|message|>` and one command; thinking forbidden gives the command
+alone (5 tokens, no reasoning); with an earlier reasoning in the history the model reasons and answers normally
+(197 tokens). All three stop at `<|return|>`. So a profile is feasible. Not built: in the turn-by-turn format
+gpt-oss drops its reasonings like Qwen3, so it serves the question only with the game written as tool calls.
+
+## 2026-11-18 — A profile for gpt-oss-20b (profiles.GptOss) and a first grid (cooking_gptoss.yaml, to run)
+
+**Why.** The user's judgement of the results: er4 is the previous thesis's result, lr4 is one model, Connect Four
+gave nothing. A second model family tells which Qwen3 results are Qwen3's own. Decided with the user: the profile
+first (the same turn-by-turn design), the game as tool calls later (the only format where gpt-oss was trained with
+its reasonings in view).
+
+**What changed.**
+- `profiles.py`: the class `GptOss` (harmony format: the reasoning is a message in the channel `analysis`, the
+  answer a message in the channel `final`; the system prompt is the `developer` message; fixed date; thinking
+  forced and forbidden by a prefill, "Reasoning: medium" left as the template's default). `Profile` got the methods
+  that read an answer and write it back in the context (`answer_start`, `reasoning_end`, `closed_within`, `kept`,
+  `readable`, `wrap_summary`, `answer`, `tidy`): their defaults are what `agent.py` did itself for the models with
+  `<think>`, so the Qwen3, SmolLM3 and DeepSeek contexts are unchanged (tests/test_legacy_equivalence.py passes).
+- `agent.py`: uses those methods instead of looking for `</think>` itself.
+- **A self-evaluation of gpt-oss is two generations**: the reasoning, stopped at its `<|end|>`, then the answer
+  after the opening of the final message, written by the agent. *Why:* in one generation the only possible stop is
+  `<|return|>`; the answers in the history end with `<|end|>`, and a model that closes its answer the same way
+  would go on writing the game's turn up to the 10,000-token limit. The two generations are one thinking turn in
+  the statistics (tokens of both; the bridge between them is written, not generated). The answer of a thinking turn
+  has the sampling of a normal turn and its limit of 100 tokens.
+- `engine.py`: `stop_tokens` (for gpt-oss: `<|end|>`, `<|return|>`, `<|call|>`), given by `profiles.model_settings`.
+- The reasonings of gpt-oss are logged and saved between `<think>` and `</think>` like the others, so
+  `memory_analysis.py` and the analysis notebooks read them unchanged. Commands are stripped of spaces (the smoke
+  test answered "look at cookbook  ").
+- `grids/cooking_gptoss.yaml`: 0, grand25, grand50, e1, er4, lr4, r4, CoT+nonempty, levels 1-9, seeds 1-10: 350
+  games. Sampling: the CoT prompt's own (temperature 0.65 / 0.7), as for every model.
+
+**Limits.** In this turn-by-turn format gpt-oss, like Qwen3, never saw its earlier reasonings in training. The
+profile is tested with a scripted model and the real tokenizer (tests/test_profiles.py::test_gpt_oss: same text of
+the official template, a kept reasoning written as the template writes the one it keeps before a tool call, which
+reasonings stay per mode, the two generations, the empty reasoning and its retry); no game was played with the
+real model here. The two-player games use the same agent but were not tested with this profile.
+`tests/test_pipeline.py::test_run_grid` still fails as before this change (6 games instead of 24).

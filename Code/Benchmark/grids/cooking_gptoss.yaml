@@ -1,0 +1,25 @@
+# Cooking with a second model family: gpt-oss-20b (OpenAI), profile gpt_oss (profiles.GptOss).
+# Why: every result so far is Qwen3's. The same modes on another family say which ones are Qwen3's own and which hold.
+#   0, grand25, grand50, e1   how much thinking: no thinking, a random 25% and 50% of the turns, every turn
+#   er4, lr4, r4              what is kept, thinking about every 4 turns: nothing, the last reasoning, all of them
+# What to read, against the Qwen3 results (THESIS_LOG.md 2026-11-13 and 2026-11-17):
+#   - does the score stop rising with the tokens (Qwen3: grand50 = e1)?
+#   - does keeping the last reasoning help (lr4 - er4; Qwen3: only the 8B, +0.17)?
+#   - does keeping all of them hurt (r4 - lr4; Qwen3-4B: -0.17)?
+# Like Qwen3, gpt-oss was trained without the reasonings of its earlier turns in view (its template drops them
+# after a final answer), so lr4 and r4 are an untrained context for it too. The format it was trained on with the
+# reasonings in view (the game as tool calls) is not built yet.
+# Prompt CoT+nonempty, same levels and seeds of the Qwen3 games. 350 games: 7 modes x 5 levels x 10 seeds.
+# The KV cache holds about four 40k-token games at a time on a 24 GB card: slower than Qwen3. For a first look,
+# run.run_grid(..., limit=35) plays the first 35 games (mode 0 and part of e1).
+# A textual-game grid: run.py / run_remote.py.
+models:
+  - openai/gpt-oss-20b
+modes: ["0", grand25, grand50, e1, er4, lr4, r4]
+prompts: [CoT+nonempty]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
