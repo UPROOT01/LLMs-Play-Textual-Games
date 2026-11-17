@@ -1,0 +1,156 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You arrive in a kitchen. A typical kind of place.
+
+You smell an interesting smell, and follow it to a fridge. The fridge contains a raw pork chop, a red onion and a lettuce. A closed oven is in the room. You smell a sickening smell, and follow it to a table. On the table you make out a knife. You see a counter. The counter is vast. On the counter you can see a raw red potato, a yellow apple and a cookbook. You rest your hand against a wall, but you miss the wall and fall onto a stove. However, the stove, like an empty stove, has nothing on it.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+pork chop
+
+Directions:
+dice the pork chop
+  roast the pork chop
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+dice pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the pork chop)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-0/6
+AGENT -------------------------------------------------
+dice pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the pork chop)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/7
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a text-based game where they need to cook a meal using the ingredients and the cookbook. The goal is to prepare the meal as per the recipe.
+
+First, the game's objective is to cook a meal using the ingredients from the fridge and counter. The recipe in the cookbook requires a pork chop, but the user hasn't been able to dice it yet because they needed a knife. They took the knife from the table, but when trying to dice the pork chop again, it's still prompting for a knife. Wait, maybe the knife is already in hand? Or perhaps the action isn't recognized. 
+
+Looking at the previous steps: the user took the cookbook, tried to open it (but couldn't), then read it. The recipe says to dice the pork chop, roast it, and prepare the meal. The user tried to dice the pork chop but was told they need a knife. They took the knife from the table and tried again, but the same message appeared. That suggests that either the knife isn't being recognized as being in hand, or the action syntax is incorrect. Maybe "dice pork chop" isn't the right command. Alternatively, maybe they need to use the knife first before dicing. 
+
+Wait, the user has the knife now. So the next step should be to use the knife on the pork chop. But the command "dice pork chop" requires the knife. Since they have the knife, maybe the correct action is to "cut pork chop" instead of "dice". Or maybe "chop pork chop" with the knife. The game might be expecting a different verb. Alternatively, maybe they need to "use knife on pork chop" or "cut pork chop with knife". 
+
+The user is stuck in a loop where they take the knife and try to dice, but the game doesn't recognize it. So the next action should be to try a different verb, like "cut" instead of "dice", or use the knife explicitly. The key is to break the loop by changing the action command.
+</think>cut pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to specify how you want to cut the pork chop. Either slice, dice, or chop it.
+
+
+>                                                                                                                                -= Kitchen =-0/8
+AGENT -------------------------------------------------
+chop pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the pork chop)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/9
+AGENT -------------------------------------------------
+chop pork chop with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the pork chop first.
+
+
+>                                                                                                                                -= Kitchen =-0/10
+AGENT -------------------------------------------------
+take pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the pork chop from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/11
+AGENT -------------------------------------------------
+chop pork chop with knife
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

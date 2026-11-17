@@ -1,0 +1,1541 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Bathroom =-
+You are in a bathroom. You can barely contain your excitement.
+
+If you haven't noticed it already, there seems to be something there by the wall, it's a toilet. I guess it's true what they say, if you're looking for a toilet, go to TextWorld. But the thing hasn't got anything on it.
+
+You need an exit without a door? You should try going east.
+
+>                                                                                                                                -= Bathroom =-0/1
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/2
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/3
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/4
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/5
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let me try to figure out how to win this game. The user's goal is to cook a delicious meal by checking the cookbook in the kitchen. So first, I need to get to the kitchen.
+
+Looking at the environment, the player has been moving between the bathroom, corridor, and bedroom. The current location is the corridor again. The previous actions were going east, north, south, and north again, which seems like a loop. The corridor has exits to east, north, and west, but no door. The bedroom has a bed but nothing else. The bathroom had a toilet but no useful items.
+
+The user needs to find the kitchen. Since the bathroom is connected to the corridor, maybe the kitchen is in the corridor or another room. But the corridor's description doesn't mention a kitchen. The bedroom doesn't have a kitchen either. Wait, maybe the exit to the east from the corridor leads to the kitchen? The user has been going back and forth between corridor and bedroom, so maybe they need to find another way.
+
+Alternatively, maybe the kitchen is in a different direction. The user has been going north and south, which might not be the right path. Since the corridor has an exit to the east, maybe that's the way to go. But the user tried going east before and ended up in the corridor again. Wait, the first move was go east from the bathroom, then north from the corridor, then south to the bedroom, then back to corridor. So maybe the kitchen is not in the corridor but another room. But the user hasn't found it yet.
+
+Alternatively, maybe the user needs to find the kitchen through a different path. Since the bedroom has a bed, maybe there's something there, but the description says the bed is large but has nothing. The bathroom has a toilet but no cookbook. So the cookbook must be in the kitchen, which is connected to the corridor. But how to get there?
+
+The user is stuck in a loop between corridor and bedroom. The next step should be to try going east from the corridor to see if that leads to the kitchen. Maybe the east exit is the correct path. The user has tried going north and south, which just brings them back. So the next action should be to go east from the corridor.
+</think>go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/7
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/8
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/9
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/10
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/11
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/12
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/13
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/14
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/15
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/16
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/17
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/18
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/19
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/20
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/21
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/22
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/23
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/24
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/25
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/26
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/27
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/28
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/29
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/30
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/31
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/32
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/33
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/34
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/35
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/36
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/37
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/38
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/39
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/40
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/41
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/42
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/43
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/44
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/45
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/46
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/47
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/48
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/49
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/50
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/51
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/52
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/53
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/54
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/55
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/56
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/57
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/58
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/59
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/60
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/61
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/62
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/63
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/64
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/65
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/66
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/67
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/68
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/69
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/70
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/71
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/72
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/73
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/74
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/75
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/76
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/77
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/78
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/79
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/80
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/81
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/82
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/83
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/84
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/85
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/86
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/87
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/88
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/89
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/90
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/91
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/92
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/93
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/94
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/95
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/96
+AGENT -------------------------------------------------
+go north
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bedroom =-
+You've just shown up in a bedroom. You can barely contain your excitement.
+
+You rest your hand against a wall, but you miss the wall and fall onto a bed. The bed is large. But the thing hasn't got anything on it. Oh! Why couldn't there just be stuff on it?
+
+You don't like doors? Why not try going south, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bedroom =-0/97
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/98
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Livingroom =-
+You arrive in a livingroom. A typical one. The room is well lit.
+
+You can make out a sofa. The sofa appears to be empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one. There is an exit to the west.
+
+
+
+>                                                                                                                                -= Livingroom =-0/99
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You find yourself in a corridor. A standard kind of place.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going north. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Corridor =-0/100
+AGENT -------------------------------------------------
+go north
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

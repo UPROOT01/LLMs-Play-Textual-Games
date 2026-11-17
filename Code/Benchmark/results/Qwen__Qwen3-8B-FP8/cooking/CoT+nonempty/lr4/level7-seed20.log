@@ -1,0 +1,103 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You arrive in a kitchen. A normal one. You start to take note of what's in the room.
+
+You see a closed fridge. You can see a closed oven, which looks conventional, right there by you. You smell an interesting smell, and follow it to a table. The table is massive. On the table you see a knife. Hey, want to see a counter? Look over there, a counter. You see a banana and a cookbook on the counter. You can see a stove. But the thing is empty, unfortunately. Oh! Why couldn't there just be stuff on it?
+
+There is a closed frosted-glass door leading west. You don't like doors? Why not try going east, that entranceway is not blocked by one.
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+open oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the oven.
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is playing a text-based game where the goal is to cook a meal. The initial prompt mentions checking the cookbook in the kitchen for a recipe. So the main objective is to prepare a meal using the cookbook.
+
+Looking at the previous actions: the user took the cookbook from the counter and opened the oven. Now, the next logical step would be to find ingredients. The fridge is closed, so maybe they need to open it to get ingredients like the banana mentioned earlier. Wait, the banana is already on the counter. But the oven is open now. Maybe the recipe requires using the oven, so they need to check the cookbook's recipe. But the user hasn't opened the fridge yet. The fridge might have other ingredients needed. So the next step should be to open the fridge to gather more ingredients. Alternatively, if the recipe requires using the oven, maybe they need to put something in there. But since the user hasn't started cooking yet, opening the fridge to get ingredients makes sense. Wait, the banana is on the counter, but maybe other ingredients are in the fridge. So opening the fridge would be the next step to get necessary items for cooking. The user might be in a loop if they keep checking the same places without gathering all ingredients. So the next action should be to open the fridge.
+</think>open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the fridge, revealing a raw pork chop, a raw white tuna, a white onion and a raw red tuna.
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+cook pork chop with oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the pork chop first.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+take pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the pork chop from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+cook pork chop with oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You roasted the pork chop.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/7
+AGENT -------------------------------------------------
+eat pork chop
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

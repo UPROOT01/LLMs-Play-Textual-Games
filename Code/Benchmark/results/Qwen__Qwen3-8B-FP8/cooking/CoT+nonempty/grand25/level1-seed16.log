@@ -1,0 +1,126 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You have walked into a kitchen. Not the kitchen you'd expect. No, this is a kitchen.
+
+As if things weren't amazing enough already, you can even see a fridge. The fridge contains a raw red tuna, a red onion and a raw white tuna. You can see a closed oven in the room. You can make out a table. The table is massive. On the table you can see a cookbook and a knife. You see a counter. You see a raw purple potato on the counter. You shudder, but continue examining the room. You see a stove. But the thing is empty.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen and needs to cook a meal. The goal is to use the cookbook recipe. The fridge has raw tuna, onion, and another tuna. The table has a cookbook and a knife. The counter has a purple potato. The stove is empty, and there's an oven.
+
+First, I need to figure out what ingredients are needed for a recipe. Since the cookbook is on the table, I should check it. But to use the cookbook, maybe I need to open it. Wait, the user hasn't interacted with the cookbook yet. So the first step is to take the cookbook. Then, maybe read it to find a recipe. But the user mentioned making a meal, so perhaps they need to prepare ingredients. The fridge has tuna and onion, the counter has a potato. Maybe the recipe requires those. But without knowing the recipe, it's hard to say. The next logical step is to take the cookbook from the table. Once you have it, you can check the recipes inside. Then, gather the necessary ingredients from the fridge and counter. But the user hasn't taken the cookbook yet. So the immediate action should be to take the cookbook. That's the first step. The previous actions were entering the kitchen, observing the items. So the next action is to take the cookbook.
+</think>take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+red tuna
+
+Directions:
+slice the red tuna
+  roast the red tuna
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The user is in a kitchen text adventure game. The goal is to cook a meal. They found a cookbook with a recipe that requires red tuna. The fridge has red tuna, so they need to get it.
+
+First, the user took the cookbook and read it. The recipe needs red tuna. The next step is to obtain the red tuna from the fridge. The user hasn't done that yet. They might need to open the fridge and take the tuna. But in the previous steps, they didn't interact with the fridge. So the next action should be to open the fridge to retrieve the red tuna. Then, they can proceed to slice and roast it as per the recipe. If they just keep reading or checking the cookbook again, they'll be stuck. So the key is to get the ingredient first.
+</think>open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's already open.
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+take red tuna
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red tuna from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+cook red tuna
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to cook the red tuna with?
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+cook red tuna with oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You roasted the red tuna.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/6
+AGENT -------------------------------------------------
+eat red tuna
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

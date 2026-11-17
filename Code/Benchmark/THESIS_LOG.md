@@ -1443,3 +1443,116 @@ TextWorld game here (textworld is not installed locally): the first games on the
 (new seeds: nothing is played twice): 300 games. With seeds 1-10, lgfail and grand25 will have 150 games each.
 lr4 is there as the best cheap mode of the 8B (0.579 with 9.2k tokens on seeds 1-10, played with the prompt CoT).
 e1 is left out for its cost (43.5k tokens per game). No code change.
+- 2026-11-17: Merged a third Colab folder: 600 new finished cooking games (CoT+nonempty). These are gfailidle4 and gfailstuck4 for the three models (50 each), plus 100 more 8B games each of grand25, lgfail and lr4. There were no conflicts and no unfinished games.
+
+## 2026-11-17 — Results of the second-trigger gates (cooking_fail2.yaml) and of the 8B lgfail repeat (cooking_lgfail_8b.yaml)
+
+All 600 games are played (300 + 300). Score is the mean normalised score; tokens are thinking tokens per game;
+tests are Wilcoxon, paired by level and seed.
+
+**1. The 8B lgfail result did not hold.** Seeds 11-30, 100 games per mode:
+
+| 8B | seeds 1-10 | seeds 11-30 | all 150 | tokens (all) | loop-stopped (all) |
+|---|---|---|---|---|---|
+| lgfail | 0.493 | 0.409 | 0.437 | 6.3k | 26 |
+| grand25 | 0.485 | 0.509 | 0.501 | 11.7k | 0 |
+| lr4 | 0.579 (prompt CoT) | 0.561 | 0.567 | 11.2k | 3 |
+
+- New seeds: lgfail − grand25 = −0.100 (p=0.018); lgfail − lr4 = −0.152 (p=0.001); lr4 − grand25 = +0.052 (p=0.17).
+- All 150: lgfail − grand25 = −0.064 (p=0.056); lgfail − lr4 = −0.130 (p=0.001); lr4 − grand25 = +0.066 (p=0.041).
+- lgfail's tokens on the new seeds are 7.8k, not 3.3k, and 22 of 100 games are stopped by the loop detector (4 of 50
+  before). Same vLLM version and settings in both sets: the first ten seeds were a lucky draw, picked out because
+  it was the one result that pointed up. Not to be claimed.
+- The 26 loop-stopped games: 11 navigation loops with no thinking (go north / go south), 7 loops on a failed command
+  the detector does not know (point 3), 8 loops of refused commands with a reasoning on every turn.
+- What holds on new seeds: lr4 is the best cheap mode of the 8B (0.56-0.58 in both sets, e1's score of 0.545 at a
+  quarter of e1's tokens).
+
+**2. The second trigger removes gfail's loops and brings the score back to the random gates, not above.**
+Seeds 1-10, 50 games per cell; score / tokens / loop-stopped games:
+
+| | gfail | gfailidle4 | gfailstuck4 | grand25 | grand50 | e1 |
+|---|---|---|---|---|---|---|
+| 1.7B | 0.109 / 14.4k / 25 | 0.172 / 23.3k / 9 | 0.194 / 25.7k / 1 | 0.179 / 9.9k / 11 | 0.199 / 19.7k / 3 | 0.207 / 42.9k / 8 |
+| 4B | 0.289 / 28.1k / 14 | 0.442 / 31.5k / 2 | 0.345 / 37.8k / 3 | 0.328 / 12.5k / 10 | 0.487 / 29.3k / 3 | 0.469 / 61.6k / 0 |
+| 8B | 0.405 / 8.0k / 4 | 0.422 / 21.6k / 0 | 0.453 / 15.7k / 0 | 0.485 / 11.7k / 0 | 0.502 / 21.6k / 0 | 0.545 / 43.5k / 0 |
+
+- Pooled over the three models (n=150): gfailidle4 − gfail = +0.078 (p=0.005); gfailstuck4 − gfail = +0.063
+  (p=0.015). Against grand50, the random gate of the nearest cost: −0.050 (p=0.074) and −0.065 (p=0.015). Against
+  grand25: +0.015 and 0.000 (n.s.), with about twice its tokens in the small models.
+- One cell above its neighbours: gfailidle4 of the 4B, +0.115 over grand25 (p=0.022) but −0.044 under grand50
+  (n.s.) at the same cost. gfailstuck4 of the 4B is below grand50 by 0.142 (p=0.005) with more tokens.
+- So the answer to the grid's question: gfail was below the random gates because of the turns it left uncovered;
+  once they are covered the gate is on the random line or slightly under it. The event is not worth more than a
+  random turn.
+- Cost. The second trigger fired on few turns (idle: 5% / 4% / 8% of the turns; stuck: 9% / 4% / 2%). The tokens
+  rise because of the event trigger: out of the loops the agent tries more commands and more are refused (refused
+  share of the turns, gfail → idle4 / stuck4: 46% → 60% / 56%, 52% → 57% / 53%, 18% → 34% / 32%), and each refusal
+  costs a reasoning. Turns with thinking: 64% / 61% / 42% (idle4) and 65% / 57% / 34% (stuck4); I had estimated
+  54 / 58 / 31 and 63 / 58 / 37 from the gfail games.
+- Thinking after a failed command does not stop the next one from failing. The command after a refusal fails again
+  in 90% / 87% / 60% of the cases under gfail (always thinks there) and 92% / 85% / 57% under grand25 (thinks there
+  one time in four). This comparison is across modes, not a controlled one.
+- A thinking turn fired by the second trigger scored less often than a thinking turn of a random gate that is not
+  after a refusal: 4.3 / 4.3 / 2.7 points per 100 such turns (idle4), 2.9 / 1.7 / 2.0 (stuck4), against
+  8.6 / 7.4 / 12.8 (grand25).
+- The gates behaved in TextWorld as in the scripted test: no run of more than 4 turns without thinking under
+  idle4; under stuck4 the log and the rule disagree on 14 turns in nine 1.7B games, where the 1.7B writes the
+  game's answer after its own command and the log reader takes only the first line.
+
+**3. An error of mine: the failure detector of gfail is incomplete.** `gate.REJECTED` does not know these replies
+of the game, all of them a command that did nothing: "Cutting something requires a knife." (2,357 turns in the gate
+and random-gate games), "You still miss something." (1,093), "Something still needs to be cooked." (862), "It
+isn't something you can open / switch." (816), "You need to specify how you want to cut…" (415), "Which do you
+mean, the … or the …?" (509), "You already have that." (239), "You have to open the … first." (230), "That's
+already open." (156), and a few rarer ones.
+- In the gfail games these are 18% / 13% / 9% of the turns, that is 28% / 19% / 33% of all the failed commands. The
+  gate did not think after them. The command after one of them fails again 92% / 84% / 69% of the time.
+- Correction to the entry of 2026-11-13: I wrote that gfail's loop-stopped games were loops on accepted commands
+  such as go east / go west. That is right for the 4B (9 of 14 are navigation) and the 8B (4 of 4). For the 1.7B,
+  15 of the 25 are loops on a failed command the detector does not know, and 6 are navigation.
+- `memory_analysis.py` reads the logs with the same pattern, so the "refused" shares of the earlier entries are too
+  low by about a fifth.
+- What it changes. gfail as played tested a detector that sees about three failures in four. The stuck check
+  catches a repeated command whatever the game answers, which is why gfailstuck4 has 1 loop-stopped game in the
+  1.7B where gfailidle4 has 9 (8 of them on such commands). With a complete detector the gate would think on about
+  65% / 66% / 27% of the turns (counted on the gfail games): for the two small models that is close to thinking
+  always, for the 8B it is grand25's cost. Not fixed here: changing the pattern changes what the mode gfail means,
+  and the games already played used the old one; a complete detector needs a new gate name.
+
+**Reading.** Five event gates in two games (gtactic, lgtactic, gfail, gfailidle4, gfailstuck4) and none is above a
+random gate of the same cost; the one exception (8B lgfail) did not survive new seeds. The claim that stands is the
+negative one, now with more behind it: when the model thinks matters little, how much matters up to a ceiling
+(grand50 = e1). The positive result that survived new seeds is about what is kept: lr4 for the 8B.
+
+Analysis scripts were scratch files, not in the repo; the numbers come from the records and logs in `results/`
+(`records.load_table`, `memory_analysis.parse_cooking_log`).
+
+## 2026-11-17 — Feasibility of a model trained with its reasoning in the context: gpt-oss-20b (smoke_gpt_oss.py)
+
+**Why.** Qwen3's template removes the reasoning of the earlier turns, so every mode that keeps a reasoning (lr4,
+l1, r4, lgfail) shows Qwen3 a context it was not trained on. The user asked for a model trained with the reasoning
+left in the context. Checked what fits this GPU class: gpt-oss-20b (13.8 GB of weights, about 16 GB loaded).
+
+**What its own template does** (chat_template.jinja of openai/gpt-oss-20b, read here):
+- An answer is two messages: the reasoning in the channel `analysis`, the answer in the channel `final`.
+- After a final answer the reasoning of that turn is dropped, as in Qwen3 ("CoT is dropped during all previous
+  turns"). It is kept only between the tool calls of one task that has no final answer yet.
+- So a game played as user turn / final answer is, for gpt-oss too, a context without earlier reasonings. The
+  format the model was trained on with reasonings in view is: the command as a tool call, the game's reply as the
+  tool result, the whole game as one task. That is a second way of writing the game, not only a new profile.
+- Thinking cannot be switched off by the template (Reasoning: low / medium / high). It can be forced on and off by
+  a prefill, as for the DeepSeek profile: the prompt ends with the opening of the analysis or of the final message.
+
+**What a profile needs in the benchmark.** The agent finds the end of a reasoning by the token `</think>` and
+stops at one end-of-turn token; gpt-oss closes its reasoning with `<|end|><|start|>assistant<|channel|>final
+<|message|>` and ends its answer with `<|return|>` (or `<|call|>`), and `<|end|>` must not stop the generation.
+So: the reasoning's opening and closing, and the stop tokens, have to come from the profile (agent.py, engine.py);
+the system message has a fixed header with the date (to freeze, as for SmolLM3); the instructions go in a
+`developer` message.
+
+**Not known yet.** Whether vLLM 0.31.0 runs the model on an L4 or a 4090: the vLLM pages name H100 and A100 class
+cards and one says "any 16GB+ card"; neither card is named. `smoke_gpt_oss.py` answers it on the GPU: it loads the
+model and generates the three cases (thinking forced, thinking forbidden, an earlier reasoning in the history).
+Its prompts were checked here against the model's tokenizer and template (same text as the official template,
+every special token one id); the generation itself was not run (no GPU for it on this machine).
