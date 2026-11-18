@@ -1,0 +1,411 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Bathroom =-
+You have fallen into the most ordinary of all possible bathrooms.
+
+You can make out a toilet. The toilet is white. But the thing is empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one.
+
+>                                                                                                                                -= Bathroom =-0/1
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You've just walked into a corridor.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going west.
+
+
+
+>                                                                                                                                -= Corridor =-0/2
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Bathroom =-
+You have fallen into the most ordinary of all possible bathrooms.
+
+You can make out a toilet. The toilet is white. But the thing is empty.
+
+You don't like doors? Why not try going east, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Bathroom =-0/3
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You've just walked into a corridor.
+
+
+
+There is an exit to the east. Don't worry, there is no door. You need an exit without a door? You should try going west.
+
+
+
+>                                                                                                                                -= Corridor =-0/4
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow the instruction: provide 3 steps then final command. But the instruction says "FINALLY, say your next action as a short command. Only output the command, nothing else." Wait: The instruction says: "FINALLY, say your next action as a short command. Only output the command, nothing else." But earlier it says "THINK about how to win the game, but be concise and brief in 3 steps." So we need to output the 3 steps and then the final command? The instruction says "Only output the command, nothing else." That seems contradictory. Let's parse: The instruction says:
+
+"THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: ...
+SECOND STEP: ...
+THIRD STEP: ...
+FINALLY, say your next action as a short command. Only output the command, nothing else."
+
+It seems the instruction wants us to output the 3 steps and then the final command, but the final command must be the only output? Wait: "Only output the command, nothing else." That might mean that the final output should be just the command, not the steps. But the earlier part says "be concise and brief in 3 steps." The instruction is ambiguous. However, the last line is "Only output the command, nothing else." So likely we should only output the command. But then why ask for 3 steps? Perhaps the steps are internal reasoning and not output. The user wants us to think about steps, but only output the command. So we should produce only the command. The steps are internal. So final output: a short command.
+
+We need to break the loop. We have been going east/west repeatedly. We need to find exit: the corridor has exit east. We are currently at corridor 0/4. We can go east to exit. But maybe we need to go to kitchen? The objective: cook a meal. We need to find cookbook in kitchen. So we need to go to kitchen. But we have not found kitchen. The loop is between bathroom and corridor. We need to find a different action: maybe "go north" or "go south" but there is no description. The only exits are east and west. We have gone west from corridor to bathroom, then east back to corridor. So we are stuck. We need to find a different direction. Maybe we can "look" or "search" or "open" something. But the environment description doesn't mention other actions. The instruction says "if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym." So we should say a different action, maybe "turn around" or "go back" synonyms. But we need to break loop. The best next action: "go east" to exit corridor. That might exit the game. But we need to cook a meal. But maybe the exit leads to kitchen? But not sure. The description: corridor has exit east. So we can go east. That might lead to kitchen. So the next action: "go east". That is a different action from previous (we have gone east from bathroom to corridor, but not from corridor to east). Actually we have not gone east from corridor yet. So it's new. So we can output "go east". That breaks loop.
+
+Thus final command: "go east".
+</think>go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Kitchen =-
+Well, here we are in the kitchen.
+
+You can see a fridge. You can make out an oven. You can see a table. Wow, isn't TextWorld just the best? On the table you can see a knife. It doesn't get more TextWorld than this! You make out a counter. Now why would someone leave that there? On the counter you can make out a red hot pepper and a cookbook. There's something strange about this thing being here, but you don't have time to worry about that now. You rest your hand against a wall, but you miss the wall and fall onto a stove. You shudder, but continue examining the stove. But there isn't a thing on it.
+
+There is a closed screen door leading east. There is a closed frosted-glass door leading north. There is an exit to the south. You don't like doors? Why not try going west, that entranceway is not blocked by one.
+
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/6
+AGENT -------------------------------------------------
+read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+green bell pepper
+  yellow onion
+  yellow potato
+
+Directions:
+dice the green bell pepper
+  grill the green bell pepper
+  slice the yellow onion
+  grill the yellow onion
+  slice the yellow potato
+  grill the yellow potato
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/7
+AGENT -------------------------------------------------
+dice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't see any such thing.
+
+>                                                                                                                                -= Kitchen =-0/7
+AGENT -------------------------------------------------
+go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You have to open the screen door first.
+
+
+>                                                                                                                                -= Kitchen =-0/8
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow instructions: Provide next action. Let's analyze.
+
+Goal: Cook a meal using recipe. Need to gather ingredients: green bell pepper, yellow onion, yellow potato. They are not present? In kitchen we saw a red hot pepper, not green bell pepper. So maybe we need to get green bell pepper from somewhere else. But maybe the red hot pepper is the green bell pepper? No. The recipe says green bell pepper. We have red hot pepper. So we need to find green bell pepper. Maybe in another room? We haven't seen green bell pepper. Also need yellow onion and yellow potato. They might be in another room.
+
+We need to open screen door to exit? The screen door leads east. But we need to cook first. The recipe steps: dice green bell pepper, grill it, slice onion, grill onion, slice potato, grill potato, prepare meal. So we need to have those items. We can maybe find them in the bathroom? The bathroom only had toilet. So maybe the kitchen has all items? But we only saw red hot pepper. Maybe the red hot pepper is actually the green bell pepper? But the recipe says green bell pepper. The user said "You can't see any such thing." So we need to find green bell pepper. Maybe it's in the fridge? The fridge is there but not looked at. We could check fridge. So next action: check fridge. That might reveal green bell pepper. Also we need onion and potato. Maybe in fridge too. So next action: check fridge. Also we might need to open screen door? But we need to cook first. So next action: check fridge.
+
+We must obey instructions: output a short command. So "check fridge".
+</think>check fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The fridge looks noble. It is closed.
+
+
+
+>                                                                                                                                -= Kitchen =-0/9
+AGENT -------------------------------------------------
+open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the fridge, revealing a green bell pepper, a yellow onion, a carrot, a raw white tuna, a block of cheese, a green apple, a green hot pepper, a yellow apple and a red onion.
+
+
+>                                                                                                                                -= Kitchen =-0/10
+AGENT -------------------------------------------------
+dice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/11
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-0/12
+AGENT -------------------------------------------------
+dice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/13
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to break loop. We have taken knife, but cannot dice because maybe need to "cut" or "dice" action. We need to use knife on green bell pepper. Maybe action is "cut green bell pepper" or "dice green bell pepper". The system says cutting requires knife. We have knife, but maybe need to "use knife on green bell pepper". Try "cut green bell pepper". Let's output that.
+</think>cut green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it.
+
+
+>                                                                                                                                -= Kitchen =-0/14
+AGENT -------------------------------------------------
+dice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/15
+AGENT -------------------------------------------------
+use knife on green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/15
+AGENT -------------------------------------------------
+slice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/16
+AGENT -------------------------------------------------
+use knife on green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/16
+AGENT -------------------------------------------------
+cut green bell pepper with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to cut the green bell pepper.
+
+>                                                                                                                                -= Kitchen =-0/16
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to interpret the game. The goal: cook a meal. Steps: gather ingredients, dice/grill etc. We have a knife. We need to "dice" the green bell pepper. The command syntax likely is "dice green bell pepper" or "dice green bell pepper with knife". The system says "You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it." So we must use "dice green bell pepper". But earlier attempts "dice green bell pepper" was not recognized? The system responded that cutting requires a knife. Maybe we need to "use knife on green bell pepper" or "cut green bell pepper" with knife. But system says "That's not a verb I recognise." So we need to use a verb recognized by the game. Maybe "cut" is recognized. But earlier "cut green bell pepper" gave same error. The system says "You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it." So we need to use "slice green bell pepper" or "dice green bell pepper" or "chop green bell pepper". But the system didn't accept "dice green bell pepper" earlier. Maybe we need to include "with knife" or "using knife". The system said "That's not a verb I recognise." So maybe the verb must be "slice" or "dice" or "chop". "dice" is a verb. But earlier it said "You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it." So "dice green bell pepper" should be recognized. But earlier it didn't. Maybe we need to "dice green bell pepper" but the system didn't accept because we didn't have the knife in inventory? We did. We took knife. So maybe we need to "take knife" then "dice green bell pepper". We did that. But system still says "Cutting something requires a knife." So maybe the syntax is "dice green bell pepper with knife" or "dice green bell pepper using knife". Let's think.
+
+The game likely uses verb-object syntax. For cooking, maybe "dice" is a verb that takes an object. But maybe the system expects "dice green bell pepper" only if the knife is equipped? Maybe we need to "equip knife" or "use knife". We did "take knife". Maybe we need "use knife" or "equip knife". The system didn't accept "use knife on green bell pepper". It said not recognized. So maybe we need to "equip knife" or "use knife". Let's try "equip knife". Or "use knife". The system didn't accept "use knife on green bell pepper". So maybe "equip knife" is the command to hold it. Then "dice green bell pepper". Let's try that.
+
+We need to break loop. So next action: "equip knife".
+</think>equip knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/16
+AGENT -------------------------------------------------
+use knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/16
+AGENT -------------------------------------------------
+knife green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/16
+AGENT -------------------------------------------------
+slice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/17
+AGENT -------------------------------------------------
+use knife on green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/17
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to break loop. Goal: cook meal. Steps: gather ingredients, dice green bell pepper, grill green bell pepper, slice yellow onion, grill yellow onion, slice yellow potato, grill yellow potato, prepare meal. We have knife, green bell pepper. Need to "dice" action. Maybe verb is "dice" but maybe need "dice" with object? "dice green bell pepper" was tried. Maybe need "dice" with "on" or "with"? In some games, action format: "dice" is verb, object "green bell pepper". That was tried. Maybe need "dice" as noun? Or "cut" with "into" or "dice" with "into" something? Or "cut" with "dice"? Maybe need "cut" and then "dice"? Let's think: The system says "You need to specify how you want to cut the green bell pepper. Either slice, dice, or chop it." So we need to specify "slice" or "dice" or "chop". So the verb "dice" is correct. But it says "That's not a verb I recognise." So maybe the verb must be "cut" with "dice" as an adjective? Eg "cut green bell pepper dice". Or "cut green bell pepper into dice". Or "cut green bell pepper into pieces". But the instruction says specify how to cut: slice, dice, or chop. So maybe the command is "dice green bell pepper". That was tried. Not recognized. Maybe the game expects "dice" as a noun? Or "cut" with "dice" as a second noun? Eg "cut green bell pepper dice". Let's try "cut green bell pepper dice". That might be recognized. Also maybe "cut green bell pepper into dice". Let's pick "cut green bell pepper dice".
+</think>cut green bell pepper dice
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to cut the green bell pepper.
+
+>                                                                                                                                -= Kitchen =-0/17
+AGENT -------------------------------------------------
+slice green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/18
+AGENT -------------------------------------------------
+use knife on green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/18
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We are stuck in a loop trying to cut green bell pepper. The game likely expects specific verbs: "slice", "dice", "chop". We tried slice, dice, chop? We tried slice, dice, but not chop. Maybe "chop green bell pepper" is recognized. Let's try that.
+</think>chop green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green bell pepper)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/19
+AGENT -------------------------------------------------
+use knife on green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/19
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We are stuck. The game expects actions like "slice green bell pepper" or "dice green bell pepper". But the system says those verbs not recognized. Maybe the correct verb is "cut" or "chop"? We tried "cut green bell pepper" but not recognized. Maybe need to specify "slice" or "dice" as separate verb: "slice" or "dice" alone? Maybe "slice" is recognized verb. Let's try "slice" without object? Might be "slice green bell pepper" is correct. But system said not recognized. Maybe the verb is "cut" but we need to specify "cut" with object? "cut green bell pepper" not recognized. Maybe the syntax is "cut" as verb and then "green bell pepper" as object. But we tried "cut green bell pepper". Hmm.
+
+Maybe the game uses "slice" and "dice" but we need to use "slice" or "dice" as separate command: "slice" and then "green bell pepper" as target? Or "slice green bell pepper" but maybe the object names are different: maybe "green bell pepper" is not recognized; maybe it's "green bell pepper" or "green bell pepper" but maybe it's "green bell pepper" indeed. But maybe the object is "green bell pepper" but we need to refer to it as "green bell pepper" exactly. We already did that.
+
+Maybe the action is "cut" with preposition "with knife"? "cut green bell pepper with knife". We tried "cut green bell pepper with knife" not recognized. Maybe "cut" is not recognized; maybe "slice" is recognized. But we tried "slice green bell pepper" not recognized. Maybe the verb is "dice" but we tried "dice green bell pepper" not recognized. Hmm.
+
+Maybe the game expects "cut" but the verb is "cut" but we need to specify "cut" as "cut" and then "green bell pepper" as "cut green bell pepper". That we did. So maybe the issue is that we need to "take" the green bell pepper first? We have it in inventory? We didn't pick it up. We only saw it in fridge. We didn't "take" it. So we need to "take green bell pepper" first. That might be the missing step. Let's do that.
+</think>take green bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/20
+AGENT -------------------------------------------------
+slice green bell pepper
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
