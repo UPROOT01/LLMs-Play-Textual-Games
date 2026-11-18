@@ -232,7 +232,38 @@ def test_no_fp8_kv_cache():
     print("ok NO_FP8_KV_CACHE: kv_cache_dtype dropped, the rest unchanged")
 
 
+def test_one_line():
+    """The prompt option +oneline: one line of an answer is the command, played and kept in the context."""
+    from agent import one_line
+    assert one_line("take pepper") == "take pepper"
+    assert one_line("take pepper\n\ntake knife\n\nslice pepper") == "take pepper"
+    assert one_line("take red onion\n\n(Note: the user did not say which.)") == "take red onion"
+    assert one_line("Goal: cook the meal.  \nPast actions: none.  \nNo loop detected.  \nread cookbook") == "read cookbook"
+    assert one_line("FIRST STEP: the goal is to cook.\nTHIRD STEP: no loop.\ntake carrot") == "take carrot"
+    assert one_line("dice green apple, slice orange bell pepper, roast green apple") == "dice green apple"
+    assert one_line("take green hot pepper; take red onion; dice green hot pepper") == "take green hot pepper"
+    assert one_line("take knife)") == "take knife" and one_line("go west.") == "go west"
+    assert one_line("take raw pork chop from fridge") == "take raw pork chop from fridge"
+    assert one_line("We are stuck.") == "We are stuck" # a sentence is not repaired
+    assert one_line("") == "" and one_line("...") == "..."
+    tokenizer = AutoTokenizer.from_pretrained(GPT_OSS)
+    for prompt, command in (("CoT+nonempty", "take pepper\n\ntake knife"), ("CoT+nonempty+oneline", "take pepper"),
+                            ("CoT+oneline", "take pepper")):
+        def generate(prompt_ids, max_tokens, sampling):
+            return tokenizer.encode("take pepper\n\ntake knife<|end|>", add_special_tokens=False), False
+        agent = SelfEvalAgent(PROFILES["gpt_oss"](), tokenizer, generate, "0", prompt=prompt, rng=random.Random(0))
+        assert agent.act("You are in a kitchen.") == command
+        assert agent.context.endswith("<|channel|>final<|message|>" + command + "<|end|>"), agent.context[-80:]
+    try:
+        SelfEvalAgent(PROFILES["gpt_oss"](), tokenizer, None, "0", prompt="CoT+online")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown prompt option was accepted")
+
+
 if __name__ == "__main__":
+    test_one_line()
     test_profiles_write_the_official_templates()
     test_reasonings_in_the_context()
     test_gpt_oss()

@@ -40,6 +40,28 @@ MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|s|sr|ls|lsr|)(?P<n>\d+)$")
 GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$") # gfail, grand30, gfailidle4
 
 
+PROMPT_OPTIONS = ("nonempty", "oneline")
+RESTATED = ("goal", "first step") # how an answer starts when it repeats the steps of the reasoning before the command
+
+
+def one_line(text):
+    """The one command in an answer (the prompt option "+oneline"). gpt-oss sometimes answers a turn without thinking
+    with a whole plan, one command per line or separated by commas, or with a command and a note to the user; played
+    whole, the game rejects it, and left in the context the model imitates it for the rest of the game (THESIS_LOG.md,
+    2026-11-18). The command is:
+    - the first line; the last one when the answer repeats the steps of the reasoning ("Goal: ...", "FIRST STEP: ...")
+      and ends with the command;
+    - of that line, what comes before the first comma or semicolon ("dice apple, slice pepper, roast apple");
+    - without the brackets, quotes and full stops around it ("take knife)", "go west.").
+    An answer that is a sentence and not a command ("We are stuck.") is not repaired: it is the model's answer."""
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return text
+    line = lines[-1] if len(lines) > 1 and lines[0].lower().startswith(RESTATED) else lines[0]
+    command = re.split("[,;]", line)[0].strip(" .()\"'")
+    return command or line
+
+
 def parse_mode(mode):
     """The settings of a mode, i.e. how often the agent self-evaluates and which reasonings stay in its context:
     "0": it never self-evaluates (it never thinks);
@@ -97,8 +119,10 @@ class SelfEvalAgent:
     def __init__(self, profile, tokenizer, generate, mode, prompt="CoT", rng=None, log=None):
         """profile: a Profile of profiles.py; tokenizer: the model's tokenizer;
         generate(prompt_ids, max_tokens, sampling) -> (output_ids, hit_limit): the model;
-        mode: see parse_mode(); prompt: a key of prompts.PROMPTS, or "<key>+nonempty": the same prompt, and a
-        reasoning that comes out empty is asked again (see NONEMPTY_MIN_TOKENS); a prompt of its own in the records;
+        mode: see parse_mode(); prompt: a key of prompts.PROMPTS, or the key with options, each a prompt of its
+        own in the records: "<key>+nonempty", a reasoning that comes out empty is asked again (see
+        NONEMPTY_MIN_TOKENS); "<key>+oneline", only one line of an answer is the command (see one_line());
+        "<key>+nonempty+oneline", both;
         rng: random.Random used for the intervals between self-evaluations and for the substitute commands;
         log: path of the log of the game (same format of the old agent), or None.
         """
@@ -120,10 +144,12 @@ class SelfEvalAgent:
         self.shadow = False # also answer every thinking turn without thinking first (the fast move), as a measure
         self.last_move_info = None # what happened at the last act(): see act()
         self.prompt = prompt
-        prompt, _, option = prompt.partition("+")
-        if option not in ("", "nonempty"):
-            raise ValueError(f"unknown prompt option {option!r}: nonempty")
-        self.nonempty = option == "nonempty" # an empty reasoning is asked again, with the first word written for it
+        prompt, *options = prompt.split("+")
+        for option in options:
+            if option not in PROMPT_OPTIONS:
+                raise ValueError(f"unknown prompt option {option!r}: {', '.join(PROMPT_OPTIONS)}")
+        self.nonempty = "nonempty" in options # an empty reasoning is asked again, with the first word written for it
+        self.oneline = "oneline" in options # only one line of an answer is played and kept in the context: one_line()
         self.empty_reasonings = self.nonempty_retries = 0 # thinking turns that came out empty / generations spent on them
         self.selfevaluations = 0 # thinking turns of the game (a retry of an empty reasoning is not another one)
         self.system_prompt = PROMPTS[prompt]["system"]
@@ -219,7 +245,7 @@ class SelfEvalAgent:
         prompt = self.context + self._user_piece(obs) + self.profile.nothink_prefill
         output_ids, capped = self._generate(think=False, prompt=prompt, kind="preview")
         command = self.rng.choice(SUBSTITUTE_COMMANDS) if capped else \
-            self._clean(self._decode(output_ids[self._answer_start(output_ids):]))
+            self._command(self._decode(output_ids[self._answer_start(output_ids):]))
         return dict(command=command, generated=len(output_ids), capped=capped, turn=len(self.turns) - 1, obs=obs)
 
     def _normal_turn(self, obs, fast=None):
@@ -240,7 +266,7 @@ class SelfEvalAgent:
         output_ids, capped = self._generate(think=False)
         if capped:
             return self.rng.choice(SUBSTITUTE_COMMANDS)
-        return self._clean(self._decode(output_ids[self._answer_start(output_ids):]))
+        return self._command(self._decode(output_ids[self._answer_start(output_ids):]))
 
     def _self_evaluation(self, obs):
         if self.keep == "last" and self.last_reasoning is not None: # the previous reasoning leaves the context
@@ -269,7 +295,7 @@ class SelfEvalAgent:
             start = self._answer_start(output_ids)
             reasoning = self._decode(output_ids[:self.profile.reasoning_end(output_ids)])
             reasoning = reasoning.replace("/no_think", "").strip("\n")
-            command = self._clean(self._decode(output_ids[start:]))
+            command = self._command(self._decode(output_ids[start:]))
             if nudge or self.profile.think_prefill: # the start of the reasoning was in the prompt
                 reasoning = (nudge or self.profile.think_prefill) + reasoning
         # kept: the reasoning as it stands in the context; reasoning: as it is logged and saved (between <think>
@@ -346,6 +372,11 @@ class SelfEvalAgent:
     def _clean(self, text):
         return self.profile.tidy(text.replace("<think>", "").replace("</think>", "").replace("/think", "")
                                      .replace("/no_think", "").strip("\n"))
+
+    def _command(self, text):
+        """The command in the text of an answer."""
+        text = self._clean(text)
+        return one_line(text) if self.oneline else text
 
     # ---------------------------------------------------------------- statistics
 

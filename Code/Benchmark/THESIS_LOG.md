@@ -1600,3 +1600,88 @@ the official template, a kept reasoning written as the template writes the one i
 reasonings stay per mode, the two generations, the empty reasoning and its retry); no game was played with the
 real model here. The two-player games use the same agent but were not tested with this profile.
 `tests/test_pipeline.py::test_run_grid` still fails as before this change (6 games instead of 24).
+
+## 2026-11-18 — Results of gpt-oss-20b in cooking (cooking_gptoss.yaml): played, but the modes are not comparable yet
+
+350 games played (results/openai__gpt-oss-20b). The format works: no empty reasoning, no retry, a thinking turn is
+a reasoning and then a command, 0.3 capped reasonings per e1 game.
+
+| mode | score | tokens | won | loop-stopped | games with answers of several lines |
+|---|---|---|---|---|---|
+| 0 | 0.185 | 1.0k | 1 | 28 | 10 |
+| r4 | 0.355 | 3.2k | 4 | 1 | 11 |
+| grand25 | 0.458 | 6.9k | 8 | 0 | 2 |
+| lr4 | 0.403 | 8.3k | 6 | 0 | 6 |
+| er4 | 0.388 | 9.7k | 4 | 0 | 14 |
+| grand50 | 0.366 | 14.7k | 1 | 0 | 0 |
+| e1 | 0.455 | 35.1k | 3 | 0 | 0 |
+
+**A flaw of the setup found in the logs.** On a turn without thinking gpt-oss sometimes answers with a whole plan
+("take pepper\n\ntake knife\n\nslice pepper\n\n…"), a command followed by a note to the user, or (r4) the three
+steps of the reasoning and then the command. The agent plays the whole text, the game rejects it, the text stays in
+the history and the model imitates it: in an affected game 55–75% of the normal turns are like this. A game counts
+as affected when more than 20% of its commands have several lines. It starts at the first turns without thinking
+(median turn 2–4), so it hits the clock modes (er4 14 games of 50, r4 11, lr4 6) and not the modes that think early
+or always (grand25 2, grand50 0, e1 0). Affected games score 0.21 against 0.46 (er4), 0.17 against 0.44 (lr4),
+0.27 against 0.38 (r4). Qwen3 does not do this.
+
+**What can be read.**
+- Thinking helps: every thinking mode is 0.17–0.27 above mode 0 (er4 − 0 = +0.204, p<0.001).
+- No comparison between thinking modes is clean. lr4 − er4 = +0.015 (p=0.76) over all games, −0.035 (p=0.54) on the
+  33 games where neither is affected; r4 − lr4 = −0.048 (p=0.31); grand25 − er4 = +0.069 overall and −0.020 where
+  both are clean. The subsets of clean games are not random, so these are indications only.
+- No sign of the memory effect: lr4 is not above er4 either way.
+- grand50 is below grand25 (−0.092, p=0.052) and below e1 (−0.090, p=0.017) with no affected game: not explained,
+  and not the ceiling seen with Qwen3 (grand50 = e1). To be seen again after the fix.
+- r4: with every reasoning kept the reasonings shrink to 178 tokens (about 450 in the other modes).
+
+**To do before any conclusion:** play one line of an answer and store only that in the history, then replay the
+modes that were hit under another name (next entry).
+
+## 2026-11-18 — Prompt option "+oneline" and the replay grid (cooking_gptoss_oneline.yaml, to run)
+
+- `agent.py`: a prompt name can carry several options (`CoT+nonempty+oneline`); the new option `oneline` makes the
+  command one line of the answer (`agent.one_line`): the first line, or the last one when the answer starts with
+  "Goal" or "FIRST STEP" (the answer that repeats the steps of the reasoning and ends with the command, seen in
+  r4). The line is what is played and what stays in the context, in turns with and without thinking. *Why:* the
+  flaw of the entry above; with only one command in the history the model has no plan to imitate.
+- *Why an option of the prompt and not a change of the profile:* the user asked to keep the played games. The
+  option is a prompt of its own in the records (`.../cooking/CoT+nonempty+oneline/...`), so the old games stay in
+  `CoT+nonempty` and are not taken for the new ones, and Qwen3 is untouched unless a grid asks for the option.
+- `grids/cooking_gptoss_oneline.yaml`: the same 350 games. The five modes that were hit come first (0, grand25,
+  er4, lr4, r4: about 6.5 hours), then grand50 and e1, which had no affected game (about 9 hours more): they can
+  be skipped by stopping the run, at the price of comparing them across two prompt names.
+- `tests/test_profiles.py::test_one_line`: the cases seen in the logs, the context of the agent with and without
+  the option, an unknown option refused.
+
+- **The rule was extended the same day**, after applying it to the 21,187 answers of the played games (the user
+  asked whether it covered the cases met). The first version only repaired the answers of several lines (2,455);
+  another 2,176 answers of one line were not commands either. Now `one_line` also cuts the line at the first comma
+  or semicolon ("dice apple, slice pepper, roast apple", "take a; take b": about 370 answers) and removes the
+  brackets, quotes and full stops around the command ("take knife)", about 630; "go west."). On the played answers
+  the rule changes 21.7% of them and leaves 94.5% that read as a command.
+- **Not repaired, on purpose:** the answers that are a sentence and not a command ("We are stuck.", "We cannot
+  proceed.", "I'm sorry, but I can't continue.", "The goal is to cook a meal…": 4.6% of the answers, almost all in
+  turns without thinking; mode 0 10.8%, r4 9.7%, lr4 7.5%, grand25 4.3%, grand50 1.0%, er4 and e1 0%), and the
+  long commands the game does not know ("cut yellow potato with knife into diced pieces", 0.8%). There is no
+  command to take out of them: they are the model giving up or not knowing the game's verbs, a behaviour to
+  report like Qwen3's loops, not a flaw of the agent.
+
+**Limits.** The rule is made from the answers seen in these logs, and the new games will not be the same games:
+with the plans gone from the history the model may answer in shapes not seen here, and the sentences may become
+rarer (if they came from the rejected plans) or not. Mode 0 is played first and takes about 20 minutes: its logs
+are the check before the rest. Not played with the real model yet.
+
+## 2026-11-18 — A short test before the long replay (cooking_gptoss_oneline_test.yaml, check_answers.py)
+
+- `grids/cooking_gptoss_oneline_test.yaml`: modes 0 and r4, levels 1, 3, 5, seeds 1-10, prompt
+  `CoT+nonempty+oneline`: 60 games, about 40 minutes. *Why:* the user asked for a test that does not need the long
+  run to be stopped by hand. Mode 0 had the most answers that were not commands (45%), r4 has every shape of them,
+  also in the thinking turns, and is the cheapest thinking mode. The games are games of the long grid with the
+  same prompt name, so the long grid does not play them again.
+- `check_answers.py <folder of a prompt>`: per mode, the share of the answers of each shape (command, several
+  lines, several commands in a line, marks around the command, sentence, long) and the games where more than 20%
+  of the answers are not commands. On the played games (`CoT+nonempty`): 0 55.0% commands and 29 such games of 50,
+  r4 58.4% and 25, er4 67.3% and 18, lr4 71.2% and 15, grand25 93.7% and 4, grand50 95.4% and 1, e1 99.7% and 0.
+  (The 20% here counts every shape; the count of the first entry of today counted the answers of several lines
+  only, hence its lower numbers.)

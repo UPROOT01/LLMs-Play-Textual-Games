@@ -1,0 +1,21 @@
+# A short test of the prompt option "+oneline" with gpt-oss-20b, to play before cooking_gptoss_oneline.yaml.
+# Why: the rule that takes one command out of an answer (agent.one_line) was made from the answers of the games
+# already played; the new games are other games, and the long grid takes 15 hours. This one takes about 40 minutes.
+#   0    turns without thinking only: the mode with the most answers that were not commands (45%)
+#   r4   every reasoning kept: the mode with every shape of bad answer, also in the thinking turns, and the cheapest
+# Levels 1, 3, 5, seeds 1-10: 60 games, all of them games of cooking_gptoss_oneline.yaml with the same prompt name,
+# so they are not played again by the long grid.
+# What to read:  python check_answers.py results/openai__gpt-oss-20b/cooking/CoT+nonempty+oneline
+# and, to compare, the same on .../CoT+nonempty (the games without the option). Good: almost no answer of several
+# lines or several commands, and fewer sentences ("We are stuck.") than before.
+# A textual-game grid: run.py / run_remote.py.
+models:
+  - openai/gpt-oss-20b
+modes: ["0", r4]
+prompts: [CoT+nonempty+oneline]
+games:
+  cooking: [1, 3, 5]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2

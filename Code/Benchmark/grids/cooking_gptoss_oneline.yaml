@@ -1,0 +1,26 @@
+# gpt-oss-20b in cooking again, with the prompt option "+oneline": only one line of an answer is played and kept in
+# the context (agent.one_line).
+# Why: in cooking_gptoss.yaml gpt-oss answered some turns without thinking with a whole plan, one command per line;
+# the agent played the whole text, the game rejected it, and the model imitated it for the rest of the game. It hit
+# er4 in 14 games of 50, r4 in 11, lr4 in 6, grand25 in 2, grand50 and e1 in none, and cost about 0.25 of score in a
+# game: the modes could not be compared (THESIS_LOG.md, 2026-11-18).
+# A prompt of its own in the records (results/openai__gpt-oss-20b/cooking/CoT+nonempty+oneline/...): the games of
+# cooking_gptoss.yaml stay where they are.
+# Same modes, levels and seeds. The modes are in the order of need: the five that were hit first (250 games, about
+# 6.5 hours on a 4090), then grand50 and e1, which had no affected game (about 9 hours more, most of it e1): stop
+# with Ctrl-C before them to save the time, or let them play to have the seven modes under the same rule.
+# Mode 0 is played first (about 20 minutes) and was the mode with the most answers that were not commands: read its
+# logs before letting the rest play. Answers that are sentences ("We are stuck.") are not repaired, on purpose.
+# What to read: the questions of cooking_gptoss.yaml (lr4 - er4, r4 - lr4, grand50 against e1 and grand25), and in
+# the logs that the answers of several lines are gone.
+# A textual-game grid: run.py / run_remote.py.
+models:
+  - openai/gpt-oss-20b
+modes: ["0", grand25, er4, lr4, r4, grand50, e1]
+prompts: [CoT+nonempty+oneline]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
