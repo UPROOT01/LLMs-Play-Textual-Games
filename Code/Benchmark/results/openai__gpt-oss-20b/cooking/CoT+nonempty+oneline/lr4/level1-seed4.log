@@ -1,0 +1,239 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You find yourself in a kitchen. A typical one. You begin looking for stuff.
+
+You can see a fridge. The fridge contains a red onion and a raw red tuna. You see a closed oven in the room. You see a table. Unfortunately, there isn't a thing on it. You see a counter. On the counter you can see a raw yellow potato, a yellow apple, a raw red potato, a cookbook and a knife. Look out! It's a- oh, never mind, it's just a stove. But there isn't a thing on it.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's already open.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+take red onion from fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red onion from the fridge.
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+take raw red tuna from fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red tuna from the fridge.
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+take raw yellow potato from counter
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/5
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to produce a short command. The instruction: "THINK about how to win the game, but be concise and brief in 3 steps." Then we must output next action as a short command. So we need to produce a command only. But the instruction says to think about steps, but final output is just the command. So we need to produce only the command, nothing else. So we need to decide next action: we have red onion, raw red tuna, raw yellow potato. Cookbook on counter. We need to cook a meal. Likely need to use knife to cut onion, maybe cook tuna. Next action: "take knife from counter". But we already have knife on counter. We can "take knife". That seems next step. So output "take knife".
+</think>take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+cook tuna with onion and potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't use multiple objects with that verb.
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+slice onion with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You slice the red onion.
+
+
+
+>                                                                                                                                -= Kitchen =-1/7
+AGENT -------------------------------------------------
+slice tuna with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You slice the red tuna.
+
+
+
+>                                                                                                                                -= Kitchen =-1/8
+AGENT -------------------------------------------------
+cook sliced tuna with sliced onion and potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't use multiple objects with that verb.
+
+>                                                                                                                                -= Kitchen =-1/8
+AGENT -------------------------------------------------
+cook tuna on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You fried the red tuna.
+
+
+
+>                                                                                                                                -= Kitchen =-1/9
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow instructions: state goal, past actions, next step, detect loop, then output short command only. But the instruction says "ONLY output the command, nothing else." So we must output just the command. The preceding steps are for internal reasoning. So we just output a command. But we must choose a command that hasn't been repeated. The goal: cook a meal and enjoy. We have fried tuna. We still need onion and potato. We sliced onion and tuna. We haven't cooked potato. We need to cook potato and combine. We could "cook potato on stove" or "cook sliced onion on stove" or "combine tuna and onion on stove". Let's do "cook potato on stove". That hasn't been done. So answer: "cook potato on stove".
+</think>cook potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(the yellow potato on the stove)
+You fried the yellow potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/10
+AGENT -------------------------------------------------
+cook onion on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You fried the red onion.
+
+
+
+>                                                                                                                                -= Kitchen =-2/11
+AGENT -------------------------------------------------
+mix tuna onion potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/11
+AGENT -------------------------------------------------
+combine tuna onion potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/11
+AGENT -------------------------------------------------
+cook tuna onion potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I didn't understand that sentence.
+
+>                                                                                                                                -= Kitchen =-2/11
+AGENT -------------------------------------------------
+serve meal
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/11
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to figure the game objective: "Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!" So goal: read cookbook, find recipe, cook meal, enjoy. We have taken items, sliced, fried. We didn't read cookbook. We need to read it. Then find recipe, maybe need to combine ingredients. But we already fried all ingredients. Maybe we need to plate? The action "serve meal" not recognized. Maybe "eat" or "eat meal" or "eat tuna" etc. We need to read cookbook first. So next action: read cookbook.
+</think>read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+yellow potato
+
+Directions:
+dice the yellow potato
+  fry the yellow potato
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-2/12
+AGENT -------------------------------------------------
+dice yellow potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the knife)
+You dice the yellow potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/13
+AGENT -------------------------------------------------
+fry yellow potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-3/13
+AGENT -------------------------------------------------
+cook yellow potato on stove
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
