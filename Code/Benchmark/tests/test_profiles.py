@@ -262,9 +262,55 @@ def test_one_line():
         raise AssertionError("an unknown prompt option was accepted")
 
 
+def test_cot_grounded_and_lsr4():
+    """CoT_grounded is game-agnostic and stripped by memory_analysis; lsr4 keeps only the last summary across profiles."""
+    import re
+    import memory_analysis as ma
+    from prompts import PROMPTS, SAMPLING
+    text = (PROMPTS["CoT_grounded"]["system"] + PROMPTS["CoT_grounded"]["selfeval"]).lower()
+    for banned in ("cook", "recipe", "ingredient", "meal", "eat", "kitchen", "stove", "oven", "knife"):
+        assert not re.search(rf"\b{banned}\b", text), banned
+    assert SAMPLING["CoT_grounded"] == SAMPLING["CoT"]
+    assert ma.THINK_PROMPT.split("Room.\n" + PROMPTS["CoT_grounded"]["selfeval"])[0] == "Room.\n"
+
+    for name, model in list(EXAMPLE_MODELS.items()) + [("gpt_oss", GPT_OSS)]:
+        profile = PROFILES[name]()
+        tokenizer = AutoTokenizer.from_pretrained(model)
+        calls = {"summary": 0}
+
+        def generate(prompt_ids, max_tokens, sampling, _tok=tokenizer, _prof=profile, _calls=calls):
+            ids = lambda s: _tok.encode(s, add_special_tokens=False)
+            if max_tokens == 10000:
+                if _prof.name == "gpt_oss":
+                    return ids("long thought<|end|>"), False
+                start = "" if _prof.think_prefill else "<think>\n"
+                return ids(f"{start}long thought\n</think>\n\ngo north") + [_tok.eos_token_id], False
+            if max_tokens == 160:
+                _calls["summary"] += 1
+                prefix = "<think>\n\n</think>\n\n" if _prof.switch == "soft" else ""
+                suffix = "<|return|>" if _prof.name == "gpt_oss" else ""
+                end = [] if _prof.name == "gpt_oss" else [_tok.eos_token_id]
+                return ids(f"{prefix}note {_calls['summary']}{suffix}") + end, False
+            if _prof.name == "gpt_oss":
+                return ids("take key<|return|>"), False
+            prefix = "<think>\n\n</think>\n\n" if _prof.switch == "soft" else ""
+            return ids(f"{prefix}take key") + [_tok.eos_token_id], False
+
+        prompt = "CoT_grounded+nonempty+oneline" if name == "gpt_oss" else "CoT_grounded+nonempty"
+        agent = SelfEvalAgent(profile, tokenizer, generate, "lsr4", prompt=prompt, rng=random.Random(0))
+        for turn in range(25):
+            agent.act(f"Room {turn}.")
+        assert calls["summary"] >= 3
+        assert f"note {calls['summary']}" in agent.context
+        assert "note 1" not in agent.context and "long thought" not in agent.context
+        assert agent.token_stats()["summary_turns"] == calls["summary"]
+    print("ok CoT_grounded + lsr4 across qwen3, smollm3, deepseek_r1, gpt_oss")
+
+
 if __name__ == "__main__":
     test_one_line()
     test_profiles_write_the_official_templates()
     test_reasonings_in_the_context()
     test_gpt_oss()
     test_no_fp8_kv_cache()
+    test_cot_grounded_and_lsr4()

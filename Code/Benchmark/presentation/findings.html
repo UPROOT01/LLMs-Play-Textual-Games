@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What is kept matters more than when the model thinks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --ink: #1d2433; --ink2: #4a5468; --muted: #7b8497; --line: #e3e6ec; --bg: #f6f7f9; --card: #ffffff;
+    --blue: #2a78d6; --green: #1f8a4c; --red: #c8463d; --amber: #c27a00; --purple: #5b4bb5; --gray: #9aa3b2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #20242c; font-family: "Inter", "Segoe UI", system-ui, sans-serif; color: var(--ink); }
+  .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; margin: auto; width: min(100vw, 177.78vh); height: min(100vh, 56.25vw);
+    background: var(--bg); padding: 4.2% 5.5% 5%; display: none; flex-direction: column;
+    font-size: min(2.3vh, 1.3vw);
+  }
+  .slide.active { display: flex; }
+  .slide h1 { font-size: 2.6em; margin: 0 0 .25em; letter-spacing: -.01em; }
+  .slide h2 { font-size: 2.05em; margin: 0 0 .9em; letter-spacing: -.01em; }
+  .slide h3 { font-size: 1.15em; margin: 0 0 .5em; color: var(--ink2); text-transform: uppercase; letter-spacing: .06em; }
+  .slide p, .slide li { font-size: 1.22em; line-height: 1.45; color: var(--ink); }
+  .slide ul { margin: .2em 0 0; padding-left: 1.2em; }
+  .slide li { margin: .35em 0; }
+  .kicker { color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: .95em; margin-bottom: .6em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 2.2em; min-height: 0; align-items: start; margin-top: .4em; }
+  .cols.c3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cols.wide-left { grid-template-columns: 1.35fr 1fr; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 1.1em 1.3em; }
+  .card p, .card li { font-size: 1.1em; }
+  .card .big, .big { font-size: 3.4em; font-weight: 800; line-height: 1; }
+  .note { color: var(--muted); font-size: 1em !important; margin-top: auto; }
+  .tag { display: inline-block; padding: .1em .55em; border-radius: 99px; font-size: .9em; font-weight: 600; background: #e8eefb; color: var(--blue); }
+  .tag.red { background: #fbe9e7; color: var(--red); } .tag.green { background: #e5f4eb; color: var(--green); }
+  .tag.amber { background: #fbf1df; color: var(--amber); }
+  blockquote { margin: .4em 0; padding: .55em .9em; border-left: 4px solid var(--blue); background: #eef3fb; font-size: 1.08em; line-height: 1.45; border-radius: 0 6px 6px 0; }
+  blockquote.red { border-color: var(--red); background: #fbefed; }
+  blockquote.green { border-color: var(--green); background: #ebf6ef; }
+  blockquote small { display: block; color: var(--ink2); margin-top: .3em; font-size: .85em; }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .92em; background: #eceff4; padding: .05em .35em; border-radius: 4px; }
+  pre { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 1em; background: #1f2430; color: #e6e9ef; padding: .8em 1em; border-radius: 8px; margin: .3em 0; line-height: 1.4; white-space: pre-wrap; }
+  table { border-collapse: collapse; width: 100%; font-size: 1.12em; }
+  th, td { text-align: left; padding: .42em .6em; border-bottom: 1px solid var(--line); }
+  th { color: var(--ink2); font-weight: 600; font-size: .9em; text-transform: uppercase; letter-spacing: .04em; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.hl td { background: #eef3fb; font-weight: 600; }
+
+  /* bar charts */
+  .bars { display: flex; flex-direction: column; gap: .55em; margin-top: .3em; }
+  .bar { display: grid; grid-template-columns: 10em 1fr 3.6em; align-items: center; gap: .7em; font-size: 1.08em; }
+  .bar .label { color: var(--ink2); text-align: right; }
+  .bar .track { height: 1.45em; background: #e9ecf1; border-radius: 4px; position: relative; overflow: hidden; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; width: 0; transition: width .7s ease; }
+  .bar .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .slide.active .fill { width: var(--w); }
+  .mid { position: absolute; top: -2px; bottom: -2px; width: 0; border-left: 2px dashed #7b8497; }
+
+  .footer { position: absolute; left: 5.5%; right: 9em; bottom: 2.2%; display: flex; justify-content: space-between; color: var(--muted); font-size: .95em; }
+  .progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--blue); transition: width .3s; }
+  .nav { position: fixed; right: 14px; bottom: 12px; display: flex; gap: 6px; z-index: 5; }
+  .nav button { background: #ffffffcc; border: 1px solid #cfd4dc; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 14px; }
+  .title-slide { justify-content: center; background: linear-gradient(135deg, #1d2433 0%, #2a3a5c 100%); color: #fff; }
+  .title-slide h1 { font-size: 3.4em; color: #fff; max-width: 80%; }
+  .title-slide p { color: #c9d3e6; font-size: 1.5em; max-width: 75%; }
+  .title-slide .kicker { color: #8fb8f2; }
+  .board { font-family: ui-monospace, monospace; font-size: 1.05em; line-height: 1.25; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: .6em .9em; white-space: pre; display: inline-block; }
+  .flow { display: flex; align-items: stretch; gap: .8em; margin: .6em 0; }
+  .flow .step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: .8em 1em; }
+  .flow .step b { display: block; margin-bottom: .3em; }
+  .flow .arrow { align-self: center; color: var(--muted); font-size: 1.8em; }
+  .legend { display: flex; gap: 1.2em; font-size: 1em; color: var(--ink2); margin: .4em 0 0; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: .9em; height: .9em; border-radius: 2px; margin-right: .35em; vertical-align: -.1em; background: var(--c); }
+  .stack { display: flex; height: 2.2em; border-radius: 5px; overflow: hidden; margin: .5em 0; }
+  .stack div { display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 1em; border-right: 2px solid var(--bg); }
+  .stack div:last-child { border-right: none; }
+  .graph { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; display: block; }
+  .howto { background: #fff8e8; border: 1px solid #f0dca8; border-radius: 10px; padding: .8em 1.1em; }
+  .howto h3 { color: var(--amber); }
+  .howto p, .howto li { font-size: 1em !important; margin: .3em 0; }
+  .stacked { display: flex; flex-direction: column; gap: .8em; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 -->
+<!-- 1 -->
+<section class="slide title-slide">
+  <div class="kicker">Thesis progress · cooking games</div>
+  <h1>What the model keeps matters more than when it thinks</h1>
+  <p>A second model family, and a look at the games that are actually finished instead of the average score.</p>
+  <p style="font-size:1.1em; margin-top:2em; color:#9fb0cc">Qwen3-4B / 8B · gpt-oss-20b · 17 – 19 November 2026</p>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <div class="kicker">Setup</div>
+  <h2>Same game, same modes, two model families</h2>
+  <div class="cols wide-left">
+    <div>
+      <table>
+        <tr><th>mode</th><th>when it thinks</th><th>what stays in the context</th></tr>
+        <tr><td><code>0</code></td><td>never</td><td>–</td></tr>
+        <tr><td><code>e1</code></td><td>every turn</td><td>nothing (ephemeral)</td></tr>
+        <tr><td><code>er4</code></td><td>about every 4 turns</td><td>nothing</td></tr>
+        <tr class="hl"><td><code>lr4</code></td><td>about every 4 turns</td><td>the last reasoning</td></tr>
+        <tr><td><code>r4</code></td><td>every 4 turns</td><td>every reasoning</td></tr>
+        <tr><td><code>grand25</code> / <code>grand50</code></td><td>a random 25% / 50% of the turns</td><td>nothing</td></tr>
+        <tr><td><code>lgfail</code></td><td>after a rejected command</td><td>the last reasoning</td></tr>
+      </table>
+    </div>
+    <div class="stacked">
+      <div class="card"><p><b>Game:</b> TextWorld cooking, levels 1, 3, 5, 7, 9, 100 steps at most. Score = share of the recipe's points; <b>won</b> = the meal prepared and eaten.</p></div>
+      <div class="card"><p><b>Qwen3-8B:</b> 50 to 150 games per mode (seeds 1-10, some modes also 11-30).</p>
+      <p><b>gpt-oss-20b:</b> 50 games per mode, new this week.</p></div>
+    </div>
+  </div>
+  <p class="note">gpt-oss needed a fix first: without thinking it answered with whole plans instead of one command, so its first run was discarded and replayed taking one command per answer.</p>
+</section>
+
+<!-- system 1 -->
+<section class="slide">
+  <div class="kicker">System</div>
+  <h2>Benchmark on vLLM: many games at the same time</h2>
+  <div class="flow">
+    <div class="step"><b>Grid</b>A YAML file lists models × modes × prompts × levels × seeds. Each game is saved as one JSON record with its log.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Runner</b>Games already played are skipped, so a run can be stopped and resumed on Colab or on the remote 4090.</div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Engine</b>Each game runs in its own thread and sends its requests to one vLLM instance.</div>
+  </div>
+  <div class="cols" style="margin-top:.8em">
+    <div class="card">
+      <h3>Inside vLLM</h3>
+      <ul>
+        <li><b>Continuous batching:</b> a request joins the batch already being generated, so a game does not wait for the long reasonings of the others.</li>
+        <li><b>Prefix caching:</b> the part of the context already read in the previous turns is not computed again.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Number of games in parallel: automatic</h3>
+      <ul>
+        <li>The limit is the KV cache: the memory where vLLM keeps the contexts of the requests it is generating.</li>
+        <li>The engine starts a new game only when there is room for it, and adjusts the limit while the run goes on (next slide).</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">Before: one game at a time with transformers, the GPU mostly idle. Times are now wall-clock times of games played together, so the modes are compared by tokens, not by seconds.</p>
+</section>
+
+<!-- system 1b -->
+<section class="slide">
+  <div class="kicker">System</div>
+  <h2>Parallel games: KV cache target adjusted to the pauses of vLLM</h2>
+  <div class="cols" style="font-size:.88em">
+    <div class="stacked">
+      <div class="card">
+        <h3>The problem</h3>
+        <p>A full cache does not slow the generation. A <b>pause</b> does: when no memory is free, vLLM stops a request and computes its context again later.</p>
+      </div>
+      <div class="card">
+        <h3>First minute: estimate</h3>
+        <p>A game counts for the memory its requests are expected to hold (75th percentile of the finished games of its mode). Games start while the estimates fit in 90% of the cache.</p>
+      </div>
+    </div>
+    <div class="stacked">
+      <div class="card">
+        <h3>After one minute: measure</h3>
+        <p>The real cache usage and the pauses are read from vLLM. A game starts if the usage plus the new game stays under the <b>target: 92%</b>.</p>
+      </div>
+      <div class="card">
+        <h3>The target follows the pauses</h3>
+        <ul>
+          <li>More than 5 pauses in a minute: <b>−5 points</b> (not below 60%).</li>
+          <li>A minute without pauses: <b>+2 points</b> (not above 92%).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="note">The estimates were about 1.6 times the real usage: the GPU was used at about 60%. A pause only costs time, never changes a result.</p>
+</section>
+
+<!-- system 2 -->
+<section class="slide">
+  <div class="kicker">System</div>
+  <h2>Model families, checks and tools</h2>
+  <div class="cols" style="font-size:.86em">
+    <div class="stacked">
+      <div class="card">
+        <h3>One profile per model family</h3>
+        <p>Qwen3, gpt-oss. A profile is the code that writes the conversation in the format that family was trained on, and that forces or forbids thinking. Checked against the format published by the model's authors.</p>
+      </div>
+      <div class="card">
+        <h3>Results of the previous experiments</h3>
+        <p>The games played before vLLM, are imported as records and appear in the same tables as the new ones.</p>
+      </div>
+    </div>
+    <div class="stacked">
+      <div class="card">
+        <h3>Options that repair the model's output</h3>
+        <ul>
+          <li><code>+nonempty</code>: an empty reasoning is generated again.</li>
+          <li><code>+oneline</code>: one command is taken from an answer with several.</li>
+        </ul>
+        <p>Part of the prompt name: their games are stored apart.</p>
+      </div>
+      <div class="card">
+        <h3>Tools</h3>
+        <ul>
+          <li><code>run_remote.py</code>: a grid on the remote GPU.</li>
+          <li><code>check_answers.py</code>: share of valid commands per mode.</li>
+          <li><code>viewer/</code>: results and logs in the browser.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="note">gpt-oss writes reasoning and answer as two separate messages: a thinking turn is two generations, counted as one turn.</p>
+</section>
+
+
+<!-- 3 -->
+<section class="slide">
+  <div class="kicker">Finding 1 · holds in both families</div>
+  <h2>More thinking stops paying early</h2>
+  <div class="cols">
+    <div>
+      <h3>gpt-oss-20b: mean score</h3><div class="bars"><div class="bar"><span class="label"><code>0</code> · 0.7k tokens</span><span class="track"><span class="fill" style="--w:33%; background:var(--gray)"></span></span><span class="val">0.33</span></div><div class="bar"><span class="label"><code>er4</code> · 6.4k</span><span class="track"><span class="fill" style="--w:49%; background:var(--blue)"></span></span><span class="val">0.49</span></div><div class="bar"><span class="label"><code>grand50</code> · 12.3k</span><span class="track"><span class="fill" style="--w:49%; background:var(--blue)"></span></span><span class="val">0.49</span></div><div class="bar"><span class="label"><code>e1</code> · 36.9k</span><span class="track"><span class="fill" style="--w:45%; background:var(--amber)"></span></span><span class="val">0.45</span></div></div>
+      <p>Thinking on every turn costs <b>six times</b> the tokens of thinking every fourth turn and scores no higher (−0.04, p = 0.28).</p>
+    </div>
+    <div>
+      <h3>Qwen3-8B: mean score</h3><div class="bars"><div class="bar"><span class="label"><code>0</code> · 0.5k tokens</span><span class="track"><span class="fill" style="--w:28%; background:var(--gray)"></span></span><span class="val">0.28</span></div><div class="bar"><span class="label"><code>grand25</code> · 12.8k</span><span class="track"><span class="fill" style="--w:49%; background:var(--blue)"></span></span><span class="val">0.49</span></div><div class="bar"><span class="label"><code>grand50</code> · 22.1k</span><span class="track"><span class="fill" style="--w:50%; background:var(--blue)"></span></span><span class="val">0.50</span></div><div class="bar"><span class="label"><code>e1</code> · 43.6k</span><span class="track"><span class="fill" style="--w:55%; background:var(--amber)"></span></span><span class="val">0.55</span></div></div>
+      <p>Doubling the thinking from 25% to 50% of the turns adds nothing; every turn adds 0.05 for twice the tokens again.</p>
+    </div>
+  </div>
+  <p class="note">Thinking does help against not thinking: +0.16 for gpt-oss (p = 0.005), and only from level 5 up.</p>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div class="kicker">Finding 2 · holds in both families</div>
+  <h2>When the model thinks does not matter</h2>
+  <div class="cols">
+    <div class="card">
+      <h3>Qwen3 (1.7B, 4B, 8B)</h3>
+      <p>Five rules that choose the moment to think (after a rejected command, when stuck, on a tactical position in Connect Four…).</p>
+      <p><b>None beats thinking on random turns at the same cost.</b></p>
+      <p>The one apparent win, <code>lgfail</code> for the 8B, did not hold on new seeds (0.41 against 0.51, p = 0.018).</p>
+    </div>
+    <div class="card">
+      <h3>gpt-oss-20b</h3>
+      <p>A fixed clock against a random quarter of the turns, same number of tokens:</p>
+      <p><code>er4</code> 0.49 &nbsp;·&nbsp; <code>grand25</code> 0.44 &nbsp; (p = 0.28)</p>
+      <p>No difference.</p>
+    </div>
+  </div>
+  <p class="note">With 50 games per mode, a difference smaller than about 0.1 cannot be seen.</p>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div class="kicker">Finding 3 · Qwen3-8B</div>
+  <h2>Keeping the last reasoning doubles the games won</h2>
+  <div class="cols wide-left">
+    <div>
+      <h3>Share of games won</h3><div class="bars"><div class="bar"><span class="label"><code>lr4</code> · 150 games</span><span class="track"><span class="fill" style="--w:81%; background:var(--green)"></span></span><span class="val">27%</span></div><div class="bar"><span class="label"><code>lgfail</code> · 150</span><span class="track"><span class="fill" style="--w:69%; background:var(--green)"></span></span><span class="val">23%</span></div><div class="bar"><span class="label"><code>r4</code> · 50</span><span class="track"><span class="fill" style="--w:60%; background:var(--green)"></span></span><span class="val">20%</span></div><div class="bar"><span class="label"><code>grand25</code> · 150</span><span class="track"><span class="fill" style="--w:42%; background:var(--gray)"></span></span><span class="val">14%</span></div><div class="bar"><span class="label"><code>e1</code> · 50</span><span class="track"><span class="fill" style="--w:36%; background:var(--gray)"></span></span><span class="val">12%</span></div><div class="bar"><span class="label"><code>er4</code> · 50</span><span class="track"><span class="fill" style="--w:36%; background:var(--gray)"></span></span><span class="val">12%</span></div><div class="bar"><span class="label"><code>grand50</code> · 50</span><span class="track"><span class="fill" style="--w:36%; background:var(--gray)"></span></span><span class="val">12%</span></div></div>
+      <div class="legend"><span style="--c:var(--green)">keeps a reasoning</span><span style="--c:var(--gray)">ephemeral</span></div>
+    </div>
+    <div class="stacked">
+      <div class="card"><p><code>lr4</code> against <code>grand25</code>, same 150 games:<br><b>41 wins against 21</b> (p = 0.0005)</p>
+      <p>Seeds 1-10: 16 against 8.<br>Seeds 11-30, played later: 25 against 13.</p></div>
+      <div class="card"><p><code>e1</code> has the same mean score as <code>lr4</code> (0.55 against 0.57) with <b>four times the tokens</b>, and wins less than half as often.</p></div>
+    </div>
+  </div>
+  <p class="note">The win rate was looked at after noticing it in the logs, not planned in advance. It holds on each block of seeds separately.</p>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div class="kicker">Why · Qwen3-8B</div>
+  <h2>Without memory, the model eats an ingredient</h2>
+  <div class="cols wide-left" style="font-size:.9em">
+    <div>
+      <h3>Games lost by eating an ingredient</h3><div class="bars"><div class="bar"><span class="label"><code>lgfail</code></span><span class="track"><span class="fill" style="--w:8%; background:var(--green)"></span></span><span class="val">3%</span></div><div class="bar"><span class="label"><code>lr4</code></span><span class="track"><span class="fill" style="--w:22%; background:var(--green)"></span></span><span class="val">9%</span></div><div class="bar"><span class="label"><code>r4</code></span><span class="track"><span class="fill" style="--w:45%; background:var(--green)"></span></span><span class="val">18%</span></div><div class="bar"><span class="label"><code>grand25</code></span><span class="track"><span class="fill" style="--w:62%; background:var(--red)"></span></span><span class="val">25%</span></div><div class="bar"><span class="label"><code>e1</code></span><span class="track"><span class="fill" style="--w:75%; background:var(--red)"></span></span><span class="val">30%</span></div><div class="bar"><span class="label"><code>grand50</code></span><span class="track"><span class="fill" style="--w:75%; background:var(--red)"></span></span><span class="val">30%</span></div><div class="bar"><span class="label"><code>er4</code></span><span class="track"><span class="fill" style="--w:90%; background:var(--red)"></span></span><span class="val">36%</span></div></div>
+      <p><code>lr4</code> against <code>grand25</code>, same 150 games: 13 against 37 (p = 0.0004).</p>
+    </div>
+    <div class="stacked">
+      <div class="card"><p><b>It happens late, with a high score:</b> 0.55 to 0.60 of the points, after 36 to 47 steps. Most of the recipe is done, then the model eats an ingredient instead of preparing the meal.</p></div>
+      <div class="card"><p><b>Thinking does not prevent it:</b> <code>e1</code> thinks on every turn and loses 30% of its games this way.</p></div>
+      <div class="card"><p>Losses by cooking (wrong appliance, cooked twice) are the same in every mode: about a third.</p></div>
+    </div>
+  </div>
+  <p class="note">Read from the last command of each game the game itself ended; the game's last message is not in the logs.</p>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <div class="kicker">Why the average hid it</div>
+  <h2>Same score, different games</h2>
+  <div class="cols">
+    <div>
+      <h3>How the games end (Qwen3-8B)</h3>
+      <div class="legend"><span style="--c:var(--green)">won</span><span style="--c:var(--red)">ate an ingredient</span><span style="--c:var(--amber)">other loss</span><span style="--c:var(--gray)">step limit or loop</span></div>
+      <p style="margin:.6em 0 0"><code>lr4</code></p>
+      <div class="stack"><div style="width:27%; background:var(--green)">27</div><div style="width:9%; background:var(--red)">9</div><div style="width:47%; background:var(--amber)">47</div><div style="width:17%; background:var(--gray)">17</div></div>
+      <p style="margin:.6em 0 0"><code>lgfail</code></p>
+      <div class="stack"><div style="width:23%; background:var(--green)">23</div><div style="width:3%; background:var(--red)"></div><div style="width:34%; background:var(--amber)">34</div><div style="width:40%; background:var(--gray)">40</div></div>
+      <p style="margin:.6em 0 0"><code>grand25</code></p>
+      <div class="stack"><div style="width:14%; background:var(--green)">14</div><div style="width:25%; background:var(--red)">25</div><div style="width:45%; background:var(--amber)">45</div><div style="width:16%; background:var(--gray)">16</div></div>
+      <p style="margin:.6em 0 0"><code>e1</code></p>
+      <div class="stack"><div style="width:12%; background:var(--green)">12</div><div style="width:30%; background:var(--red)">30</div><div style="width:40%; background:var(--amber)">40</div><div style="width:18%; background:var(--gray)">18</div></div>
+    </div>
+    <div class="stacked">
+      <div class="card"><p>A game eaten away keeps its points, so the mean score barely moves: <code>e1</code> has 40% of its games between 0.6 and 0.8, and 12% won.</p></div>
+      <div class="card"><p>Of the 37 games <code>grand25</code> lost by eating, <code>lr4</code> <b>won 9</b> and lost 17 at the next obstacle, the cooking.</p></div>
+      <div class="card"><p><code>lgfail</code> is all or nothing: it wins 23%, but 41% of its games end under 0.2 of the points (loops, or it never thinks).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <div class="kicker">Other models</div>
+  <h2>Eating mistake per model</h2>
+  <table>
+    <tr><th>lost by eating / won</th><th class="num"><code>e1</code></th><th class="num"><code>er4</code></th><th class="num"><code>lr4</code></th><th class="num"><code>r4</code></th><th class="num"><code>grand25</code></th><th class="num"><code>grand50</code></th></tr>
+    <tr class="hl"><td>Qwen3-8B</td><td class="num">30% / 12%</td><td class="num">36% / 12%</td><td class="num">9% / 27%</td><td class="num">18% / 20%</td><td class="num">25% / 14%</td><td class="num">30% / 12%</td></tr>
+    <tr><td>gpt-oss-20b</td><td class="num">18% / 10%</td><td class="num">24% / 12%</td><td class="num">14% / 16%</td><td class="num">16% / 14%</td><td class="num">16% / 12%</td><td class="num">20% / 10%</td></tr>
+    <tr><td>Qwen3-4B (old games)</td><td class="num">20% / 8%</td><td class="num">6% / 9%</td><td class="num">1% / 9%</td><td class="num">2% / 3%</td><td class="num">–</td><td class="num">–</td></tr>
+  </table>
+  <div class="cols" style="margin-top:1.2em">
+    <div class="card"><p><b>gpt-oss:</b> same direction, a quarter of the size. <code>lr4</code> 7 games of 50 against <code>er4</code> 12 (p = 0.33); wins 8 against 6. Not established.</p></div>
+    <div class="card"><p><b>Qwen3-4B:</b> eats ingredients mainly in <code>e1</code> (18 games against 5 for <code>er4</code>, p = 0.007). In the every-4 modes it rarely gets that far: 40-60% of its games end at the step limit or in a loop.</p></div>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="slide">
+  <div class="kicker">8B against gpt-oss</div>
+  <h2>Only 8B gains from the lr4</h2>
+  <div class="cols">
+    <div>
+      <h3>What a kept reasoning contains (<code>lr4</code>)</h3>
+      <table>
+        <tr><th>per reasoning</th><th class="num">Qwen3-8B</th><th class="num">gpt-oss</th></tr>
+        <tr><td>words</td><td class="num">445</td><td class="num">197</td></tr>
+        <tr><td>state of the task (recipe, already, still need…)</td><td class="num">7.2</td><td class="num">2.8</td></tr>
+        <tr><td>hypotheses (maybe, perhaps, alternatively…)</td><td class="num">20.3</td><td class="num">13.0</td></tr>
+        <tr><td>command wordings tried in quotes</td><td class="num">6.9</td><td class="num">22.7</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>The 3 turns after it: kept against erased</h3>
+      <table>
+        <tr><th></th><th class="num">Qwen3-8B</th><th class="num">gpt-oss</th></tr>
+        <tr class="hl"><td>the turn gains a point</td><td class="num" style="white-space:nowrap">17% vs 11%<br>p = 0.012</td><td class="num" style="white-space:nowrap">15% vs 14%<br>p = 0.85</td></tr>
+        <tr><td>the command comes from the reasoning</td><td class="num" style="white-space:nowrap">68% vs 70%</td><td class="num" style="white-space:nowrap">63% vs 51%<br>p = 0.004</td></tr>
+      </table>
+      <p>The 8B writes a note on the state of the task. gpt-oss writes a list of wordings to try for one command, follows it, and gains nothing.</p>
+    </div>
+  </div>
+  <p class="note">Word counts with fixed patterns: a crude measure. The reasonings of gpt-oss are not labelled yet.</p>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <div class="kicker">Summary</div>
+  <div class="cols">
+    <div class="card">
+      <h3>Supported</h3>
+      <ul>
+        <li>The amount of thinking has a low ceiling <span class="tag green">2 families</span></li>
+        <li>The moment of thinking does not matter <span class="tag green">2 families</span></li>
+        <li>Keeping the last reasoning doubles the wins <span class="tag amber">8B only</span></li>
+        <li>Ephemeral reasoning loses the thread near the end of the task, however often the model thinks <span class="tag amber">8B only</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Open</h3>
+      <ul>
+        <li><b>Why</b> the kept reasoning prevents the eating: not tested (read the reasonings before an <code>eat</code>).</li>
+        <li><code>e1</code>, <code>er4</code>, <code>r4</code>, <code>grand50</code> of the 8B have 50 games; <code>lr4</code> has 150.</li>
+        <li>The win rate was not a planned measure.</li>
+        <li>gpt-oss in the format it was trained on with its reasoning in view (the game as tool calls).</li>
+        <li>Labels of the reasonings are a model's, no human check yet.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+</div>
+
+<div class="footer" id="footer"><span>Cooking games · findings of 17 – 19 November 2026</span><span id="counter"></span></div>
+<div class="progress" id="progress"></div>
+<div class="nav"><button onclick="go(-1)">‹</button><button onclick="go(1)">›</button><button onclick="toggleFs()">⛶</button></div>
+
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  let current = Math.max(0, Math.min(slides.length - 1, parseInt(location.hash.slice(1) || "1", 10) - 1)) || 0;
+  function show(i) {
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle("active", j === current));
+    document.getElementById("counter").textContent = `${current + 1} / ${slides.length}`;
+    document.getElementById("progress").style.width = `${100 * (current + 1) / slides.length}%`;
+    document.getElementById("footer").style.display = current === 0 ? "none" : "flex";
+    history.replaceState(null, "", "#" + (current + 1));
+  }
+  function go(d) { show(current + d); }
+  function toggleFs() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  document.addEventListener("keydown", e => {
+    if (["ArrowRight", "PageDown", " ", "Enter"].includes(e.key)) { e.preventDefault(); go(1); }
+    if (["ArrowLeft", "PageUp", "Backspace"].includes(e.key)) { e.preventDefault(); go(-1); }
+    if (e.key === "Home") show(0);
+    if (e.key === "End") show(slides.length - 1);
+    if (e.key === "f") toggleFs();
+  });
+  document.getElementById("deck").addEventListener("click", e => {
+    if (e.target.closest("button, a, pre")) return;
+    go(e.clientX > window.innerWidth / 3 ? 1 : -1);
+  });
+  show(current);
+</script>
+</body>
+</html>

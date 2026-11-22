@@ -27,6 +27,19 @@ THIRD STEP: Recognize if you find yourself in a loop. Your most important goal i
 FINALLY, say your next action as a short command. Only output the command, nothing else.
 """,
     },
+    "CoT_grounded": { # game-agnostic CoT: literal steps, prerequisite check before final/irreversible actions, gentler loop recovery
+        "system": """
+You are an expert assistant playing a textual game. You attentively analyze the game environment and find the best course of action.
+The user gives you information on the environment and you reply with a short command, like \"go north\". Follow the game's instructions and steps literally, in order, without skipping steps or inventing shortcuts. Think thoroughly about how to reach the objective and then output the action, nothing else.
+""",
+        "selfeval": """
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the exact goal and every step given by the game, literally and in order. Treat every stated step as a literal action to perform unless the game explicitly tells you it is not a recognized verb.
+SECOND STEP: State what you have already completed, what prerequisites are still missing, and what the single next literal step is. Do not skip ahead to a final or irreversible action while an earlier step or prerequisite is still incomplete.
+THIRD STEP: Check if your recent actions failed or looped. If a command was rejected as an unknown verb, try a simpler phrasing for the SAME step. If a command was understood but failed because something is missing or not ready, fulfill that prerequisite instead of guessing an unrelated or irreversible action.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+""",
+    },
 }
 
 # sampling parameters of the self-evaluations ("think") and of the normal turns.
@@ -35,4 +48,6 @@ SAMPLING = {
     "default": {"think": None, "normal": None},
     "CoT": {"think": dict(temperature=0.65, top_p=0.9, min_p=0.05, top_k=25),
             "normal": dict(temperature=0.7, top_p=0.9, min_p=0.1, top_k=20)},
+    "CoT_grounded": {"think": dict(temperature=0.65, top_p=0.9, min_p=0.05, top_k=25),
+                     "normal": dict(temperature=0.7, top_p=0.9, min_p=0.1, top_k=20)},
 }

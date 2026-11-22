@@ -345,10 +345,47 @@ def test_grid_files():
         print(f"ok {name}: {len(list(run.grid_games(grid)))} games")
 
 
+def test_model_prompts_and_isolation():
+    """Per-model prompts (model_prompts), Engine.close() shutdown, and multi-model subprocess dispatch."""
+    grid = run.load_grid(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "grids", "cooking_grounded.yaml"))
+    run.check_modes(grid)
+    assert run.model_prompts(grid, "openai/gpt-oss-20b") == ["CoT+oneline", "CoT_grounded+oneline"]
+    assert run.model_prompts(grid, "Qwen/Qwen3-8B-FP8") == ["CoT", "CoT_grounded"]
+    # Engine.close() restores scheduler._preempt_request and shuts down engine_core + model_executor
+    closed = []
+    orig_preempt = lambda *a, **k: None
+    scheduler = types.SimpleNamespace(_preempt_request=lambda *a, **k: None)
+    executor = types.SimpleNamespace(shutdown=lambda: closed.append("executor"))
+    inner_core = types.SimpleNamespace(scheduler=scheduler, model_executor=executor)
+    outer_core = types.SimpleNamespace(engine_core=inner_core, shutdown=lambda: closed.append("core"))
+    real_engine = FakeEngine.__bases__[0]
+    e = object.__new__(real_engine)
+    e.llm = object()
+    e.tokenizer = object()
+    e.backend = types.SimpleNamespace(engine_core=outer_core, shutdown=lambda: closed.append("backend"))
+    e._preempt_restore = (scheduler, orig_preempt)
+    e.close()
+    assert scheduler._preempt_request is orig_preempt
+    assert closed == ["core", "backend", "executor"] and not hasattr(e, "llm") and not hasattr(e, "backend")
+    # isolate_models=True dispatches one subprocess per model with unplayed work (skipping done ones)
+    spawned = []
+    orig_sub = run._run_model_subprocess
+    run._run_model_subprocess = lambda script, g, model, *a: spawned.append(model)
+    try:
+        small = dict(run.DEFAULTS, models=["Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B"], modes=["0"],
+                     prompts=["CoT"], games={"cooking": [1]}, seeds=[1])
+        run.run_grid(small, tempfile.mkdtemp(), read=[], isolate_models=True, verbose=False)
+        assert spawned == ["Qwen/Qwen3-1.7B", "Qwen/Qwen3-4B"], spawned
+    finally:
+        run._run_model_subprocess = orig_sub
+    print("ok model_prompts, Engine.close() shutdown, and multi-model subprocess isolation")
+
+
 if __name__ == "__main__":
     test_grid_files()
     test_context_budget()
     test_auto_parallel()
     test_measured_budget()
     test_kv_usage_display()
+    test_model_prompts_and_isolation()
     test_run_grid()

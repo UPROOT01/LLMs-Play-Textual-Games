@@ -115,21 +115,30 @@ class Engine:
         if cache_config.num_gpu_blocks:
             self.kv_capacity = cache_config.num_gpu_blocks * cache_config.block_size
         self.preemptions = None # requests vLLM paused for lack of KV cache (None: cannot be counted in this vLLM)
+        self._preempt_restore = None
         try:
             scheduler = self.backend.engine_core.engine_core.scheduler
             preempt = scheduler._preempt_request
+            counter = [0]
 
             def counted_preempt(*args, **kwargs):
-                self.preemptions += 1
+                counter[0] += 1
                 return preempt(*args, **kwargs)
             scheduler._preempt_request = counted_preempt
+            self._preempt_counter = counter
+            self._preempt_restore = (scheduler, preempt)
             self.preemptions = 0
         except Exception:
-            pass
+            self._preempt_counter = None
         print(f"{model}: KV cache of {self.kv_capacity} tokens" if self.kv_capacity else
               f"{model}: unknown KV cache size, n_parallel='auto' plays {FALLBACK_PARALLEL} games at a time")
         self.description = dict(backend=f"vllm {vllm.__version__}", gpu_memory_utilization=gpu_memory_utilization,
                                 **llm_settings)
+
+    def _sync_preemptions(self):
+        if getattr(self, "_preempt_counter", None) is not None:
+            self.preemptions = self._preempt_counter[0]
+        return getattr(self, "preemptions", None)
 
     def kv_usage(self):
         """Fraction of the KV cache held right now by the requests being generated (blocks that are free but still
@@ -140,10 +149,33 @@ class Engine:
             return None
 
     def close(self):
-        """Frees the GPU memory, to load another model. If it is not enough (out of memory when loading the next
-        model), restart the runtime: the games already played are not played again."""
-        import torch
-        del self.llm, self.backend
+        """Shuts down vLLM's engine core and frees GPU memory, so another model can be loaded. For multi-model grids,
+        run.py / run_duel.py also isolate each model in its own subprocess so the OS reclaims 100% of VRAM."""
+        if getattr(self, "_preempt_restore", None) is not None:
+            scheduler, original = self._preempt_restore
+            try:
+                scheduler._preempt_request = original
+            except Exception:
+                pass
+            self._preempt_restore = None
+        backend = getattr(self, "backend", None)
+        if backend is not None:
+            for obj in (getattr(backend, "engine_core", None), backend):
+                shutdown = getattr(obj, "shutdown", None)
+                if callable(shutdown):
+                    try:
+                        shutdown()
+                    except Exception:
+                        pass
+            try:
+                executor = backend.engine_core.engine_core.model_executor
+                if callable(getattr(executor, "shutdown", None)):
+                    executor.shutdown()
+            except Exception:
+                pass
+        for attr in ("llm", "backend", "tokenizer"):
+            if hasattr(self, attr):
+                delattr(self, attr)
         try:
             from vllm.distributed.parallel_state import destroy_model_parallel, destroy_distributed_environment
             destroy_model_parallel()
@@ -151,7 +183,20 @@ class Engine:
         except Exception:
             pass
         gc.collect()
-        torch.cuda.empty_cache()
+        try:
+            import torch
+            if torch.cuda.is_available():
+                try:
+                    torch.cuda.synchronize()
+                except Exception:
+                    pass
+                torch.cuda.empty_cache()
+                try:
+                    torch.cuda.ipc_collect()
+                except Exception:
+                    pass
+        except ImportError:
+            pass
 
     def _sampling_params(self, max_tokens, sampling):
         from vllm import SamplingParams
@@ -245,8 +290,9 @@ class Engine:
 
                 if in_vllm:
                     usage = self.kv_usage() if verbose or budget else None # before the step
+                    preemptions = self._sync_preemptions()
                     if usage is not None and budget:
-                        budget.measure(usage, getattr(self, "preemptions", None))
+                        budget.measure(usage, preemptions)
                     if usage is not None:
                         usage_sum += usage
                         usage_samples += 1
@@ -287,12 +333,13 @@ class Engine:
                                   + f" (peak {max(peak for _, peak in peaks):.0%})"
                     elif budget:
                         text += ", actual not readable in this vLLM"
-                    if getattr(self, "preemptions", None) is not None:
-                        history_preemptions.append((last_display, self.preemptions))
+                    preemptions = self._sync_preemptions()
+                    if preemptions is not None:
+                        history_preemptions.append((last_display, preemptions))
                         while last_display - history_preemptions[0][0] > RECENT:
                             history_preemptions.popleft()
-                        text += f"; {self.preemptions - history_preemptions[0][1]} requests paused (preempted) in the last {recent / 60:.0f} min" \
-                              + f", {self.preemptions} since the start"
+                        text += f"; {preemptions - history_preemptions[0][1]} requests paused (preempted) in the last {recent / 60:.0f} min" \
+                              + f", {preemptions} since the start"
                     display_handle = _show(text, display_handle)
         finally:
             if in_vllm:

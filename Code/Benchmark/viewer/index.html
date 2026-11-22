@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark results viewer</title>
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<header>
+  <h1>Benchmark results</h1>
+  <label class="pick">
+    <input type="file" id="folder" webkitdirectory directory multiple hidden autocomplete="off">
+    <span class="button" id="pickButton">Choose the results folder…</span>
+  </label>
+  <span id="status"></span>
+  <div class="selectors" id="selectors" hidden>
+    <label>Model <select id="model"></select></label>
+    <label>Game <select id="game"></select></label>
+    <label>Prompt <select id="prompt"></select></label>
+    <label>Mode <select id="mode"></select></label>
+  </div>
+</header>
+
+<main>
+  <section id="welcome">
+    <p>Click <b>Choose the results folder…</b> and select <code>Code/Benchmark/results</code>, or the folder <code>Code</code>
+       to also read the logs of the old imported games, which are in <code>Code/Experiments</code>.</p>
+    <p>Nothing is uploaded: the browser only reads the files from your disk, and only the games you open.
+       The browser may ask to confirm "uploading" thousands of files; that is its wording for letting this page read them.</p>
+  </section>
+
+  <section id="overview" hidden>
+    <h2>Modes <small id="overviewTitle"></small></h2>
+    <div class="scroll"><table id="modes"></table></div>
+  </section>
+
+  <section id="games" hidden>
+    <h2>Games <small id="gamesTitle"></small></h2>
+    <p class="legend">One cell per game: the score (0 to 1). <span class="mark">★</span> won · <span class="mark">↻</span> stopped for a loop. Click a cell to read the game.</p>
+    <div class="scroll"><table id="grid"></table></div>
+  </section>
+
+  <section id="detail" hidden>
+    <div class="detailhead">
+      <h2 id="detailTitle"></h2>
+      <span class="nav">
+        <button id="prev" title="previous game (←)">←</button>
+        <button id="next" title="next game (→)">→</button>
+      </span>
+    </div>
+    <div id="facts"></div>
+    <div id="trajectory"></div>
+    <p class="legend" id="hint"></p>
+    <div class="tabs" id="tabs"></div>
+    <div class="logtools" id="logtools">
+      <label><input type="checkbox" id="hideThink"> hide the reasonings</label>
+      <label><input type="checkbox" id="hideGame"> hide the game's text</label>
+      <input type="search" id="filter" placeholder="filter the turns (text)…">
+      <span id="filterCount"></span>
+    </div>
+    <div id="content"></div>
+  </section>
+</main>
+<script src="viewer.js"></script>
+</body>
+</html>

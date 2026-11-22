@@ -31,11 +31,14 @@ import argparse
 import json
 import os
 import random
+import subprocess
+import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 
 from records import LEGACY_RESULTS, record_path, save_record
-from run import grid_games, is_played, load_grid, summary
+from run import grid_games, is_played, load_grid, model_prompts, summary
 
 DUEL_DEFAULTS = dict(max_steps=100, max_illegal=3, illegal_policy="random", colors="alternate", game_options={},
                      adjudicate=None, adjudicate_cp=300, shadow_fast_move=False, solver="auto")
@@ -95,10 +98,11 @@ def load_duel_grid(path):
     from duel_games import make_game
     from duel_prompts import DUEL_PROMPTS
     for game in grid["games"]:
-        for prompt in grid["prompts"]: # unknown prompts and boards fail now, not after loading the model
-            if split_prompt(prompt)[0] not in DUEL_PROMPTS[game]:
-                raise ValueError(f"unknown prompt {prompt!r} for {game}: one of {sorted(DUEL_PROMPTS[game])}")
-            make_game(game, **prompt_game_options(grid, game, prompt))
+        for model in grid["models"]:
+            for prompt in model_prompts(grid, model): # unknown prompts and boards fail now, not after loading the model
+                if split_prompt(prompt)[0] not in DUEL_PROMPTS[game]:
+                    raise ValueError(f"unknown prompt {prompt!r} for {game}: one of {sorted(DUEL_PROMPTS[game])}")
+                make_game(game, **prompt_game_options(grid, game, prompt))
     for game, levels in grid["games"].items():
         for level in levels:
             parse_opponent(level, game) # unknown opponents fail now, not after loading the model
@@ -113,12 +117,13 @@ def agent_color(seed, colors):
 
 
 def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_parallel="auto",
-                  gpu_memory_utilization=0.9, verbose=True):
+                  gpu_memory_utilization=0.9, verbose=True, isolate_models="auto"):
     """Plays the games of the grid (a path or a dict of load_duel_grid()) not yet played, and saves their records in
     results. The other arguments are those of run.run_grid()."""
+    import engine as engine_mod
     from duel import Contestants, DuelAgent, parse_opponent, play_duel, stockfish_path, write_transcript
-    from engine import Engine
     from profiles import model_settings
+    from run import _run_model_subprocess
 
     if isinstance(grid, str):
         grid = load_duel_grid(grid)
@@ -126,13 +131,28 @@ def run_duel_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None
             or (grid["adjudicate"] == "stockfish" and "chess" in grid["games"]):
         stockfish_path() # missing Stockfish fails now, not in the middle of the games
     folders = [results, *read]
+    selected = [m for m in grid["models"] if not models or m in models]
+    pending = [(m, [g for g in grid_games(grid, [m]) if not is_played(folders, g)]) for m in selected]
+    if limit is not None:
+        pending = [(m, games[:limit]) for m, games in pending]
+    with_work = [m for m, games in pending if games]
+    use_subprocess = (isolate_models is True) or (
+        isolate_models == "auto" and len(with_work) > 1 and engine_mod.Engine.__module__ == "engine"
+    )
+    if use_subprocess:
+        grid_solver(grid) # fail fast before launching subprocesses if the solver is missing
+        for model, to_play in pending:
+            if not to_play:
+                print(f"{model}: 0 games to play")
+                continue
+            print(f"{model}: launching isolated process ({len(to_play)} games to play)")
+            _run_model_subprocess(os.path.abspath(__file__), grid, model, results, read,
+                                  limit, n_parallel, gpu_memory_utilization, verbose)
+        return
+
+    Engine = engine_mod.Engine
     solver = grid_solver(grid) # missing solver fails now, not in the middle of the games
-    for model in grid["models"]:
-        if models and model not in models:
-            continue
-        to_play = [game_id for game_id in grid_games(grid, [model]) if not is_played(folders, game_id)]
-        if limit is not None:
-            to_play = to_play[:limit]
+    for model, to_play in pending:
         print(f"{model}: {len(to_play)} games to play")
         if not to_play:
             continue
@@ -219,13 +239,17 @@ def main():
                         help="games played at the same time, or auto: as many as fit in the GPU memory")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9)
     parser.add_argument("--dry-run", action="store_true", help="only show what is played and what is left")
+    parser.add_argument("--in-process", action="store_true",
+                        help="do not spawn one subprocess per model (used internally by isolated runs)")
+    parser.add_argument("--quiet", action="store_true", help="suppress per-game progress output")
     args = parser.parse_args()
     grid = load_duel_grid(args.grid)
     if args.dry_run:
         summary(grid, args.results, args.read, args.model)
     else:
         n_parallel = args.n_parallel if args.n_parallel == "auto" else int(args.n_parallel)
-        run_duel_grid(grid, args.results, args.read, args.model, args.limit, n_parallel, args.gpu_memory_utilization)
+        run_duel_grid(grid, args.results, args.read, args.model, args.limit, n_parallel, args.gpu_memory_utilization,
+                      verbose=not args.quiet, isolate_models=False if args.in_process else "auto")
 
 
 if __name__ == "__main__":

@@ -12,6 +12,9 @@ stopped every combination has the same seeds. Stopping and running again resumes
 import argparse
 import os
 import random
+import subprocess
+import sys
+import tempfile
 import time
 from collections import Counter
 from datetime import datetime, timezone
@@ -37,16 +40,31 @@ def load_grid(path):
     return grid
 
 
+def model_prompts(grid, model):
+    """Prompts of one model in the grid: model_prompts[model] if set, otherwise grid['prompts']."""
+    overrides = grid.get("model_prompts") or {}
+    return list(overrides.get(model, grid.get("prompts", ())))
+
+
 def check_modes(grid):
-    """An unknown mode, or a gate that needs the position of a two-player game, fails now and not after loading the
-    model (the textual games have the gates gfail and grand<p>: gate.TEXTUAL_GATES)."""
-    from agent import parse_mode
+    """An unknown mode, unknown prompt/option, or a gate that needs the position of a two-player game fails now and
+    not after loading the model (the textual games have the gates gfail and grand<p>: gate.TEXTUAL_GATES)."""
+    from agent import PROMPT_OPTIONS, parse_mode
     from gate import TEXTUAL_GATES, parse_gate
+    from prompts import PROMPTS
     for mode in grid["modes"]:
         gate = parse_mode(mode)["gate"]
         if gate is not None and parse_gate(gate)[0] not in TEXTUAL_GATES:
             raise ValueError(f"mode {mode} is for the two-player games (run_duel.py): the textual games have "
                              f"g{' / g'.join(TEXTUAL_GATES)}")
+    for model in grid.get("models", ()):
+        for prompt in model_prompts(grid, model):
+            base, *options = prompt.split("+")
+            if base not in PROMPTS:
+                raise ValueError(f"unknown prompt {base!r} (in {prompt!r}): one of {sorted(PROMPTS)}")
+            for option in options:
+                if option not in PROMPT_OPTIONS:
+                    raise ValueError(f"unknown prompt option {option!r} (in {prompt!r}): {', '.join(PROMPT_OPTIONS)}")
 
 
 def grid_games(grid, models=None):
@@ -54,10 +72,11 @@ def grid_games(grid, models=None):
     for model in grid["models"]:
         if models and model not in models:
             continue
+        prompts = model_prompts(grid, model)
         for seed in grid["seeds"]:
             for game, levels in grid["games"].items():
                 for level in levels:
-                    for prompt in grid["prompts"]:
+                    for prompt in prompts:
                         for mode in grid["modes"]:
                             yield model, game, prompt, mode, level, seed
 
@@ -76,7 +95,7 @@ def token_samples(grid, folders, per_mode=30):
         for folder in folders:
             for model in grid["models"]:
                 for game in grid["games"]:
-                    for prompt in grid["prompts"]:
+                    for prompt in model_prompts(grid, model):
                         path = os.path.join(folder, model_folder(model), game, prompt, mode)
                         if os.path.isdir(path):
                             paths += [os.path.join(path, name) for name in sorted(os.listdir(path))
@@ -126,26 +145,65 @@ def summary(grid, results, read, models=None):
           "(the token estimate uses some games already played with the same mode, models, games and prompts of the grid)")
 
 
+def _run_model_subprocess(script, grid, model, results, read, limit, n_parallel, gpu_memory_utilization, verbose):
+    """Runs one model of a grid in a fresh Python process so the OS reclaims 100% of GPU memory when it finishes."""
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as tmp:
+        yaml.safe_dump(grid, tmp, sort_keys=False)
+        tmp_path = tmp.name
+    try:
+        cmd = [sys.executable, script, tmp_path, "--results", results, "--model", model,
+               "--n-parallel", str(n_parallel), "--gpu-memory-utilization", str(gpu_memory_utilization),
+               "--in-process"]
+        if limit is not None:
+            cmd += ["--limit", str(limit)]
+        if not verbose:
+            cmd += ["--quiet"]
+        cmd += ["--read", *list(read)]
+        env = {**os.environ, "PYTHONUNBUFFERED": "1"}
+        subprocess.run(cmd, check=True, env=env)
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
+
 def run_grid(grid, results, read=(LEGACY_RESULTS,), models=None, limit=None, n_parallel="auto",
-             gpu_memory_utilization=0.9, verbose=True):
+             gpu_memory_utilization=0.9, verbose=True, isolate_models="auto"):
     """Plays the games of the grid (a path or a dict of load_grid()) not yet played, and saves their records in results.
     read: other results folders whose games are not played again. models: only these models of the grid.
     limit: at most this many games per model (e.g. for a pilot).
-    n_parallel: games played at the same time, or "auto": as many as fit in the GPU memory (see engine.ContextBudget)."""
+    n_parallel: games played at the same time, or "auto": as many as fit in the GPU memory (see engine.ContextBudget).
+    isolate_models: True runs each model in its own subprocess so the OS reclaims all VRAM between models (preventing
+    vLLM V1 multi-model OOM); "auto" isolates whenever >1 model has unplayed games and Engine is not monkeypatched."""
+    import engine as engine_mod
     from agent import SelfEvalAgent
-    from engine import Engine
     from profiles import model_settings
 
     if isinstance(grid, str):
         grid = load_grid(grid)
     check_modes(grid)
     folders = [results, *read]
-    for model in grid["models"]:
-        if models and model not in models:
-            continue
-        to_play = [game_id for game_id in grid_games(grid, [model]) if not is_played(folders, game_id)]
-        if limit is not None:
-            to_play = to_play[:limit]
+    selected = [m for m in grid["models"] if not models or m in models]
+    pending = [(m, [g for g in grid_games(grid, [m]) if not is_played(folders, g)]) for m in selected]
+    if limit is not None:
+        pending = [(m, games[:limit]) for m, games in pending]
+    with_work = [m for m, games in pending if games]
+    use_subprocess = (isolate_models is True) or (
+        isolate_models == "auto" and len(with_work) > 1 and engine_mod.Engine.__module__ == "engine"
+    )
+    if use_subprocess:
+        for model, to_play in pending:
+            if not to_play:
+                print(f"{model}: 0 games to play")
+                continue
+            print(f"{model}: launching isolated process ({len(to_play)} games to play)")
+            _run_model_subprocess(os.path.abspath(__file__), grid, model, results, read,
+                                  limit, n_parallel, gpu_memory_utilization, verbose)
+        return
+
+    Engine = engine_mod.Engine
+    for model, to_play in pending:
         print(f"{model}: {len(to_play)} games to play")
         if not to_play:
             continue
@@ -201,13 +259,17 @@ def main():
                         help="games played at the same time, or auto: as many as fit in the GPU memory")
     parser.add_argument("--gpu-memory-utilization", type=float, default=0.9)
     parser.add_argument("--dry-run", action="store_true", help="only show what is played and what is left")
+    parser.add_argument("--in-process", action="store_true",
+                        help="do not spawn one subprocess per model (used internally by isolated runs)")
+    parser.add_argument("--quiet", action="store_true", help="suppress per-game progress output")
     args = parser.parse_args()
     grid = load_grid(args.grid)
     if args.dry_run:
         summary(grid, args.results, args.read, args.model)
     else:
         n_parallel = args.n_parallel if args.n_parallel == "auto" else int(args.n_parallel)
-        run_grid(grid, args.results, args.read, args.model, args.limit, n_parallel, args.gpu_memory_utilization)
+        run_grid(grid, args.results, args.read, args.model, args.limit, n_parallel, args.gpu_memory_utilization,
+                 verbose=not args.quiet, isolate_models=False if args.in_process else "auto")
 
 
 if __name__ == "__main__":

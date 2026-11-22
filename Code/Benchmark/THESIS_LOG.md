@@ -1685,3 +1685,199 @@ are the check before the rest. Not played with the real model yet.
   r4 58.4% and 25, er4 67.3% and 18, lr4 71.2% and 15, grand25 93.7% and 4, grand50 95.4% and 1, e1 99.7% and 0.
   (The 20% here counts every shape; the count of the first entry of today counted the answers of several lines
   only, hence its lower numbers.)
+
+## 2026-11-18 — Result of the short test of "+oneline" (cooking_gptoss_oneline_test.yaml): the rule works
+
+60 games in 3 minutes (normal: only the two cheapest modes, all the games in parallel; mode 0 generates about 500
+tokens per game). Same games (levels 1, 3, 5, seeds 1-10) without and with the option:
+
+| mode | score before | score with +oneline | won (of 30) | commands | several lines / list / marks | sentence | long |
+|---|---|---|---|---|---|---|---|
+| 0 | 0.247 | 0.473 | 1 → 6 | 55% → 86.8% | 0% | 4.2% | 9.0% |
+| r4 | 0.456 | 0.472 | 4 → 7 | 58% → 85.8% | 0% | 10.5% | 3.7% |
+
+- The three repaired shapes are gone. What is left is in a few games (4 of 30 per mode with more than 20% of
+  answers that are not commands): "We are stuck" (r4, 11 games, almost all in turns without thinking), and in
+  mode 0 commands that run on ("look stove stove top burner flame heat source…", 9 games). Left as the model's
+  behaviour; mode 0 is still loop-stopped in 13 games of 30.
+- **Mode 0 doubled and is now equal to r4.** The +0.2 of thinking over mode 0 in the first entry of today was in
+  good part the flaw: unrepaired plans weighed most on the mode with no thinking turn to break them. On 30 games
+  and three levels only; the long grid says whether thinking still helps gpt-oss, and by how much.
+
+## 2026-11-19 — Results of gpt-oss-20b in cooking with "+oneline" (cooking_gptoss_oneline.yaml): the comparable ones
+
+350 games (results/openai__gpt-oss-20b/cooking/CoT+nonempty+oneline). No answer of several lines, no list, no marks
+in any mode; no empty reasoning. These replace the numbers of the first entry of 2026-11-18 for every comparison.
+
+| mode | score | tokens | tokens per reasoning | won | loop-stopped | sentences | bad games (of 50) |
+|---|---|---|---|---|---|---|---|
+| 0 | 0.331 | 0.7k | – | 6 | 26 | 12.1% | 11 |
+| r4 | 0.379 | 2.6k | 159 | 7 | 1 | 17.6% | 10 |
+| lr4 | 0.451 | 5.5k | 449 | 8 | 0 | 9.4% | 6 |
+| er4 | 0.493 | 6.4k | 452 | 6 | 0 | 5.1% | 3 |
+| grand25 | 0.438 | 6.6k | 432 | 6 | 0 | 5.0% | 7 |
+| grand50 | 0.487 | 12.3k | 484 | 5 | 0 | 1.2% | 0 |
+| e1 | 0.451 | 36.9k | 553 | 5 | 0 | 0.0% | 0 |
+
+Per level (1, 3, 5, 7, 9): mode 0 0.52 / 0.54 / 0.36 / 0.16 / 0.08; er4 0.56 / 0.62 / 0.61 / 0.46 / 0.21.
+Paired differences over the 50 games (t test, not corrected for the number of comparisons):
+
+- **Thinking helps, on the harder levels.** er4 − 0 = +0.162 (p=0.005), e1 − 0 = +0.120 (p=0.013), grand25 − 0 =
+  +0.107 (p=0.030). At levels 1 and 3 mode 0 scores as the thinking modes; the gap is at levels 5 to 9. (The +0.2
+  of the first run was inflated by the flaw: mode 0 was 0.185 there.)
+- **The ceiling on the amount is there, and lower than Qwen3's.** Thinking about every 4 turns (er4, 6.4k tokens)
+  is not below thinking every turn (e1, 36.9k): e1 − er4 = −0.042 (p=0.28); e1 − grand50 = −0.036 (p=0.33);
+  grand50 − er4 = −0.006. Six times the tokens buy nothing.
+- **When does not matter.** grand25 − er4 = −0.054 (p=0.28): a random quarter of the turns and the clock, same
+  cost, no difference. grand50 − grand25 = +0.049 (p=0.24). The odd low grand50 of the first run is gone.
+- **Keeping the reasoning does not help gpt-oss.** lr4 − er4 = −0.042 (p=0.39): no memory effect. r4 − er4 =
+  −0.113 (p=0.041), r4 − lr4 = −0.071 (p=0.18): keeping all of them tends to hurt, as for Qwen3-4B, and the
+  reasonings shrink to 159 tokens. r4 is not above mode 0 (+0.048, p=0.34). One uncorrected p of 0.04 among
+  fourteen comparisons: a tendency, not a result.
+- **Sentences instead of commands** ("We are stuck") grow with what is kept: 0% e1, 5.1% er4, 9.4% lr4, 17.6% r4
+  (mode 0: 12.1%). Games with more than 20% of such answers score 0.14–0.27 against 0.44–0.51. Not tested whether
+  the kept reasoning causes them.
+
+**Against Qwen3.** Same in both families: the amount has a ceiling, the timing (clock or random) does not matter,
+keeping every reasoning does not help. Not the same: the +0.07 of lr4 for Qwen3-8B has no counterpart here, so it
+stays a result of one model. 50 games per mode: differences under about 0.1 are not detectable.
+
+## 2026-11-19 — A viewer of the results in the browser (viewer/)
+
+`viewer/index.html` (+ `viewer.css`, `viewer.js`), opened by double click, no server and no build step. *Why:* the
+user asked for a way to read the logs and the results by model, game and mode without opening the files by hand.
+A page opened from the disk cannot read files by itself, so the results folder is chosen once in the page; the
+records are read for the chosen model, game and prompt, a log only when its game is opened. It shows the table of
+the modes (score, won, loop-stopped, tokens; for the two-player games wins/draws/losses, illegal moves, blunder
+rate), the games of a mode as a grid level × seed, and one game: its record, the score along the steps, and the log
+split into turns (game text, answers, reasonings that can be hidden, a text filter), plus the opponent's log, the
+transcript and the move files where they exist. It computes plain means only: no test, no filter of seeds; the
+numbers of the thesis come from the notebooks and from records.load_table. Its reading of the folder and of the
+logs was run on the real files with node; the page itself was not opened in a browser here.
+- Viewer, same day: scrolling a log stalled Chrome. The user's trace showed the page almost idle (1.5 s of work in
+  10 s) and Chrome's own main process busy 87% of the time in tasks of 1.2 s each. Cause, inferred from the trace:
+  the 30,447 files chosen stayed in the file input, which is part of the page state Chrome saves at every scroll.
+  `viewer.js` now copies the list and empties the input. The earlier CSS changes (only the turns near the screen
+  are painted) stay.
+- Viewer, same day: the games imported from the old experiments (e.g. Qwen3-4B, cooking, CoT) showed no log. Their
+  logs were never copied: the record's `log` is a path in `Code/Experiments`. The viewer now finds them when the
+  folder chosen is `Code` (3,304 games); 4,187 imported games have no log at all, and the page says which case it is.
+
+## 2026-11-19 — Wins of Qwen3-8B per mode, and its kept reasoning against gpt-oss's (analysis, no new games)
+
+The user noticed in the viewer that lr4 of the 8B wins many more games, and asked whether the 8B's reasoning is a
+better note than gpt-oss's. Both checked on the played cooking games.
+
+**1. Wins (a game finished with the full score), Qwen3-8B.** Paired by level and seed, exact McNemar test.
+
+| mode | games | won | ended by the game before the end ("lost") | mean score |
+|---|---|---|---|---|
+| lr4 | 150 | 41 (27%) | 55% | 0.567 |
+| lgfail | 150 | 34 (23%) | 37% (17% loop-stopped) | 0.437 |
+| r4 | 50 | 10 (20%) | 46% | 0.480 |
+| grand25 | 150 | 21 (14%) | 70% | 0.501 |
+| e1 | 50 | 6 (12%) | 70% | 0.545 |
+| er4 | 50 | 6 (12%) | 68% | 0.413 |
+| grand50 | 50 | 6 (12%) | 74% | 0.502 |
+
+- lr4 against grand25, 150 games: 41 wins against 21; won only by lr4 26, only by grand25 6: p=0.0005. Seeds 1-10
+  alone: 16 against 8 (p=0.02); seeds 11-30 alone, played later: 25 against 13 (p=0.017). It holds on new seeds.
+- lr4 against e1, er4, grand50 (50 games each): 16 wins against 6 (p=0.013, 0.013, 0.006). e1 has lr4's mean score
+  with four times the tokens and wins less than half as often.
+- The three modes that keep a reasoning (lr4, lgfail, r4) win 20-27%; the ephemeral ones 12-14% (gfail 18%,
+  gfailstuck4 20% on 50 games). The ephemeral modes are ended by the game in about 70% of the games, lr4 in 55%.
+- The mean score hid this: a game ended early still keeps its points, so lr4's +0.07 on the score is +13 points
+  of win rate. *Caution:* the win rate was looked at after seeing it in the viewer, not planned; what defends it
+  is that it holds on each block of seeds separately.
+- gpt-oss: lr4 8 wins of 50, er4 6, e1 5: nothing.
+
+**2. The reasoning of lr4, 8B against gpt-oss** (seeds 1-10; word counts with fixed patterns, no labelling).
+
+| per reasoning | 8B lr4 | gpt-oss lr4 |
+|---|---|---|
+| words (median) | 445 | 197 |
+| hypothesis words (maybe, perhaps, might, alternatively…) | 20.3 | 13.0 |
+| state words (recipe, already, inventory, not yet, still need…) | 7.2 | 2.8 |
+| commands tried out in quotes ("cook pepper") | 6.9 | 22.7 |
+
+| turns 1-3 after a reasoning, lr4 against er4 (paired by game, Wilcoxon) | 8B | gpt-oss |
+|---|---|---|
+| the turn gains a point | 17.0% against 11.4% (p=0.012) | 14.6% against 13.6% (p=0.85) |
+| the command is announced in the reasoning | 68% against 70% (p=0.90) | 63% against 51% (p=0.004) |
+
+- The 8B's reasoning is more than twice as long and carries more of the state of the task; gpt-oss's is short and
+  mostly a list of wordings to try for one command.
+- gpt-oss does use the kept reasoning (its next commands come from it more often when it is visible), but that
+  brings no points; the 8B gains points after a visible reasoning.
+- So the difference between the two is in what the note is worth, not in whether it is read. Word counts are a
+  crude measure: a labelling of gpt-oss's reasonings with the rubric of 2026-11-09 would be the real comparison.
+
+## 2026-11-19 — Why more wins with a similar score: the games lost by eating an ingredient (Qwen3-8B, analysis)
+
+Question of the user: lr4 and lgfail win more than the ephemeral modes with a similar or lower mean score; why?
+Read from the last command of every game the game itself ended before the step limit (the game's last message is
+not in the logs, so "ate an ingredient" means the last command was `eat <ingredient>`, "cooking" that it was
+`cook …`: the wrong appliance or a second cooking, "cutting" a chop/dice/slice).
+
+| mode | games | won | lost: ate an ingredient | lost: cooking | lost: cutting | step limit | loop |
+|---|---|---|---|---|---|---|---|
+| lr4 | 150 | 27% | 9% | 38% | 9% | 15% | 2% |
+| lgfail | 150 | 23% | 3% | 26% | 8% | 23% | 17% |
+| r4 | 50 | 20% | 18% | 18% | 10% | 34% | 0% |
+| grand25 | 150 | 14% | 25% | 33% | 13% | 16% | 0% |
+| e1 | 50 | 12% | 30% | 32% | 8% | 18% | 0% |
+| er4 | 50 | 12% | 36% | 24% | 8% | 20% | 0% |
+| grand50 | 50 | 12% | 30% | 28% | 16% | 14% | 0% |
+
+- **The ephemeral modes lose a quarter to a third of their games by eating an ingredient; lr4 9%, lgfail 3%.**
+  lr4 against grand25 on the same 150 games: 13 against 37 (only lr4 10, only grand25 34; McNemar p=0.0004). The
+  losses by cooking are the same (38% against 33%).
+- **These losses come late and with a high score**: the game eaten away had 0.55 (grand25) and 0.60 (e1) of the
+  points, after a median of 47 and 36 steps. The model did most of the recipe and then ate an ingredient instead
+  of preparing the meal. This is why the ephemeral modes have a good mean score and few wins.
+- **Thinking does not prevent it, memory does**: e1 thinks at every turn and loses 30% of its games this way.
+- Of the 37 games grand25 lost by eating, lr4 won 9, lost 17 by cooking, 4 by cutting, 3 by eating, 4 at the
+  step limit: removing this loss turns a part of the games into wins and moves the others to the next obstacle.
+- **Score distribution**: e1 has 40% of its games between 0.6 and 0.8 and 12% won; lr4 20% and 27%; lgfail has 41%
+  of its games under 0.2 (the loops and the games where it never thinks) and 23% won: all or nothing.
+- Not tested: why the kept reasoning prevents it (hypothesis: it keeps the end of the recipe, "prepare meal" then
+  "eat meal", in view). Checkable by reading the reasonings before an `eat`.
+- Viewer, same day: a game that was not won shows its last command, and a cooking game ended by the game shows
+  "lost by": ate an ingredient / cooking / cutting, from that command (the reading of the entry above; the records
+  do not hold it). The percentages of won and loop-stopped replace the counts in the table of the modes.
+
+## 2026-11-19 — Games lost by eating an ingredient: gpt-oss-20b and Qwen3-4B (analysis)
+
+Same reading as the entry on Qwen3-8B (last command of a game the game ended), asked by the user.
+
+| lost by eating / won | e1 | er4 | lr4 | r4 | grand25 | grand50 |
+|---|---|---|---|---|---|---|
+| gpt-oss (+oneline, 50 games each) | 18% / 10% | 24% / 12% | 14% / 16% | 16% / 14% | 16% / 12% | 20% / 10% |
+| Qwen3-4B, CoT (old games with a log: 90 / 97 / 77 / 86) | 20% / 8% | 6% / 9% | 1% / 9% | 2% / 3% | – | – |
+| Qwen3-4B, CoT+nonempty (50 games each) | – | 4% / 8% | 4% / 4% | 2% / 8% | 0% / 6% | 14% / 10% |
+| Qwen3-8B (for comparison) | 30% / 12% | 36% / 12% | 9% / 27% | 18% / 20% | 25% / 14% | 30% / 12% |
+
+- **gpt-oss:** it eats ingredients too (16-24% of the games of the ephemeral modes), but keeping the reasoning
+  changes little: lr4 7 of 50 against er4 12 (p=0.33); lr4 and r4 together 15%, the four ephemeral modes 19.5%.
+  Wins: lr4 8, er4 6 (p=0.73). Same direction as the 8B, a quarter of the size, not significant on 50 games.
+- **Qwen3-4B:** it eats ingredients where it thinks at every turn (e1 20%; against er4 on the same games 18
+  against 5, p=0.007; against lr4 12 against 1, p=0.003) and almost never in the every-4 modes, with or without
+  memory (lr4 0 of 74 against er4 4, p=0.13). Its win rate is the same everywhere (about 8%). The 4B rarely gets
+  far enough to make this mistake: 40-60% of its every-4 games end at the step limit or in a loop.
+- **So:** the mistake is common to the three models; that the kept reasoning removes it and turns the games into
+  wins is established for the 8B only. For the 4B, e1's better score comes with more games eaten away, not with
+  more wins.
+- The old 4B games of r4 and r10 mostly have no log (94 and 91 of 180), so their row is on the games that do.
+- `presentation/findings.html` (2026-11-19): ten slides with the findings of 17-19 November (the ceiling on the
+  amount and the irrelevance of the moment in two families, the win rate of lr4 for the 8B, the games lost by
+  eating an ingredient, the other models, the reasonings of the 8B against gpt-oss, what is open). Same style and
+  keys as `presentation/index.html`; every number is from the entries above.
+- `presentation/findings.html`: two slides on the system added after the setup (the vLLM engine with continuous
+  batching, prefix caching and the automatic number of parallel games; profiles, the equivalence test, the prompt
+  options `+nonempty` and `+oneline`, the tools), asked by the user, who also rewrote some titles to be impersonal.
+  No speed figure is given: the old times are CPU times of single games and the new ones wall-clock times of games
+  played together, so no measured ratio exists.
+- `presentation/findings.html`: a slide on how the number of parallel games follows vLLM's pauses (estimate for
+  the first minute, then the measured KV cache usage against a target of 92%, lowered by 5 points when more than
+  5 requests are paused in a minute and raised by 2 after a minute without pauses), asked by the user; the numbers
+  are those of `engine.ContextBudget` (entry of 2026-11-11).

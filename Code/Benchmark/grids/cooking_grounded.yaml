@@ -1,0 +1,27 @@
+# Cooking: prompt comparison (CoT vs CoT_grounded) + summary memory (lsr4) across five model families.
+# - CoT_grounded (prompts.py): game-agnostic update targeting the two failure modes found in the eat-ingredient log
+#   inspection: (1) follow in-game instructions literally before paraphrasing/skipping steps, (2) check missing
+#   prerequisites before taking final/irreversible actions or abandoning a step to "break a loop".
+# - lsr4: thinks about every 4 turns and keeps only a short 3-sentence summary of the last reasoning (agent.py).
+# - No "+nonempty": it was a workaround for very small Qwen3 models (1.7B/4B); dropping it reuses Qwen3-8B-FP8's
+#   200 already-played CoT games (0, er4, lr4, e1) automatically.
+# - model_prompts: openai/gpt-oss-20b keeps "+oneline" (THESIS_LOG.md, 2026-11-18) so its normal turns stay one
+#   command without multi-line plan corruption.
+# - Multi-model runs isolate each model in its own subprocess (run.py) so GPU memory is 100% freed between models.
+# A textual-game grid: python run_remote.py grids/cooking_grounded.yaml  (or run.py / colab.ipynb).
+models:
+  - Qwen/Qwen3-8B-FP8
+  - openai/gpt-oss-20b
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-8B
+  - Qwen/Qwen3-14B-AWQ
+  - HuggingFaceTB/SmolLM3-3B
+modes: ["0", er4, lr4, lsr4, grand25, e1]
+prompts: [CoT, CoT_grounded]
+model_prompts:
+  openai/gpt-oss-20b: [CoT+oneline, CoT_grounded+oneline]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
