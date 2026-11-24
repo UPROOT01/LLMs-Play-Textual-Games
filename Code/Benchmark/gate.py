@@ -194,7 +194,7 @@ class SelfGate(Gate):
         board = board.rsplit("\n", 1)[0] if self.game is not None else board # without "Your move:"
         profile = agent.profile
         prompt = (profile.system(agent.system_prompt) + profile.user(board + "\n" + SELF_GATE_QUESTION, think=False)
-                  + profile.assistant_start + profile.nothink_prefill)
+                  + profile.assistant_start + agent._nothink_prefill())
         output_ids, capped = agent._generate(think=False, prompt=prompt, kind="gate", max_tokens=SELF_GATE_MAX_TOKENS)
         answer = agent._clean(agent._decode(output_ids[agent._answer_start(output_ids):]))
         word = re.search(r"\b(yes|no)\b", answer, re.I)
@@ -271,7 +271,7 @@ class SurpriseGate(Gate):
         profile = agent.profile
         body = (text + "\n\n" if text else "") + f"Answer: {command}\n\n" + question.format(move=move or command)
         prompt = (profile.system(agent.system_prompt) + profile.user(body, think=False) + profile.assistant_start
-                  + profile.nothink_prefill)
+                  + agent._nothink_prefill())
         output_ids, _ = agent._generate(think=False, prompt=prompt, kind="gate", max_tokens=EXTRACT_MAX_TOKENS)
         raw = agent._clean(agent._decode(output_ids[agent._answer_start(output_ids):])).strip()
         expected = None if re.search(r"\bnone\b", raw, re.I) else (game._prediction(raw) if game is not None else None)

@@ -307,6 +307,57 @@ def test_cot_grounded_and_lsr4():
     print("ok CoT_grounded + lsr4 across qwen3, smollm3, deepseek_r1, gpt_oss")
 
 
+def test_strictnothink():
+    """+strictnothink prefills Qwen3's official empty <think> block on every non-thinking turn without storing it,
+    and _summarize() skips empty reasonings instead of calling the model."""
+    import run
+    profile = PROFILES["qwen3"]()
+    tokenizer = AutoTokenizer.from_pretrained(EXAMPLE_MODELS["qwen3"])
+    prefill = "<think>\n\n</think>\n\n"
+    seen = {"normal": [], "think": [], "summary": []}
+
+    def generate(prompt_ids, max_tokens, sampling):
+        prompt = tokenizer.decode(prompt_ids)
+        ids = lambda s: tokenizer.encode(s, add_special_tokens=False)
+        if max_tokens == 10000:
+            seen["think"].append(prompt)
+            return ids("<think>\nlong thought\n</think>\n\ngo north") + [tokenizer.eos_token_id], False
+        if max_tokens == 160:
+            seen["summary"].append(prompt)
+            return ids("short note") + [tokenizer.eos_token_id], False
+        seen["normal"].append(prompt)
+        return ids("take key") + [tokenizer.eos_token_id], False
+
+    agent = SelfEvalAgent(profile, tokenizer, generate, "lsr4", prompt="CoT+strictnothink", rng=random.Random(0))
+    for turn in range(20):
+        assert agent.act(f"Room {turn}.") in ("go north", "take key")
+    assert seen["normal"] and all(p.endswith(profile.assistant_start + prefill) for p in seen["normal"])
+    assert seen["summary"] and all(p.endswith(profile.assistant_start + prefill) for p in seen["summary"])
+    assert seen["think"] and all(p.endswith(profile.assistant_start) and not p.endswith(prefill) for p in seen["think"])
+    assert "<think>\n\n</think>" not in agent.context
+
+    # Empty reasoning is not summarized (no hallucinated note, zero summary calls)
+    summary_calls = []
+    def empty_think(prompt_ids, max_tokens, sampling):
+        ids = lambda s: tokenizer.encode(s, add_special_tokens=False)
+        if max_tokens == 10000:
+            return ids("<think>\n\n</think>\n\ngo north") + [tokenizer.eos_token_id], False
+        if max_tokens == 160:
+            summary_calls.append(1)
+            return ids("hallucinated dungeon") + [tokenizer.eos_token_id], False
+        return ids("take key") + [tokenizer.eos_token_id], False
+
+    empty_agent = SelfEvalAgent(profile, tokenizer, empty_think, "lsr4", prompt="CoT+strictnothink", rng=random.Random(0))
+    for turn in range(12):
+        empty_agent.act(f"Room {turn}.")
+    assert summary_calls == [] and empty_agent.token_stats()["summary_turns"] == 0
+
+    grid = run.load_grid("grids/cooking_strictnothink.yaml")
+    run.check_modes(grid)
+    assert len(list(run.grid_games(grid))) == 300
+    print("ok strictnothink: Qwen3 prefill on normal/summary turns, empty summary guard, 300-game grid")
+
+
 if __name__ == "__main__":
     test_one_line()
     test_profiles_write_the_official_templates()
@@ -314,3 +365,4 @@ if __name__ == "__main__":
     test_gpt_oss()
     test_no_fp8_kv_cache()
     test_cot_grounded_and_lsr4()
+    test_strictnothink()

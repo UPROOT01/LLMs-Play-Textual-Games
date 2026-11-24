@@ -40,7 +40,7 @@ MODE_PATTERN = re.compile(r"^(?P<kind>e|r|er|lr|l|s|sr|ls|lsr|)(?P<n>\d+)$")
 GATE_MODE_PATTERN = re.compile(r"^(?P<memory>l?)g(?P<gate>[a-z]+\d*)$") # gfail, grand30, gfailidle4
 
 
-PROMPT_OPTIONS = ("nonempty", "oneline")
+PROMPT_OPTIONS = ("nonempty", "oneline", "strictnothink")
 RESTATED = ("goal", "first step") # how an answer starts when it repeats the steps of the reasoning before the command
 
 
@@ -122,7 +122,9 @@ class SelfEvalAgent:
         mode: see parse_mode(); prompt: a key of prompts.PROMPTS, or the key with options, each a prompt of its
         own in the records: "<key>+nonempty", a reasoning that comes out empty is asked again (see
         NONEMPTY_MIN_TOKENS); "<key>+oneline", only one line of an answer is the command (see one_line());
-        "<key>+nonempty+oneline", both;
+        "<key>+strictnothink", prefills "<think>\\n\\n</think>\\n\\n" on non-thinking turns of soft-switch profiles
+        (Qwen3's official enable_thinking=False prefix, preventing /no_think drift on turns 2+ after a self-eval);
+        options can be combined with "+";
         rng: random.Random used for the intervals between self-evaluations and for the substitute commands;
         log: path of the log of the game (same format of the old agent), or None.
         """
@@ -150,6 +152,7 @@ class SelfEvalAgent:
                 raise ValueError(f"unknown prompt option {option!r}: {', '.join(PROMPT_OPTIONS)}")
         self.nonempty = "nonempty" in options # an empty reasoning is asked again, with the first word written for it
         self.oneline = "oneline" in options # only one line of an answer is played and kept in the context: one_line()
+        self.strictnothink = "strictnothink" in options # prefill empty <think> block on normal turns of soft profiles
         self.empty_reasonings = self.nonempty_retries = 0 # thinking turns that came out empty / generations spent on them
         self.selfevaluations = 0 # thinking turns of the game (a retry of an empty reasoning is not another one)
         self.system_prompt = PROMPTS[prompt]["system"]
@@ -237,12 +240,19 @@ class SelfEvalAgent:
         """The piece of a normal turn before the answer."""
         return self.profile.user(obs, think=False if self.after_selfeval else None) + self.profile.assistant_start
 
+    def _nothink_prefill(self):
+        """Prefix forcing a non-thinking turn: the profile's own, or Qwen3's official empty <think> block under
+        +strictnothink (for soft-switch profiles that leave nothink_prefill empty)."""
+        if self.strictnothink and not self.profile.nothink_prefill:
+            return "<think>\n\n</think>\n\n"
+        return self.profile.nothink_prefill
+
     def preview(self, obs):
         """The answer the agent would give now without thinking, generated without touching the context (the gates and
         the shadow measure use it). The turn is recorded as "preview": _normal_turn() makes it the normal turn if the
         answer is played, act() marks it "gate" or "shadow" if it is not. Returns dict(command, generated, capped,
         turn: index in self.turns, obs)."""
-        prompt = self.context + self._user_piece(obs) + self.profile.nothink_prefill
+        prompt = self.context + self._user_piece(obs) + self._nothink_prefill()
         output_ids, capped = self._generate(think=False, prompt=prompt, kind="preview")
         command = self.rng.choice(SUBSTITUTE_COMMANDS) if capped else \
             self._command(self._decode(output_ids[self._answer_start(output_ids):]))
@@ -320,8 +330,11 @@ class SelfEvalAgent:
         """The summary of a reasoning, written by the model without thinking in a context of its own (the summary
         never reads the game, only the reasoning), as it stands in the context in the place of the reasoning."""
         text = reasoning.replace("<think>", "").replace("</think>", "").strip()
+        if not text:
+            self.last_summary = ""
+            return ""
         prompt = (self.profile.system(self.system_prompt) + self.profile.user(text + "\n\n" + SUMMARY_QUESTION, think=False)
-                  + self.profile.assistant_start + self.profile.nothink_prefill)
+                  + self.profile.assistant_start + self._nothink_prefill())
         output_ids, capped = self._generate(think=False, prompt=prompt, kind="summary", max_tokens=SUMMARY_MAX_TOKENS)
         summary = self._clean(self._decode(output_ids[self._answer_start(output_ids):])).strip()
         self.last_summary = summary
@@ -337,7 +350,7 @@ class SelfEvalAgent:
         think)."""
         max_tokens = max_tokens or (THINK_MAX_TOKENS if think else NORMAL_MAX_TOKENS)
         if prompt is None:
-            prompt = self.context + (self.profile.think_prefill if think else self.profile.nothink_prefill)
+            prompt = self.context + (self.profile.think_prefill if think else self._nothink_prefill())
         prompt_ids = self.tokenizer.encode(prompt, add_special_tokens=False)
         output_ids, hit_limit = self.generate(prompt_ids, max_tokens, self.sampling["think" if think else "normal"])
         capped = len(output_ids) >= 0.95 * max_tokens or hit_limit

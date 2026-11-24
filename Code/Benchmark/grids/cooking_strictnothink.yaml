@@ -1,0 +1,19 @@
+# Cooking: strict /no_think control for Qwen3-8B-FP8 and Qwen3-14B-AWQ (er4, lr4, lsr4).
+# - Why: under Qwen3's soft /no_think switch (sent only on the first turn after a self-evaluation), er4 and 14B lsr4
+#   drift back into thinking mode on turns 2-5 after a self-evaluation, hit NORMAL_MAX_TOKENS=100, and get replaced
+#   by substitute "help"/"look" commands on 17-20% of all normal turns (40-71% at since=4-5), vs 1-6% in lr4.
+# - CoT+strictnothink prefills Qwen3's official empty thinking block ("<think>\n\n</think>\n\n") on every non-thinking
+#   turn (and on lsr4 summary turns) without storing it in context, separating genuine memory gain (lr4/lsr4 vs er4)
+#   from soft-switch /no_think stability.
+# - 2 models x 3 modes x 5 levels x 10 seeds = 300 games (no e1, so fast to run).
+models:
+  - Qwen/Qwen3-8B-FP8
+  - Qwen/Qwen3-14B-AWQ
+modes: [er4, lr4, lsr4]
+prompts: [CoT+strictnothink]
+games:
+  cooking: [1, 3, 5, 7, 9]
+seeds: 1-10
+max_steps: 100
+loop_window: 20
+loop_max_distinct: 2
