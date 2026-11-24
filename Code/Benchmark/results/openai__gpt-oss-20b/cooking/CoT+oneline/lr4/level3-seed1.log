@@ -1,0 +1,255 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You've just walked into a kitchen. You decide to start listing off everything you see in the room, as if you were in a text adventure.
+
+You make out an opened conventional looking fridge in the room. The fridge contains a yellow bell pepper, a red bell pepper, a red hot pepper and a yellow onion. There's something strange about this being here, but you can't put your finger on it. You see a closed oven. You can see a table. You see a cookbook on the table. You can see a counter. You see a raw red potato, a red apple, a raw purple potato and a knife on the counter. You can see a stove. The stove is conventional. However, the stove, like an empty stove, has nothing on it.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+look at cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+red bell pepper
+  red potato
+  yellow bell pepper
+
+Directions:
+slice the red bell pepper
+  roast the red bell pepper
+  slice the red potato
+  fry the red potato
+  chop the yellow bell pepper
+  fry the yellow bell pepper
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+AGENT -------------------------------------------------
+take red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/4
+AGENT -------------------------------------------------
+take red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/5
+AGENT -------------------------------------------------
+help
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Available commands:
+  look:                describe the current room
+  goal:                print the goal of this game
+  inventory:           print player's inventory
+  go <dir>:            move the player north, east, south or west
+  examine ...:         examine something more closely
+  eat ...:             eat edible food
+  open ...:            open a door or a container
+  close ...:           close a door or a container
+  drop ...:            drop an object on the floor
+  take ...:            take an object that is on the floor
+  put ... on ...:      place an object on a supporter
+  take ... from ...:   take an object from a container or a supporter
+  insert ... into ...: place an object into a container
+  lock ... with ...:   lock a door or a container with a key
+  unlock ... with ...: unlock a door or a container with a key
+
+
+
+>                                                                                                                                -= Kitchen =-2/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to output just the command. But we need to think: goal: prepare meal following recipe. Steps: gather ingredients: red bell pepper, red potato, yellow bell pepper. Already have red bell pepper and red potato. Need yellow bell pepper. Need to slice red bell pepper, roast it, slice red potato, fry red potato, chop yellow bell pepper, fry yellow bell pepper, prepare meal. We have not sliced or roasted or chopped or fried anything. We need yellow bell pepper from fridge. So next action: take yellow bell pepper.
+</think>take yellow bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/7
+AGENT -------------------------------------------------
+slice red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to slice the red bell pepper with?
+
+>                                                                                                                                -= Kitchen =-3/7
+AGENT -------------------------------------------------
+knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the knife first.
+
+
+>                                                                                                                                -= Kitchen =-3/8
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-3/9
+AGENT -------------------------------------------------
+slice red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the knife)
+You slice the red bell pepper.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-4/10
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to state goal: recipe steps: slice red bell pepper, roast red bell pepper, slice red potato, fry red potato, chop yellow bell pepper, fry yellow bell pepper, prepare meal. Past actions: took red bell pepper, red potato, yellow bell pepper, knife; sliced red bell pepper. Next step: roast red bell pepper. No loop. So command: roast red bell pepper.
+</think>roast red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/10
+AGENT -------------------------------------------------
+cook red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to cook the red bell pepper with?
+
+>                                                                                                                                -= Kitchen =-4/10
+AGENT -------------------------------------------------
+oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You roasted the red bell pepper.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-5/11
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the knife)
+You slice the red potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-6/12
+AGENT -------------------------------------------------
+fry red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-6/12
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to continue cooking. Steps: slice red potato done. Next: fry red potato. But 'fry' not recognized. We need to use a recognized verb. The game has commands: look, goal, inventory, go, examine, eat, open, close, drop, take, put, take from, insert, lock, unlock. No cooking verbs. Maybe we need to use 'cook' or 'prepare'? The recipe says 'fry the red potato'. But we can't use 'fry'. Maybe we need to 'cook' the red potato. Let's see if 'cook' is recognized. Not in list. But maybe 'prepare' is recognized? Not in list. 'eat' is recognized but not cooking. Maybe we need to 'put' the potato on the stove? But stove empty. We might need to 'put red potato on stove' and then 'cook'? But no cook command. Maybe 'use stove' is implicit. Perhaps 'put' is the action to cook? The recipe might require 'fry', but we can 'put' on stove and then 'cook'? Not sure.
+
+We need to find a verb that is recognized that can accomplish cooking. The list: look, goal, inventory, go, examine, eat, open, close, drop, take, put, take from, insert, lock, unlock. None for cooking. So maybe we need to 'put' the potato on the stove, then 'eat' it? But that would skip cooking. But maybe the game expects 'put' to be the cooking action. The recipe says 'fry the red potato', so maybe we need to 'put' the potato on the stove. That might be the intended action. Let's do that.
+
+Also we need to chop yellow bell pepper. We have yellow bell pepper. Need to chop. 'chop' not recognized. Maybe 'slice' again? But we already sliced red bell pepper. For yellow, we need to 'slice' or 'cut'? 'cut' not recognized. Maybe 'slice' works for yellow too. Let's do 'slice yellow bell pepper'.
+
+But we need to 'fry' yellow bell pepper too. So we need to 'put' yellow pepper on stove. But we need to chop first. So next step: slice yellow bell pepper. Use knife. Then put on stove. Then maybe 'eat' after cooking? But we need to 'prepare meal' step. That might be 'eat' all cooked items. The goal: prepare meal. So final action likely 'eat' something.
+
+We are at step 6. Past actions: took red bell pepper, red potato, yellow bell pepper, knife. Sliced red bell pepper, roasted it. Sliced red potato. Next: need to fry red potato. So 'put red potato on stove'. Let's do that.
+
+But we need to ensure we don't repeat an action that didn't work. 'fry' not recognized. So use 'put'.
+
+Thus next command: put red potato on stove.
+</think>put red potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You put the red potato on the stove.
+
+
+>                                                                                                                                -= Kitchen =-6/13
+AGENT -------------------------------------------------
+slice yellow bell pepper
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

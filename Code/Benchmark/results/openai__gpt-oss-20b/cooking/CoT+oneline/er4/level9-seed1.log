@@ -1,0 +1,248 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+Well, here we are in the kitchen. Let's see what's in here.
+
+What's that over there? It looks like it's a fridge. You see a closed oven right there by you. You can make out a table. The table is massive. On the table you see a cookbook. Look over there! a counter. On the counter you make out a raw red potato, a red apple, a raw purple potato and a knife. Look out! It's a- oh, never mind, it's just a stove. But the thing is empty.
+
+There is a closed frosted-glass door leading west. There is an exit to the east. There is an exit to the south.
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the fridge, revealing a yellow bell pepper, a yellow onion, a green bell pepper and a raw red tuna.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+take yellow bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the yellow bell pepper from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to think about the game. The objective: "You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!"
+
+Goal: cook a meal using ingredients. We have a cookbook on table. Items: raw red potato, red apple, raw purple potato, knife, yellow bell pepper, yellow onion, green bell pepper, raw red tuna. We need to find recipe. Probably cookbook has recipes. We need to check cookbook. So next action: read cookbook. So steps: 1) Goal: cook meal. 2) Past actions: opened fridge, took yellow bell pepper. Next step: read cookbook. No loop. So command: "read cookbook".
+</think>read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+red bell pepper
+  red potato
+  yellow bell pepper
+
+Directions:
+slice the red bell pepper
+  roast the red bell pepper
+  dice the red potato
+  roast the red potato
+  chop the yellow bell pepper
+  fry the yellow bell pepper
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-1/4
+AGENT -------------------------------------------------
+slice red bell pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Which do you mean, the red tuna, the red potato or the red apple?
+
+>                                                                                                                                -= Kitchen =-1/4
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/6
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to think about the game objective: cook a meal per recipe. Steps: gather ingredients, slice, roast, dice, etc. We have: fridge items: yellow bell pepper, yellow onion, green bell pepper, raw red tuna. We have table items: raw red potato, red apple, raw purple potato, knife. We took yellow bell pepper from fridge. We opened cookbook. Recipe requires red bell pepper, red potato, yellow bell pepper. We have yellow bell pepper. We need red bell pepper and red potato. We have raw red potato. We need red bell pepper: we have yellow bell pepper, yellow onion, green bell pepper, raw red tuna. No red bell pepper. Could we use green bell pepper? No. We need red bell pepper. Maybe we can cut something else? But recipe requires red bell pepper. We might need to find red bell pepper. But maybe we can substitute? Not sure. The instructions: "Gather all following ingredients and follow the directions to prepare this tasty meal." So we need red bell pepper. We don't have it. We have raw red potato. We need to slice red bell pepper, roast it, dice red potato, roast red potato, chop yellow bell pepper, fry yellow bell pepper, prepare meal. We have yellow bell pepper. We need to chop and fry it. We have knife. We need to slice red bell pepper. We don't have it. We might need to get it from somewhere else. The environment: fridge has yellow bell pepper, yellow onion, green bell pepper, raw red tuna. No red bell pepper. Maybe we can cut raw red tuna? No. So maybe we need to find red bell pepper elsewhere. But we might not need to actually have it if we can use something else? But the recipe is strict. The game might require exact items. So we need to get red bell pepper. Maybe we can cut the green bell pepper to red? No. So maybe we need to go to another location. There's a closed frosted-glass door west, exit east, exit south. Maybe there's a pantry? Not described. But maybe we can open the fridge and see more items? We saw only those. So maybe we need to get red bell pepper from somewhere else. But we might not have to actually physically get it if we can use the raw red tuna? But no.
+
+We might need to go to the exit east to find a store? But not described. The goal: cook a meal. We have to follow recipe. So next step: we need to slice red bell pepper. But we don't have it. So we need to get it. Maybe we can use the green bell pepper? But it's not red. Might be okay? But maybe the game expects we use the green bell pepper as a substitute? But the recipe explicitly says red bell pepper. So we need to find it. Maybe the fridge had a yellow bell pepper but we need red. We could maybe cut the raw red tuna into a red bell pepper shape? No.
+
+We might need to go to the exit east to find a store. But we don't know what's there. But we can at least move east. That might lead to more items. So next action: go east. That is a different action. So we break loop. So next action: go east.
+</think>go east
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Corridor =-
+You've entered a corridor. The room is well lit.
+
+
+
+There is a closed sliding patio door leading south. There is an exit to the east. There is an exit to the west. Don't worry, there is no door.
+
+
+
+>                                                                                                                                -= Corridor =-1/7
+AGENT -------------------------------------------------
+go west
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Kitchen =-
+Well, here we are in the kitchen. Let's see what's in here.
+
+What's that over there? It looks like it's a fridge. The fridge contains a yellow onion, a green bell pepper and a raw red tuna. You see a closed oven right there by you. You can make out a table. The table is massive. On the table you see a cookbook. Look over there! a counter. On the counter you make out a raw red potato, a red apple and a raw purple potato. Look out! It's a- oh, never mind, it's just a stove. But the thing is empty.
+
+There is a closed frosted-glass door leading west. There is an exit to the east. There is an exit to the south.
+
+
+
+>                                                                                                                                -= Kitchen =-1/8
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow instructions: The goal: cook a meal per recipe. Steps: gather ingredients, slice etc. We have items: red bell pepper? Not present now: fridge has yellow onion, green bell pepper, raw red tuna. Counter has raw red potato, red apple, raw purple potato. We need red bell pepper, red potato, yellow bell pepper. We have yellow bell pepper earlier, but we took it? We took yellow bell pepper earlier. So we have yellow bell pepper. We need red bell pepper and red potato. We have raw red potato on counter. We need red bell pepper: not present. We have green bell pepper. We need red bell pepper. Maybe we can cut the green bell pepper? But recipe requires red bell pepper. Could we cut the green? No. We need red bell pepper. Maybe we can find it elsewhere? The fridge has yellow onion, green bell pepper, raw red tuna. No red bell pepper. Maybe we can cut the raw red tuna? Not relevant. We might need to find red bell pepper. Maybe we can slice the green bell pepper and use it? But recipe says red bell pepper. Maybe we can use green? But likely we need red. Maybe we can cut the raw red potato: we have raw red potato. So we can slice and dice. We need to slice red bell pepper, roast it, dice red potato, roast potato, chop yellow bell pepper, fry yellow bell pepper. We have yellow bell pepper. We need to chop it. We have knife. So next step: chop yellow bell pepper. So action: chop yellow bell pepper. But we need to slice red bell pepper. We don't have it. But maybe we can use green bell pepper? But recipe is strict. We might need to find red bell pepper elsewhere. But maybe we can use the raw red tuna? No. So maybe we can slice the raw red potato first. So next action: slice red potato. That is a step. We have knife. So let's do that. So next action: slice red potato.
+</think>slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-1/9
+AGENT -------------------------------------------------
+use knife to slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-1/9
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-1/10
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You already have that.
+
+
+
+>                                                                                                                                -= Kitchen =-1/11
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-1/12
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to think about the game. The goal: cook a meal according to recipe. Steps: gather ingredients: red bell pepper, red potato, yellow bell pepper. We have red bell pepper? We have yellow bell pepper in fridge earlier. We have red potato on counter. We need to slice red bell pepper, roast red bell pepper, dice red potato, roast red potato, chop yellow bell pepper, fry yellow bell pepper, prepare meal. We have knife. We need to slice red bell pepper and dice red potato. We also need to chop yellow bell pepper. We have to roast and fry. The oven is closed. We need to open oven? Or use stove? The stove is empty. We need to open oven to roast. So next action: open oven. But we need to slice red bell pepper first. We have red bell pepper? Wait we have red bell pepper? The fridge contains yellow onion, green bell pepper, raw red tuna. So we don't have red bell pepper. We had earlier a yellow bell pepper in fridge. But recipe requires red bell pepper. We have no red bell pepper. We have raw red potato, red apple, raw purple potato. We have no red bell pepper. So we cannot complete recipe. Maybe we need to find red bell pepper somewhere else. But we can't. Maybe we can use green bell pepper? But recipe says red bell pepper. Might be a trick. But we can proceed with available ingredients? The recipe might not be strict. But we need to slice something. We have knife. We can slice red potato. We need to dice red potato. So we need to dice. But we can't dice without knife. We have knife. So next action: dice red potato. But we need to slice red bell pepper first. We don't have it. We might need to find it. But we can't. So maybe we can use yellow bell pepper as substitute. But the recipe says slice red bell pepper. We can still slice yellow bell pepper. But we need to chop yellow bell pepper. So we need to chop. So we need to chop yellow bell pepper. So next action: chop yellow bell pepper. But we need to slice red bell pepper first. We can't. So maybe we need to find red bell pepper. But we can't. So maybe we need to open fridge to check again? We saw fridge contents. No red bell pepper. So maybe we need to go to fridge again? But we already did. So maybe we need to go to the oven? The oven is closed. We need to open it. So next action: open oven. But we need to roast. So open oven. Let's do that.
+</think>open oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the oven.
+
+
+>                                                                                                                                -= Kitchen =-1/13
+AGENT -------------------------------------------------
+put red potato in oven
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the red potato first.
+
+
+>                                                                                                                                -= Kitchen =-1/14
+AGENT -------------------------------------------------
+take red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/15
+AGENT -------------------------------------------------
+slice red potato
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

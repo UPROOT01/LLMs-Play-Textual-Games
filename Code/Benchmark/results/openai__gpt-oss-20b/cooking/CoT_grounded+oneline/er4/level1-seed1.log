@@ -1,0 +1,219 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You've just shown up in a kitchen. You start to take note of what's in the room.
+
+You can see an opened fridge. What a letdown! The fridge is empty! You can make out a closed oven. Oh, great. Here's a table. You see a cookbook on the table. Huh, weird. You can see a counter. You see a raw red potato, a red bell pepper, a raw purple potato and a knife on the counter. You see a stove. The stove is conventional. But oh no! there's nothing on this piece of trash.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+look at cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+red potato
+
+Directions:
+slice the red potato
+  fry the red potato
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the exact goal and every step given by the game, literally and in order. Treat every stated step as a literal action to perform unless the game explicitly tells you it is not a recognized verb.
+SECOND STEP: State what you have already completed, what prerequisites are still missing, and what the single next literal step is. Do not skip ahead to a final or irreversible action while an earlier step or prerequisite is still incomplete.
+THIRD STEP: Check if your recent actions failed or looped. If a command was rejected as an unknown verb, try a simpler phrasing for the SAME step. If a command was understood but failed because something is missing or not ready, fulfill that prerequisite instead of guessing an unrelated or irreversible action.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+look
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-= Kitchen =-
+You've just shown up in a kitchen. You start to take note of what's in the room.
+
+You can see an opened fridge. What a letdown! The fridge is empty! You can make out a closed oven. Oh, great. Here's a table. You see a cookbook on the table. Huh, weird. You can see a counter. You see a raw red potato, a red bell pepper, a raw purple potato and a knife on the counter. You see a stove. The stove is conventional. But oh no! there's nothing on this piece of trash.
+
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+use knife on red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/5
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the exact goal and every step given by the game, literally and in order. Treat every stated step as a literal action to perform unless the game explicitly tells you it is not a recognized verb.
+SECOND STEP: State what you have already completed, what prerequisites are still missing, and what the single next literal step is. Do not skip ahead to a final or irreversible action while an earlier step or prerequisite is still incomplete.
+THIRD STEP: Check if your recent actions failed or looped. If a command was rejected as an unknown verb, try a simpler phrasing for the SAME step. If a command was understood but failed because something is missing or not ready, fulfill that prerequisite instead of guessing an unrelated or irreversible action.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow instructions. The goal: prepare meal using recipe: slice red potato, fry red potato, prepare meal. We have red potato, knife. We need to slice. The verb recognized? Maybe "cut" or "slice" is recognized? We tried "slice red potato" and it was not recognized. So maybe the verb is "slice" but the game didn't recognize? Could be "slice" is not recognized, maybe "cut" is recognized. Try "cut red potato". But we need to use knife. Maybe "cut" requires knife? The game says cutting something requires a knife. So maybe we need to "use knife on red potato" but that was not recognized. Maybe the verb is "cut" or "slice" but we need to specify "with knife". The game says "Cutting something requires a knife." So maybe we need to "cut red potato with knife". Let's try "cut red potato with knife". That might be recognized. We'll do that.
+</think>cut red potato with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to cut the red potato.
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+slice red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the red potato)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/6
+AGENT -------------------------------------------------
+use knife on red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/6
+AGENT -------------------------------------------------
+slice red potato with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the red potato first.
+
+
+>                                                                                                                                -= Kitchen =-0/7
+AGENT -------------------------------------------------
+take red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red potato from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/8
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the exact goal and every step given by the game, literally and in order. Treat every stated step as a literal action to perform unless the game explicitly tells you it is not a recognized verb.
+SECOND STEP: State what you have already completed, what prerequisites are still missing, and what the single next literal step is. Do not skip ahead to a final or irreversible action while an earlier step or prerequisite is still incomplete.
+THIRD STEP: Check if your recent actions failed or looped. If a command was rejected as an unknown verb, try a simpler phrasing for the SAME step. If a command was understood but failed because something is missing or not ready, fulfill that prerequisite instead of guessing an unrelated or irreversible action.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to follow instructions. The goal: from recipe: gather all following ingredients: red potato. Directions: slice the red potato, fry the red potato, prepare meal. We have red potato in hand. Next step: slice. The game hasn't recognized "slice" earlier? It recognized "slice" as a verb? We tried "slice red potato" earlier and it was not recognized? It said "That's not a verb I recognise." So maybe we need to use "cut" or "chop"? But earlier "cut" was not recognized either. Maybe the verb is "slice" but we need to specify "slice red potato" again? But earlier it was not recognized. Maybe we need to "use knife on red potato" but that was not recognized. Perhaps the verb is "cut" but we need to "cut red potato" exactly. But earlier "cut red potato" was not recognized. The game might expect "slice" but maybe we need to "slice" with knife? Let's see: The game says "Cutting something requires a knife." So we need to have knife and potato. We have knife on counter. We have potato in hand. Maybe we need to "take knife" first. We haven't taken knife. So prerequisite: take knife. So next step: take knife. Then slice. So next action: take knife.
+</think>take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-1/9
+AGENT -------------------------------------------------
+slice red potato with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You slice the red potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/10
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the exact goal and every step given by the game, literally and in order. Treat every stated step as a literal action to perform unless the game explicitly tells you it is not a recognized verb.
+SECOND STEP: State what you have already completed, what prerequisites are still missing, and what the single next literal step is. Do not skip ahead to a final or irreversible action while an earlier step or prerequisite is still incomplete.
+THIRD STEP: Check if your recent actions failed or looped. If a command was rejected as an unknown verb, try a simpler phrasing for the SAME step. If a command was understood but failed because something is missing or not ready, fulfill that prerequisite instead of guessing an unrelated or irreversible action.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have a cooking game. Goal: prepare meal according to recipe #1: gather ingredients: red potato. Directions: slice the red potato, fry the red potato, prepare meal. We have sliced red potato. Next step: fry the sliced potato. Need to use stove. Probably need to put sliced potato on stove or in pan. We have stove, but nothing on it. We need a pan? Not mentioned. Maybe we can "fry potato" directly? The recipe says "fry the red potato". We have sliced potato. So next step: fry potato. But we might need to use stove. The game likely expects "fry red potato" or "fry sliced potato". The verb "fry" might be recognized. Let's try "fry red potato". If that fails, maybe "fry potato". We'll output "fry red potato".
+</think>fry red potato
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/10
+AGENT -------------------------------------------------
+cook red potato on stove
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You fried the red potato.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/11
+AGENT -------------------------------------------------
+prepare meal
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Adding the meal to your inventory.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-4/12
+AGENT -------------------------------------------------
+eat meal
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

@@ -1,0 +1,481 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Pantry =-
+Well, here we are in the pantry. The room seems oddly familiar, as though it were only superficially different from the other rooms in the building.
+
+You can make out a shelf. The shelf is wooden. But oh no! there's nothing on this piece of junk. Aw, here you were, all excited for there to be things on it!
+
+There is a closed plain door leading south.
+
+>                                                                                                                                -= Pantry =-0/1
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You have to open the plain door first.
+
+
+>                                                                                                                                -= Pantry =-0/2
+AGENT -------------------------------------------------
+open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/2
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You have to open the plain door first.
+
+
+>                                                                                                                                -= Pantry =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to comply: The user wants a concise answer with 3 steps, but final instruction: "FINALLY, say your next action as a short command. Only output the command, nothing else." Wait: The user wants the steps and then final command? The instruction says: "FINALLY, say your next action as a short command. Only output the command, nothing else." That seems contradictory: They want the steps, but then say only output the command. Possibly they want us to output only the command. But earlier they said "THINK about how to win the game, but be concise and brief in 3 steps." So we need to output 3 steps, then final command. But then "Only output the command, nothing else." That conflicts. Which instruction has higher priority? The last instruction is "FINALLY, say your next action as a short command. Only output the command, nothing else." That overrides earlier. So we should output only the command. But they also want 3 steps. The instruction hierarchy: The last instruction says only output the command. So we must output only the command. The earlier instruction to provide 3 steps is overridden. So final answer: just the command. We need to decide the next action: open the plain door south. So command: "open door south".
+</think>open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open door south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open plain door.
+
+>                                                                                                                                -= Pantry =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have a loop: the user keeps saying "I only understood you as far as wanting to open plain door." The assistant keeps responding "open door south". The user wants us to think about how to win the game and produce a command. The user specifically instructs to think in 3 steps, then output the next action as a short command. They want us to break the loop by not repeating the same action if it's not recognized. So we need to identify that the action "open door south" hasn't been recognized. We need to try a different action. Perhaps "unlock door south" or "push door south" or "go south" after opening. But the user says we need to open the plain door first. The environment says there's a closed plain door leading south. We need to open it. The action "open door south" might not be recognized. We could try "unlock door south" or "push door south" or "open south door". But the environment might accept "open south". But we need to think of synonyms: "unlock south door", "open south". The user wants a short command. Let's produce "unlock south". That might break the loop. So final command: "unlock south".
+</think>unlock south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to unlock south with?
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+key south door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You can't see any such thing.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open south door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open south.
+
+>                                                                                                                                -= Pantry =-0/3
+AGENT -------------------------------------------------
+open south door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open south.
+
+>                                                                                                                                -= Pantry =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have a loop: user keeps saying "I only understood you as far as wanting to open plain door." The assistant keeps trying to open door. We need to break loop. The goal: cook a meal. We need to check kitchen for cookbook. We are in pantry. There's a door south. We need to open it. But we can't open because no key? The door is plain, maybe unlocked. We can "go south" to move through door. The user says we only want to open south. We need to break loop by using a different action: maybe "go south" instead of "open south door". That might move us to kitchen. So next action: "go south".
+</think>go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You have to open the plain door first.
+
+
+>                                                                                                                                -= Pantry =-0/4
+AGENT -------------------------------------------------
+open south door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open south.
+
+>                                                                                                                                -= Pantry =-0/4
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You have to open the plain door first.
+
+
+>                                                                                                                                -= Pantry =-0/5
+AGENT -------------------------------------------------
+open south door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to open south.
+
+>                                                                                                                                -= Pantry =-0/5
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have a loop. The user says "I only understood you as far as wanting to open south." The assistant keeps saying "open south door" or "go south". The user says "You have to open the plain door first." So the goal: get to kitchen, find cookbook, cook meal. We need to open the plain door. The door is south. The assistant is stuck. The user wants a different action. We need to break loop. The instruction: "THINK about how to win the game, but be concise and brief in 3 steps. FIRST STEP: State the goal of the game again, step by step. SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step? THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized. FINALLY, say your next action as a short command. Only output the command, nothing else."
+
+We need to output only the command. But we also need to do the 3 steps in reasoning. The instruction says "only output the command, nothing else." So we need to produce only the command. But we must think. So we need to output just the command. So we need to break loop. We can try "open door south" or "unlock door south" or "open plain door". The user says "You have to open the plain door first." So maybe "open plain door". But we might need to use synonyms. The user says "I only understood you as far as wanting to open south." So we can say "open south door" but that's same. We need different action. Maybe "unlock south door" or "open door". Let's try "unlock south door". But we don't have key. Maybe "open plain door". That might be considered a different action. Let's do "open plain door". That is a synonym. So final command: "open plain door".
+</think>open plain door
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open plain door.
+
+
+>                                                                                                                                -= Pantry =-0/6
+AGENT -------------------------------------------------
+help
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Available commands:
+  look:                describe the current room
+  goal:                print the goal of this game
+  inventory:           print player's inventory
+  go <dir>:            move the player north, east, south or west
+  examine ...:         examine something more closely
+  eat ...:             eat edible food
+  open ...:            open a door or a container
+  close ...:           close a door or a container
+  drop ...:            drop an object on the floor
+  take ...:            take an object that is on the floor
+  put ... on ...:      place an object on a supporter
+  take ... from ...:   take an object from a container or a supporter
+  insert ... into ...: place an object into a container
+  lock ... with ...:   lock a door or a container with a key
+  unlock ... with ...: unlock a door or a container with a key
+
+
+
+>                                                                                                                                -= Pantry =-0/7
+AGENT -------------------------------------------------
+look
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-= Pantry =-
+Well, here we are in the pantry. The room seems oddly familiar, as though it were only superficially different from the other rooms in the building.
+
+You can make out a shelf. The shelf is wooden. But oh no! there's nothing on this piece of junk. Aw, here you were, all excited for there to be things on it!
+
+There is an open plain door leading south.
+
+
+
+>                                                                                                                                -= Pantry =-0/8
+AGENT -------------------------------------------------
+go south
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+-= Kitchen =-
+You find yourself in a kitchen. A standard kind of place. You try to gain information on your surroundings by using a technique you call "looking."
+
+Hey, want to see a fridge? Look over there, a fridge! You see a closed oven nearby. You see a table. On the table you see a knife. You scan the room for a counter, and you find a counter. The counter is vast. On the counter you can see a green hot pepper, a green bell pepper, a red bell pepper, a red hot pepper, a green apple and a cookbook. As if things weren't amazing enough already, you can even see a stove. The stove is conventional. But the thing is empty.
+
+There is an open plain door leading north. There is an exit to the east. Don't worry, there is no door. There is an exit to the south.
+
+
+
+>                                                                                                                                -= Kitchen =-0/9
+AGENT -------------------------------------------------
+take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/10
+AGENT -------------------------------------------------
+We need to continue game. We have cookbook. Goal: cook meal. We need to check recipe. Let's examine cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/10
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to output a short command. The goal: cook a meal. Steps: get recipe from cookbook, gather ingredients, cook. Past actions: we are in kitchen, have cookbook. Next step: examine cookbook to read recipe. Use "examine cookbook". That is a valid command. So output "examine cookbook".
+</think>examine cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+green hot pepper
+  red onion
+  white onion
+
+Directions:
+slice the green hot pepper
+  roast the green hot pepper
+  dice the red onion
+  roast the red onion
+  slice the white onion
+  roast the white onion
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/11
+AGENT -------------------------------------------------
+take green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green hot pepper from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/12
+AGENT -------------------------------------------------
+look
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-= Kitchen =-
+You find yourself in a kitchen. A standard kind of place. You try to gain information on your surroundings by using a technique you call "looking."
+
+Hey, want to see a fridge? Look over there, a fridge! You see a closed oven nearby. You see a table. On the table you see a knife. You scan the room for a counter, and you find a counter. The counter is vast. On the counter you can see a green bell pepper, a red bell pepper, a red hot pepper and a green apple. As if things weren't amazing enough already, you can even see a stove. The stove is conventional. But the thing is empty.
+
+There is an open plain door leading north. There is an exit to the east. Don't worry, there is no door. There is an exit to the south.
+
+
+
+>                                                                                                                                -= Kitchen =-1/13
+AGENT -------------------------------------------------
+look
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-= Kitchen =-
+You find yourself in a kitchen. A standard kind of place. You try to gain information on your surroundings by using a technique you call "looking."
+
+Hey, want to see a fridge? Look over there, a fridge! You see a closed oven nearby. You see a table. On the table you see a knife. You scan the room for a counter, and you find a counter. The counter is vast. On the counter you can see a green bell pepper, a red bell pepper, a red hot pepper and a green apple. As if things weren't amazing enough already, you can even see a stove. The stove is conventional. But the thing is empty.
+
+There is an open plain door leading north. There is an exit to the east. Don't worry, there is no door. There is an exit to the south.
+
+
+
+>                                                                                                                                -= Kitchen =-1/14
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have lost track: we took green hot pepper earlier, but now it's gone from counter. We need red onion, white onion. They are not present. We might need to get them from elsewhere? No mention. Maybe they are in pantry? But pantry had no items. Maybe we need to get them from somewhere else like fridge? Not mentioned. Maybe we need to find them in other rooms. But we only have kitchen and pantry. Maybe we need to go to pantry again? But pantry had no items. Could be that we need to find them in fridge. But fridge not described. We could go to fridge? We can "look" to see fridge. But we cannot "take" unless present. Maybe we need to "open fridge" to get onions? But fridge closed. We could "open fridge" to get items. But not described. Maybe we need to "open oven" to get onions? Not likely. Maybe we need to "go east" to exit? But goal is cook meal. We need ingredients. We have cookbook. We need to gather all ingredients: green hot pepper, red onion, white onion. We have green hot pepper. Need red onion and white onion. They might be in pantry? But pantry had nothing. Maybe they are in fridge. So we should "open fridge" to get them. Let's try "open fridge".
+</think>open fridge
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the fridge, revealing a red onion, a white onion, a raw red potato, a raw white tuna and a raw pork chop.
+
+
+>                                                                                                                                -= Kitchen =-1/15
+AGENT -------------------------------------------------
+take red onion
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the red onion from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/16
+AGENT -------------------------------------------------
+take white onion
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the white onion from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-3/17
+AGENT -------------------------------------------------
+We have all ingredients. Need to slice and roast. We have knife. Need to slice green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-3/17
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to slice green hot pepper. Command "slice green hot pepper" is not recognized. Maybe "cut green hot pepper" or "cut" is recognized? We have knife. Probably "cut" or "slice" not recognized. Use "cut" maybe. Let's choose "cut green hot pepper".
+</think>cut green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to specify how you want to cut the green hot pepper. Either slice, dice, or chop it.
+
+
+>                                                                                                                                -= Kitchen =-3/18
+AGENT -------------------------------------------------
+slice green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to slice the green hot pepper with?
+
+>                                                                                                                                -= Kitchen =-3/18
+AGENT -------------------------------------------------
+knife green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to slice the green hot pepper with the knife.
+
+>                                                                                                                                -= Kitchen =-3/18
+AGENT -------------------------------------------------
+slice green hot pepper with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the knife first.
+
+
+>                                                                                                                                -= Kitchen =-3/19
+AGENT -------------------------------------------------
+take knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-3/20
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We have goal: cook meal. Steps: gather ingredients, slice, roast, dice, roast, slice, roast, prepare meal. We have all ingredients, knife. Need to slice green hot pepper. Next action: slice green hot pepper. Use command "slice green hot pepper".
+</think>slice green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the knife)
+You slice the green hot pepper.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-4/21
+AGENT -------------------------------------------------
+We need to roast green hot pepper. Use stove. Command: roast green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-4/21
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to roast. Maybe command "cook" or "heat" or "use stove". Let's try "cook green hot pepper".
+</think>cook green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to cook the green hot pepper with?
+
+>                                                                                                                                -= Kitchen =-4/21
+AGENT -------------------------------------------------
+stove green hot pepper
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+I only understood you as far as wanting to cook the green hot pepper with the stove.
+
+>                                                                                                                                -= Kitchen =-4/21
+AGENT -------------------------------------------------
+cook green hot pepper with stove
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

@@ -1,0 +1,188 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You arrive in a kitchen. A typical one. You start to take note of what's in the room.
+
+Look out! It's a- oh, never mind, it's just a fridge. The fridge contains a lettuce. You scan the room, seeing an oven. You wonder idly who left that here. You can see a table. The table is massive. On the table you can see a knife. You make out a counter. You see a red apple, a green apple, a red hot pepper, a green hot pepper, a raw red potato, a green bell pepper, a tomato and a cookbook on the counter. You see a stove. Unfortunately, there isn't a thing on it.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+look at cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+green apple
+  red apple
+  red hot pepper
+
+Directions:
+chop the green apple
+  roast the green apple
+  chop the red apple
+  fry the red apple
+  chop the red hot pepper
+  roast the red hot pepper
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+We need to produce a short command. The user wants us to think in 3 steps, but final output should be just the command. The user says: "THINK about how to win the game, but be concise and brief in 3 steps. FIRST STEP: State the goal of the game again, step by step. SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step? THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized. FINALLY, say your next action as a short command. Only output the command, nothing else."
+
+Thus we need to output only the command. The prior instructions to think in 3 steps are internal; we need to output only the command. So we need to decide next action: we need to chop green apple, roast green apple, chop red apple, fry red apple, chop red hot pepper, roast red hot pepper, prepare meal. We have not done any yet. We need to start. We should pick first step: chop green apple. So command: "chop green apple".
+</think>chop green apple
+SUMMARY (kept in the context instead of the reasoning): +-+-+-+-+-
+chop green apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+(with the green apple)
+Cutting something requires a knife.
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+use knife to chop green apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+chop green apple with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the green apple first.
+
+
+>                                                                                                                                -= Kitchen =-0/5
+AGENT -------------------------------------------------
+take green apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the green apple from the counter.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+use knife to chop green apple
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-1/6
+AGENT -------------------------------------------------
+chop green apple with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You need to take the knife first.
+
+
+>                                                                                                                                -= Kitchen =-1/7
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Goal: gather ingredients and follow directions. Steps: take green apple, take red apple, take red hot pepper, chop green apple, roast green apple, chop red apple, fry red apple, chop red hot pepper, roast red hot pepper, prepare meal. Past actions: took green apple. Need to take knife. Next action: take knife.
+</think>take knife
+SUMMARY (kept in the context instead of the reasoning): +-+-+-+-+-
+I will take the knife next, then chop the green apple, roast it, chop the red apple, fry it, chop the hot pepper, roast it, and finally prepare the meal.  
+I saw no immediate hazards, but I’ll keep an eye on the stove and avoid burning the apples.  
+I expect the next step to be chopping the green apple once I have the knife.
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the knife from the table.
+
+
+
+>                                                                                                                                -= Kitchen =-1/8
+AGENT -------------------------------------------------
+chop green apple with knife
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You chop the green apple.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-2/9
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Goal: gather ingredients, chop green apple, roast green apple, chop red apple, fry red apple, chop hot pepper, roast hot pepper, prepare meal.  
+Actions so far: took knife, took green apple, chopped green apple. Next: roast green apple. No loop.
+</think>roast green apple
+SUMMARY (kept in the context instead of the reasoning): +-+-+-+-+-
+I will roast the green apple next, then move on to chopping the red apple.  
+I must watch for the stove’s heat and avoid dropping the knife or apples.  
+After roasting the green apple, I expect the next step to be chopping the red apple.
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-2/9
+AGENT -------------------------------------------------
+cook green apple on stove
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
