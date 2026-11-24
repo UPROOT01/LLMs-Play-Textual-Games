@@ -42,8 +42,8 @@ def test_profiles_write_the_official_templates():
         tokenizer = AutoTokenizer.from_pretrained(model)
         if name == "qwen3": # soft switch: the same prompt for both turns, the model decides
             assert ours(profile, True) == official(tokenizer, profile)
-        elif name == "smollm3": # /think mode of the template, and its /no_think start of the answer
-            assert ours(profile, True) == official(tokenizer, profile)
+        elif name == "smollm3": # /think mode of the template + <think>\n prefill, and its /no_think start of the answer
+            assert ours(profile, True) == official(tokenizer, profile) + profile.think_prefill
             no_think = official(tokenizer, profile, enable_thinking=False)
             assert no_think.endswith("<|im_start|>assistant\n" + profile.nothink_prefill)
         elif name == "deepseek_r1": # the template always prefills "<think>\n"

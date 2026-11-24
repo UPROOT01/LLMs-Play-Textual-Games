@@ -91,13 +91,16 @@ class Qwen3(Profile):
 
 class SmolLM3(Profile):
     """SmolLM3 (Hugging Face): the official template only has a global reasoning mode, in the system prompt.
-    It is set to /think, and the normal turns are prefilled with an empty reasoning, as the template does in /no_think mode.
+    It is set to /think, normal turns are prefilled with an empty reasoning (as the template does in /no_think mode),
+    and self-evaluations prefill "<think>\\n": without it, once plain normal-turn answers sit in the history, SmolLM3
+    imitates them and omits <think> on ~99% of self-evaluation turns.
     The template writes today's date in the system prompt: here it is a fixed date, so that all the runs see the same prompt.
     """
     name = "smollm3"
     switch = "prefill"
     end_of_turn = "<|im_end|>\n"
     assistant_start = "<|im_start|>assistant\n"
+    think_prefill = "<think>\n"
     nothink_prefill = "<think>\n\n</think>\n"
     today = "18 October 2026"
 
