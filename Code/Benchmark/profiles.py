@@ -223,8 +223,8 @@ MODELS = {
     "Qwen/Qwen3-4B": dict(profile="qwen3", max_model_len=40960),
     "Qwen/Qwen3-8B-FP8": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
     "Qwen/Qwen3-14B-AWQ": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
-    # SmolLM3 uses vLLM's generic transformers backend, which crashes in torch.compile AOT on Python 3.10 (collections.abc)
-    "HuggingFaceTB/SmolLM3-3B": dict(profile="smollm3", max_model_len=40960, enforce_eager=True),
+    # SmolLM3 uses vLLM's generic transformers backend, which crashes in torch.compile AOT on Python 3.10 (collections.abc) (use enforce_eager=True on 4090)
+    "HuggingFaceTB/SmolLM3-3B": dict(profile="smollm3", max_model_len=40960, enforce_eager=False),
     "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": dict(profile="deepseek_r1", max_model_len=40960,
                                                      quantization="fp8", kv_cache_dtype="fp8"),
     # ~14 GB of weights (MXFP4 as published); on a 24 GB card a KV cache of ~160k tokens: four 40k games at a time
