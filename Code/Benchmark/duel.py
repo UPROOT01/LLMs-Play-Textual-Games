@@ -50,7 +50,7 @@ class DuelAgent(SelfEvalAgent):
         self.prompt = prompt
         self.system_prompt = DUEL_PROMPTS[game][prompt]["system"]
         self.selfeval_prompt = DUEL_PROMPTS[game][prompt]["selfeval"]
-        self.sampling = DUEL_SAMPLING[prompt]
+        self.sampling = self.profile.resolve_sampling(DUEL_SAMPLING[prompt])
         self.log = log
         self.shadow = shadow
         if self.gate_name is not None:

@@ -355,7 +355,15 @@ def test_strictnothink():
     grid = run.load_grid("grids/cooking_strictnothink.yaml")
     run.check_modes(grid)
     assert len(list(run.grid_games(grid))) == 300
-    print("ok strictnothink: Qwen3 prefill on normal/summary turns, empty summary guard, 300-game grid")
+
+    # SmolLM3 applies anti-loop sampling on thinking turns only; other profiles leave CoT sampling untouched
+    from prompts import SAMPLING
+    smol = PROFILES["smollm3"]().resolve_sampling(SAMPLING["CoT"])
+    assert smol["think"] == dict(temperature=0.6, top_p=0.95, top_k=-1, min_p=0.0, repetition_penalty=1.08)
+    assert smol["normal"] == SAMPLING["CoT"]["normal"]
+    for other in ("qwen3", "deepseek_r1", "gpt_oss"):
+        assert PROFILES[other]().resolve_sampling(SAMPLING["CoT"]) == SAMPLING["CoT"]
+    print("ok strictnothink + smollm3 sampling overrides")
 
 
 if __name__ == "__main__":

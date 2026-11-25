@@ -34,6 +34,14 @@ class Profile:
     # before gpt-oss was added); GptOss replaces them.
     stop_tokens = None # tokens that end a generation (None: the tokenizer's end-of-sequence token)
     think_bridge = "" # if set, a self-evaluation is two generations: the reasoning, then this text and the answer
+    sampling_overrides = None # optional {"think": {...}, "normal": {...}} merged over the prompt's sampling
+
+    def resolve_sampling(self, sampling):
+        if not self.sampling_overrides:
+            return sampling
+        return {kind: (None if base is None and kind not in self.sampling_overrides
+                       else {**(base or {}), **self.sampling_overrides.get(kind, {})})
+                for kind, base in sampling.items()}
 
     def bind(self, tokenizer):
         """Called once by the agent: the ids of the tokens the methods below look for."""
@@ -103,6 +111,12 @@ class SmolLM3(Profile):
     think_prefill = "<think>\n"
     nothink_prefill = "<think>\n\n</think>\n"
     today = "18 October 2026"
+    # Official HF recipe (temp=0.6, top_p=0.95, no top_k/min_p narrowing) + mild repetition_penalty on thinking turns
+    # to break verbatim <think> repetition loops (24.6% hit THINK_MAX_TOKENS=10000 under CoT's top_k=25/min_p=0.05).
+    # Normal turns stay untouched so already-played mode-0 games remain comparable.
+    sampling_overrides = {
+        "think": dict(temperature=0.6, top_p=0.95, top_k=-1, min_p=0.0, repetition_penalty=1.08),
+    }
 
     def system(self, text):
         # no <|im_end|> after the system prompt: the official template only writes it when there are tools
@@ -224,7 +238,7 @@ MODELS = {
     "Qwen/Qwen3-8B-FP8": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
     "Qwen/Qwen3-14B-AWQ": dict(profile="qwen3", max_model_len=40960, kv_cache_dtype="fp8"),
     # SmolLM3 uses vLLM's generic transformers backend, which crashes in torch.compile AOT on Python 3.10 (collections.abc) (use enforce_eager=True on 4090)
-    "HuggingFaceTB/SmolLM3-3B": dict(profile="smollm3", max_model_len=40960, enforce_eager=False),
+    "HuggingFaceTB/SmolLM3-3B": dict(profile="smollm3", max_model_len=40960, enforce_eager=True),
     "deepseek-ai/DeepSeek-R1-Distill-Llama-8B": dict(profile="deepseek_r1", max_model_len=40960,
                                                      quantization="fp8", kv_cache_dtype="fp8"),
     # ~14 GB of weights (MXFP4 as published); on a 24 GB card a KV cache of ~160k tokens: four 40k games at a time

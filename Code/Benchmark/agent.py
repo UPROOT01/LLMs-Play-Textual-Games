@@ -157,7 +157,7 @@ class SelfEvalAgent:
         self.selfevaluations = 0 # thinking turns of the game (a retry of an empty reasoning is not another one)
         self.system_prompt = PROMPTS[prompt]["system"]
         self.selfeval_prompt = PROMPTS[prompt]["selfeval"]
-        self.sampling = SAMPLING[prompt]
+        self.sampling = self.profile.resolve_sampling(SAMPLING[prompt])
         self.rng = rng if rng is not None else random.Random()
         self.log = log
         self.profile.bind(tokenizer) # the profile finds the reasoning and the answer in the model's tokens
