@@ -1,0 +1,141 @@
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+                    ________  ________  __    __  ________        
+                   |        \|        \|  \  |  \|        \       
+                    \$$$$$$$$| $$$$$$$$| $$  | $$ \$$$$$$$$       
+                      | $$   | $$__     \$$\/  $$   | $$          
+                      | $$   | $$  \     >$$  $$    | $$          
+                      | $$   | $$$$$    /  $$$$\    | $$          
+                      | $$   | $$_____ |  $$ \$$\   | $$          
+                      | $$   | $$     \| $$  | $$   | $$          
+                       \$$    \$$$$$$$$ \$$   \$$    \$$          
+              __       __   ______   _______   __        _______  
+             |  \  _  |  \ /      \ |       \ |  \      |       \ 
+             | $$ / \ | $$|  $$$$$$\| $$$$$$$\| $$      | $$$$$$$\
+             | $$/  $\| $$| $$  | $$| $$__| $$| $$      | $$  | $$
+             | $$  $$$\ $$| $$  | $$| $$    $$| $$      | $$  | $$
+             | $$ $$\$$\$$| $$  | $$| $$$$$$$\| $$      | $$  | $$
+             | $$$$  \$$$$| $$__/ $$| $$  | $$| $$_____ | $$__/ $$
+             | $$$    \$$$ \$$    $$| $$  | $$| $$     \| $$    $$
+              \$$      \$$  \$$$$$$  \$$   \$$ \$$$$$$$$ \$$$$$$$ 
+
+You are hungry! Let's cook a delicious meal. Check the cookbook in the kitchen for the recipe. Once done, enjoy your meal!
+
+-= Kitchen =-
+You've entered a kitchen. You decide to start listing off everything you see in the room, as if you were in a text adventure.
+
+You see a fridge. The fridge contains a raw pork chop and a lettuce! You can make out a closed conventional looking oven close by. You can see a table. You see a knife on the table. You can see a counter. On the counter you can see a cookbook. You bend down to tie your shoe. When you stand up, you notice a stove. The stove is conventional. But the thing is empty, unfortunately.
+
+
+
+>                                                                                                                                -= Kitchen =-0/1
+AGENT -------------------------------------------------
+take cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the cookbook from the counter.
+
+
+
+>                                                                                                                                -= Kitchen =-0/2
+AGENT -------------------------------------------------
+open cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+It isn't something you can open.
+
+
+>                                                                                                                                -= Kitchen =-0/3
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's see. The user is trying to cook a meal using the cookbook in the kitchen. The goal is to make a delicious meal, so the steps would involve getting the recipe from the cookbook, gathering ingredients, and then cooking.
+
+First, the user took the cookbook from the counter. But when they tried to open it, it didn't work. So maybe the cookbook isn't a book you open like usual. Maybe it's a recipe card or something else. Or perhaps they need to use another method to access the recipes. 
+
+Looking at the kitchen items again: there's a fridge with raw pork chop and lettuce, a knife on the table, an oven, a stove, and a counter. The user needs to find a recipe for the pork chop. Since the cookbook isn't openable, maybe they need to check if there's another way to get the recipe. Alternatively, maybe the cookbook is a book that can be read, but the command was wrong. Maybe "read cookbook" instead of "open"?
+
+Wait, the user tried "open cookbook" and it didn't work. So maybe the correct action is to "read" it. Or perhaps the cookbook is on the counter, and they need to look at it. Alternatively, maybe the recipe is in the fridge or somewhere else. But the fridge has ingredients, not recipes. 
+
+The next step should be to try a different action related to the cookbook. Since opening didn't work, maybe "use cookbook" or "look at cookbook". Alternatively, check if the cookbook is in a different state. Maybe they need to find the recipe page first. Or perhaps the cookbook is a book that needs to be opened with a specific command. 
+
+Wait, the user is in a text adventure, so commands might be case-sensitive or require specific verbs. Since "open" didn't work, maybe "read" is the correct verb. So the next action should be to read the cookbook to get the recipe. Once they have the recipe, they can gather the ingredients (pork chop, lettuce, maybe other items) and cook using the stove or oven. 
+
+So the next command should be "read cookbook" instead of "open". That makes sense. Let me check the previous steps again. The user took the cookbook, tried to open it, which failed. So the next step is to read it. Then, once the recipe is known, they can proceed to cook.
+</think>read cookbook
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You open the copy of "Cooking: A Modern Approach (3rd Ed.)" and start reading:
+
+Recipe #1
+---------
+Gather all following ingredients and follow the directions to prepare this tasty meal.
+
+Ingredients:
+pork chop
+
+Directions:
+dice the pork chop
+  roast the pork chop
+  prepare meal
+
+
+
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+roast pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/4
+AGENT -------------------------------------------------
+roast pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+That's not a verb I recognise.
+
+>                                                                                                                                -= Kitchen =-0/4
+THINK about how to win the game, but be concise and brief in 3 steps.
+FIRST STEP: State the goal of the game again, step by step.
+SECOND STEP: State your past actions so far. Which steps of the goal have you already taken? And what is the next step?
+THIRD STEP: Recognize if you find yourself in a loop. Your most important goal is to break the loop: if the previous actions didn't make any progress you have to say a different action, maybe by using a synonym. It is fundamental that you do NOT repeat the same action if it's not being recognized.
+FINALLY, say your next action as a short command. Only output the command, nothing else.
+
+SELF-EVALUATION: +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+<think>
+Okay, let's break this down. The goal is to cook a meal using the ingredients and cookbook in the kitchen. So far, the user took the cookbook, tried to open it (but couldn't), then read it. The recipe in the cookbook says to roast the pork chop, but when they tried to "roast pork chop," the game didn't recognize the verb.
+
+Hmm, maybe "roast" isn't the correct verb here. The user needs to use the oven. Wait, the kitchen has an oven mentioned earlier. So perhaps the correct action is to use the oven to roast the pork chop. But the user tried "roast pork chop" directly. Maybe they need to first put the pork chop in the oven. Let me check the previous steps again.
+
+The user has the pork chop in the fridge. They need to take it first. Wait, in the initial description, the fridge contains a raw pork chop. So the user hasn't taken the pork chop yet. Oh, right! The user took the cookbook but didn't take the pork chop. So the next step should be to take the pork chop from the fridge. Then, maybe use the oven to roast it. But the user tried to roast it without having it. So the loop is trying to roast without the ingredient. The correct sequence is: take pork chop, then use oven to roast it. So the next action should be taking the pork chop.
+</think>take pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+You take the pork chop from the fridge.
+
+
+
+Your score has just gone up by one point.
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+cook pork chop
+GAME ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What do you want to cook the pork chop with?
+
+>                                                                                                                                -= Kitchen =-1/5
+AGENT -------------------------------------------------
+stove
+CONTEXT INITIALIZED +-+-+-+-+-+-+-+-+-+-

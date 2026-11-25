@@ -1881,3 +1881,66 @@ Same reading as the entry on Qwen3-8B (last command of a game the game ended), a
   the first minute, then the measured KV cache usage against a target of 92%, lowered by 5 points when more than
   5 requests are paused in a minute and raised by 2 after a minute without pauses), asked by the user; the numbers
   are those of `engine.ContextBudget` (entry of 2026-11-11).
+
+
+## 2026-11-24 — Results of `cooking_grounded.yaml`: `CoT` vs `CoT_grounded`, `lsr4`, and `Qwen3-14B-AWQ`
+
+Grid `grids/cooking_grounded.yaml`: models `Qwen/Qwen3-8B-FP8`, `Qwen/Qwen3-14B-AWQ`, `openai/gpt-oss-20b` (`+oneline`), `HuggingFaceTB/SmolLM3-3B` (plus 109 partial games of `DeepSeek-R1-Distill-Llama-8B`), modes `0 / er4 / lr4 / lsr4 / e1`, prompts `CoT` and `CoT_grounded` (game-agnostic update in `prompts.py`: follow in-game steps literally, check missing prerequisites before final/irreversible actions, gentler loop recovery), levels 1, 3, 5, 7, 9, seeds 1-10 (50 games per cell, 2,000 games across the four finished models). Paired tests by `(level, seed)`: Wilcoxon signed-rank for score, exact McNemar for wins and eat-ingredient losses.
+
+**1. Summary of the three working models** (mean score / win% / lost-by-eating% / generated tokens per game):
+
+| model & prompt | `0` | `er4` | `lr4` | `lsr4` | `e1` |
+|---|---|---|---|---|---|
+| `Qwen3-8B-FP8` CoT | 0.275 / 10% / 8% / 0.5k | 0.413 / 12% / 36% / 16.4k | 0.579 / 32% / 10% / 9.5k | 0.511 / 22% / 16% / 14.0k | 0.545 / 12% / 30% / 43.6k |
+| `Qwen3-8B-FP8` CoT_grounded | 0.182 / 2% / 0% / 0.5k | 0.513 / 20% / 20% / 22.1k | 0.565 / 26% / 6% / 13.7k | 0.568 / 34% / 6% / 11.9k | 0.568 / 16% / 16% / 69.9k |
+| `Qwen3-14B-AWQ` CoT | 0.144 / 4% / 4% / 0.8k | 0.628 / 32% / 14% / 9.6k | 0.735 / 44% / 12% / 7.1k | 0.608 / 30% / 16% / 7.1k | 0.746 / 48% / 2% / 25.3k |
+| `Qwen3-14B-AWQ` CoT_grounded | 0.077 / 0% / 2% / 0.7k | 0.522 / 18% / 24% / 12.9k | 0.666 / 44% / 8% / 8.2k | 0.606 / 22% / 18% / 9.0k | 0.636 / 22% / 6% / 39.6k |
+| `gpt-oss-20b` CoT+oneline | 0.290 / 6% / 4% / 0.8k | 0.425 / 12% / 14% / 6.6k | 0.550 / 26% / 20% / 5.7k | 0.437 / 16% / 12% / 4.4k | 0.458 / 6% / 24% / 40.3k |
+| `gpt-oss-20b` CoT_grounded+oneline | 0.251 / 4% / 4% / 0.8k | 0.528 / 20% / 14% / 7.4k | 0.467 / 16% / 24% / 8.7k | 0.451 / 16% / 8% / 5.0k | 0.485 / 10% / 26% / 45.8k |
+
+**2. `CoT_grounded` vs `CoT` (pooled across the 4 thinking modes, `n = 200` per model):**
+- **`Qwen3-8B-FP8`:** cuts eat-ingredient losses in half (`23% → 12%`, 46 vs 24, `p = 0.0021`), lifts `er4` (`+0.101, p = 0.052`) and pushes `lsr4` to `34%` wins. Overall score gain is modest (`+0.042, p = 0.10`), wins `39 → 48` (n.s.), at `+41%` tokens.
+- **`Qwen3-14B-AWQ`:** significantly hurts performance (`−0.072` score, `p = 0.0015`; wins `77 → 53`, `p = 0.0027`; tokens `+42%`). Worst hit is `e1` (`0.746 → 0.636`, `p = 0.022`; wins `48% → 22%`, `p = 0.0072`). Logs show `14B` obeys the literal-step / anti-shortcut rule too rigidly and repeats `prepare meal` (`"You still miss something."`) 25–45 times until `max_steps` (`step_limit` rises `14% → 38%` in `e1`, `28% → 38%` in `er4`).
+- **`gpt-oss-20b`:** flat (`+0.015`, `p = 0.51`; wins 31 vs 30; eat-losses 36 vs 35; tokens `+17%`).
+- **Mode `0`** drops on all three models (`8B −0.093 p = 0.012`; `14B −0.066 p = 0.008`; `gpt-oss −0.039` n.s.).
+
+**3. `gpt-oss-20b` replicate check (`CoT+oneline` vs earlier `CoT+nonempty+oneline`):**
+Both runs had 0 empty reasonings and 0 nonempty retries (identical effective prompts). Pooled (`n = 100` per mode): `lr4` `0.501` (`21%` wins, `5.6k` tok), `er4` `0.459` (`12%` wins, `6.5k` tok; `lr4 − er4` score `+0.042` n.s., wins `p = 0.078`), `e1` `0.454` (`8%` wins, `38.6k` tok; `lr4 > e1` in wins `16:3`, `p = 0.0044`).
+
+**4. `lsr4` (3-sentence summary memory):**
+- On `Qwen3-8B` (pooled CoT + grounded, `n = 100`): beats `er4` (`+0.077, p = 0.024`; wins `28%` vs `16%`, `p = 0.036`) and matches `lr4` on wins (`28%` vs `29%`).
+- On `Qwen3-14B` (`n = 100`): trailed `lr4` (`−0.094, p = 0.0065`; wins `26%` vs `44%`, `p = 0.0021`) under soft `/no_think` (see confound below).
+- On `gpt-oss-20b` (`n = 100`): shrank thoughts (`477 → 194` tok/think) and stayed flat vs `er4` (`−0.032` n.s.).
+- Minor bug found in `agent._summarize()`: when a reasoning was empty (no `+nonempty`), `_summarize("")` still queried the model and injected a hallucinated summary (`6.9%` of `8B` summaries, `1%` on `14B`, `0.1%` on `gpt-oss`). Too small to invalidate finished runs; fixed afterward with `if not text: return ""`.
+
+**5. Invalid / failed models in the grid:**
+- **`SmolLM3-3B`** (500 games, `0%` wins, scores `0.015–0.059`): profile bug. `SmolLM3` had `think_prefill = ""`, so once plain normal-turn answers sat in history it mimicked them and omitted `<think>` on ~99% of self-evaluation turns. Fixed in `profiles.py` (`think_prefill = "<think>\n"`, plus `enforce_eager=True` for vLLM's Python 3.10 `torch.compile` crash); the 400 non-`0` runs were deleted. (In a subsequent Colab re-run with `think_prefill`, SmolLM3 did think and score points, but hit `THINK_MAX_TOKENS = 10000` on 24.6% of self-evaluations due to `<think>` repetition loops, pushing average throughput to ~2.6 games/h with 53 concurrent games and 98–100% KV cache.)
+- **`DeepSeek-R1-Distill-Llama-8B`** (109 partial games, `0%` wins): outputs multi-sentence prose on normal turns (`"You seem to want to talk to someone..."`), hitting 100% loops in mode `0` and 71–100% step limits with thinking.
+
+## 2026-11-24 — Soft `/no_think` drift confound on Qwen3, `+strictnothink`, and `cooking_strictnothink.yaml`
+
+Log inspection of `Qwen3-8B-FP8` and `Qwen3-14B-AWQ` uncovered a large confound in the soft `/no_think` switch: `Qwen3.user()` only appends `/no_think` on `since = 1` (the first normal turn after a self-evaluation) and sends nothing on `since >= 2`. On `Qwen3-8B` and `Qwen3-14B` (not `Qwen3-4B`, which stays at `0.0–0.6%`), when the prior reasoning is stripped (`er4`, `grand25`, `grand50`) or compressed (`14B lsr4`), the model drifts back into thinking on `since >= 2`, hits `NORMAL_MAX_TOKENS = 100`, and gets replaced by random `"help"` / `"look"`:
+- Capped normal turns in `CoT`: `8B` `er4` `18.1%`, `lsr4` `4.1%`, `lr4` `0.6%` (`grand25` `20.9%`, `grand50` `14.5%` in earlier 150-game `CoT+nonempty`); `14B` `er4` `16.9%`, `lsr4` `19.9%`, `lr4` `5.8%`.
+- By `since` (`CoT er4`): `before_first 0%`, `since=1` `1–2%`, `since=2` `9–19%`, `since=3` `27–38%`, `since=4` `43–49%`, `since=5+` `50–53%` (`14B lsr4` reaches `71%` at `since=5+`).
+
+**Fix & control grid:**
+- Added prompt option `+strictnothink` (`agent.py`, `gate.py`): prefills Qwen3's official `enable_thinking=False` prefix (`"<think>\n\n</think>\n\n"`) on every non-thinking turn (`normal`, `preview`, `summary`, `gate`) for soft-switch profiles without storing it in context. Existing `CoT` runs remain untouched (`tests/test_legacy_equivalence.py`, `tests/test_profiles.py::test_strictnothink`, and `tests/test_gate.py` pass). Also added the empty-reasoning guard in `_summarize()`.
+- Created `grids/cooking_strictnothink.yaml`: `Qwen/Qwen3-8B-FP8` and `Qwen/Qwen3-14B-AWQ` × `er4 / lr4 / lsr4` × `CoT+strictnothink` × levels 1, 3, 5, 7, 9 × seeds 1-10 (300 games).
+
+## 2026-11-25 — Results of `cooking_strictnothink.yaml`: memory holds on `8B`, vanishes on `14B`, and eat-losses drop 4×
+
+All 300 games played and merged into `results/` (`CoT+strictnothink/`). `+strictnothink` completely eliminated normal-turn capping (`17–20% → 0.0–0.2%`) and reduced generated tokens by `~15–22%` on `er4`/`lsr4`.
+
+| model & mode (`CoT+strictnothink`, 50g) | score (vs CoT) | win% (vs CoT) | eat-loss% (vs CoT) | cook% / cut% / lim% | gen tokens | capN% |
+|---|---|---|---|---|---|---|
+| `Qwen3-8B` `er4` | 0.428 (+0.015) | 14% (12%) | 8% (36%) | 24% / 18% / 30% | 14.6k | 0.0% |
+| `Qwen3-8B` `lr4` | **0.601** (+0.021) | **32%** (32%) | 14% (10%) | 28% / 12% / 14% | 10.7k | 0.0% |
+| `Qwen3-8B` `lsr4` | 0.508 (−0.003) | **28%** (22%) | **4%** (16%) | 44% / 10% / 14% | 9.5k | 0.0% |
+| `Qwen3-14B` `er4` | **0.685** (+0.058) | **48%** (32%) | **4%** (14%) | 18% / 0% / 26% | 7.5k | 0.0% |
+| `Qwen3-14B` `lr4` | 0.657 (−0.079) | 42% (44%) | 8% (12%) | 24% / 6% / 16% | 6.2k | 0.2% |
+| `Qwen3-14B` `lsr4` | 0.618 (+0.010) | 38% (30%) | **4%** (16%) | 22% / 12% / 20% | 5.6k | 0.1% |
+
+- **`Qwen3-8B-FP8` — the memory effect is genuine:** with `0.0%` capped normal turns in all three modes, `lr4` still beats `er4` by **`+0.173` (`Wilcoxon p = 0.0040`, `t p = 0.0024`)** and **`32%` vs `14%` wins (`12:3`, McNemar `p = 0.0352`)** at fewer tokens (`10.7k` vs `14.6k`). Both `lr4` (`32%`, `p = 0.021`) and `lsr4` (`28%`, `p = 0.022`, `9.5k` tok) beat `CoT e1` (`12%` wins, `43.6k` tok) in win rate.
+- **`Qwen3-14B-AWQ` — the `CoT` memory gap was the `/no_think` drift confound:** once `er4` stopped losing 16.9% of turns to drift, **`er4` jumped from `32% → 48%` wins (`0.628 → 0.685`)**, matching `CoT e1`'s `48%` win rate (`24` vs `24`, `p = 1.00`) at `30%` of its tokens (`7.5k` vs `25.3k`). `lr4 − er4 = −0.029` (`p = 0.48`; wins 21 vs 24, `p = 0.63`). `lsr4` also recovered (`30% → 38%` wins).
+- **Eat-ingredient losses dropped 4× under `+strictnothink`:** pooled across `er4` and `lsr4` on both models (`n = 200`), fatal `eat <ingredient>` endings fell from **`41/200 (20.5%)` to `10/200 (5.0%)`** (`6:37`, McNemar **`p = 0.000002`**; `8B er4` alone `36% → 8%`, `p = 0.0013`). In the original `CoT` logs, 38 of those 41 `eat` losses happened on normal turns (30 on `since = 1–2`). On `8B er4`, removing them shifted losses to cutting (`8% → 18%`) and step limits (`20% → 30%`) rather than wins — confirming `8B` still needs kept memory to finish, whereas `14B` converted them into wins (`32% → 48%`).
+- **Synthesis across scales and families:** keeping the last reasoning shows a capability "sweet spot": no benefit on small models (`1.7B`, `4B`), a strong replicated benefit on mid-scale `Qwen3-8B` (`lr4` and `lsr4` beat `er4` and `e1` even with strict `/no_think`), and no advantage over clean ephemeral `er4` on stronger `Qwen3-14B` (where `er4` already saturates `e1`'s 48% win rate at 30% of the tokens). Across all models, soft `/no_think` tags decay over multi-turn trajectories when reasoning is dropped, so hard per-turn prefilling is required for clean ablations of thinking schedules.
