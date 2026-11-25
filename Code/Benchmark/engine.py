@@ -27,6 +27,18 @@ import numpy as np
 
 _env_lock = threading.Lock() # TextWorld is not thread-safe: one game action at a time
 _request_ids = itertools.count()
+JERICHO_MAX_COMMAND_BYTES = 190 # Jericho truncates actions at 198 UTF-8 bytes and crashes if a multi-byte char is split
+
+
+def _safe_env_command(command, max_bytes=JERICHO_MAX_COMMAND_BYTES):
+    """Sanitizes a command before TextWorld/Jericho env.step(): strips NUL bytes (which truncate C strings in
+    libfrotz) and truncates on a clean UTF-8 boundary below Jericho's 198-byte limit so its truncation logger
+    cannot raise UnicodeDecodeError on split multi-byte characters."""
+    clean = command.replace("\x00", "")
+    raw = clean.encode("utf-8")
+    if len(raw) <= max_bytes:
+        return clean
+    return raw[:max_bytes].decode("utf-8", errors="ignore")
 
 
 def make_env(path, max_steps):
@@ -59,7 +71,7 @@ def play_game(agent, path, max_steps=100, loop_window=None, loop_max_distinct=2)
             turns.append((re.sub(r">\s+-=.*", "", obs).strip(), command))
             timestamp = time.perf_counter()
             with _env_lock:
-                obs, score, done, infos = env.step(command)
+                obs, score, done, infos = env.step(_safe_env_command(command))
             moves += 1
             trajectory.append((moves, score, round(timestamp - start, 3)))
             if not done and loop_window and len(turns) >= loop_window \

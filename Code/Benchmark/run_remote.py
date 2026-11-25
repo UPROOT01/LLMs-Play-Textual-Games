@@ -34,6 +34,8 @@ if __name__ == "__main__":
         grid = load_grid(grid_path)
         play = run_grid
 
+    raw_parallel = os.environ.get("N_PARALLEL", "auto").strip()
+    n_parallel = raw_parallel if raw_parallel == "auto" else int(raw_parallel)
     summary(grid, results, read, models)
-    play(grid, results, read, models=models, limit=None, n_parallel="auto")
+    play(grid, results, read, models=models, limit=None, n_parallel=n_parallel)
     summary(grid, results, read, models)

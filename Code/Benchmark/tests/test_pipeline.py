@@ -381,6 +381,46 @@ def test_model_prompts_and_isolation():
     print("ok model_prompts, Engine.close() shutdown, and multi-model subprocess isolation")
 
 
+def test_safe_env_command():
+    assert engine._safe_env_command("go north") == "go north"
+    assert engine._safe_env_command("look\x00around") == "lookaround"
+    # Multi-byte UTF-8 characters straddling byte 190 must not raise or leave broken UTF-8
+    for pad in (188, 189, 190, 195):
+        long_cmd = "a" * pad + "—🚀" * 10
+        safe = engine._safe_env_command(long_cmd)
+        assert len(safe.encode("utf-8")) <= engine.JERICHO_MAX_COMMAND_BYTES
+        assert safe.encode("utf-8").decode("utf-8") == safe
+    # play_game() passes the sanitized command to env.step()
+    seen = []
+
+    class CaptureEnv:
+        def reset(self):
+            return "Room", {"max_score": 1}
+
+        def step(self, cmd):
+            seen.append(cmd)
+            return "Done", 1, True, {"max_score": 1}
+
+        def close(self):
+            pass
+
+    class LongAgent:
+        def act(self, obs, done=False):
+            return ":)" if done else ("x" * 189 + "—tail")
+
+        def _write_log(self, text):
+            pass
+
+    orig_make = engine.make_env
+    engine.make_env = lambda path, max_steps: CaptureEnv()
+    try:
+        engine.play_game(LongAgent(), "fake.z8", max_steps=5)
+    finally:
+        engine.make_env = orig_make
+    assert seen == ["x" * 189], seen
+    print("ok _safe_env_command (UTF-8 truncation & NUL stripping before env.step)")
+
+
 if __name__ == "__main__":
     test_grid_files()
     test_context_budget()
@@ -388,4 +428,5 @@ if __name__ == "__main__":
     test_measured_budget()
     test_kv_usage_display()
     test_model_prompts_and_isolation()
+    test_safe_env_command()
     test_run_grid()
